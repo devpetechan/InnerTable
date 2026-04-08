@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>The Inner Table</title>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f7;
+      color: #1c1c1e;
+      min-height: 100vh;
+    }
+
+    /* ── Google Places API key banner ── */
+    #api-banner {
+      background: #fff3cd;
+      border-bottom: 1px solid #ffc107;
+      padding: 8px 16px;
+      font-size: 13px;
+      color: #856404;
+      text-align: center;
+      display: none;
+    }
+    #api-banner a { color: #533f03; font-weight: 600; }
+
+    /* ── Header ── */
+    header {
+      background: #fff;
+      border-bottom: 1px solid #e5e5ea;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    header h1 { font-size: 20px; font-weight: 700; }
+    #user-chip {
+      background: #f0f0f5;
+      border: none;
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #1c1c1e;
+    }
+    #user-chip:hover { background: #e0e0ea; }
+
+    /* ── Login screen ── */
+    #login-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 80vh;
+      padding: 32px 24px;
+      gap: 24px;
+    }
+    #login-screen .logo { font-size: 64px; }
+    #login-screen h2 { font-size: 28px; font-weight: 700; text-align: center; }
+    #login-screen p { color: #6e6e73; text-align: center; font-size: 15px; max-width: 300px; }
+    #login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      max-width: 320px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1.5px solid #e5e5ea;
+      border-radius: 12px;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.2s;
+      background: #fff;
+    }
+    input[type="text"]:focus { border-color: #007aff; }
+    .btn-primary {
+      background: #007aff;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.2s;
+    }
+    .btn-primary:hover { background: #0066d6; }
+    .btn-primary:active { background: #0055b3; }
+
+    /* ── App shell (hidden until logged in) ── */
+    #app { display: none; }
+
+    /* ── Nav tabs ── */
+    nav {
+      display: flex;
+      border-bottom: 1px solid #e5e5ea;
+      background: #fff;
+      position: sticky;
+      top: 57px;
+      z-index: 99;
+    }
+    nav button {
+      flex: 1;
+      padding: 12px 8px;
+      border: none;
+      background: transparent;
+      font-size: 14px;
+      font-weight: 500;
+      color: #6e6e73;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    nav button.active {
+      color: #007aff;
+      border-bottom-color: #007aff;
+      font-weight: 600;
+    }
+
+    /* ── Main content ── */
+    main { padding: 16px; max-width: 600px; margin: 0 auto; }
+
+    /* ── Category tabs (Restaurants / Bars) ── */
+    .cat-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .cat-tab {
+      flex: 1;
+      padding: 10px;
+      border: 1.5px solid #e5e5ea;
+      border-radius: 10px;
+      background: #fff;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+      color: #6e6e73;
+    }
+    .cat-tab.active {
+      background: #007aff;
+      border-color: #007aff;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    /* ── Add place form ── */
+    .add-section {
+      background: #fff;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 20px;
+      border: 1px solid #e5e5ea;
+    }
+    .add-section h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #1c1c1e;
+    }
+    .search-wrapper { position: relative; margin-bottom: 10px; }
+    .search-wrapper input { padding-right: 36px; }
+    .search-clear {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #c7c7cc;
+      border: none;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 11px;
+      color: #fff;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    .autocomplete-dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0; right: 0;
+      background: #fff;
+      border: 1.5px solid #e5e5ea;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      z-index: 200;
+      display: none;
+    }
+    .autocomplete-item {
+      padding: 11px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid #f2f2f7;
+      transition: background 0.1s;
+    }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:hover, .autocomplete-item.highlighted { background: #f0f7ff; }
+    .autocomplete-item .place-name { font-weight: 600; font-size: 14px; }
+    .autocomplete-item .place-addr { font-size: 12px; color: #6e6e73; margin-top: 2px; }
+    .autocomplete-item.manual-entry .place-name { color: #007aff; }
+
+    .list-type-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .toggle-btn {
+      flex: 1;
+      padding: 9px;
+      border: 1.5px solid #e5e5ea;
+      border-radius: 10px;
+      background: #f2f2f7;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+      color: #3c3c43;
+    }
+    .toggle-btn.selected {
+      background: #34c759;
+      border-color: #34c759;
+      color: #fff;
+      font-weight: 600;
+    }
+    .toggle-btn.want { }
+    .toggle-btn.want.selected {
+      background: #ff9f0a;
+      border-color: #ff9f0a;
+    }
+
+    .add-note-input { margin-bottom: 10px; }
+    .btn-add {
+      background: #34c759;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.2s;
+    }
+    .btn-add:hover { background: #28a745; }
+
+    /* ── List sections ── */
+    .list-section { margin-bottom: 24px; }
+    .list-section h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge {
+      background: #e5e5ea;
+      color: #6e6e73;
+      border-radius: 10px;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* ── Place card ── */
+    .place-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+      border: 1px solid #e5e5ea;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      position: relative;
+    }
+    .place-card .place-icon { font-size: 22px; flex-shrink: 0; }
+    .place-card .place-info { flex: 1; min-width: 0; }
+    .place-card .place-title {
+      font-size: 15px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .place-card .place-subtitle {
+      font-size: 12px;
+      color: #6e6e73;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .place-card .place-note {
+      font-size: 13px;
+      color: #3c3c43;
+      margin-top: 5px;
+      font-style: italic;
+    }
+    .place-card .place-meta {
+      font-size: 11px;
+      color: #aeaeb2;
+      margin-top: 5px;
+    }
+    .place-card .place-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .btn-icon {
+      background: #f2f2f7;
+      border: none;
+      border-radius: 8px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 15px;
+      transition: background 0.15s;
+    }
+    .btn-icon:hover { background: #e5e5ea; }
+    .btn-icon.move-btn { font-size: 13px; }
+
+    .list-type-pill {
+      display: inline-block;
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .pill-been { background: #d1f7dc; color: #1a7a33; }
+    .pill-want { background: #fff0d6; color: #a05c00; }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px 16px;
+      color: #aeaeb2;
+    }
+    .empty-state .empty-icon { font-size: 40px; margin-bottom: 8px; }
+    .empty-state p { font-size: 14px; }
+
+    /* ── Browse tab ── */
+    .browse-filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .filter-chip {
+      padding: 7px 14px;
+      border-radius: 20px;
+      border: 1.5px solid #e5e5ea;
+      background: #fff;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: #3c3c43;
+      font-weight: 500;
+    }
+    .filter-chip.active {
+      background: #1c1c1e;
+      border-color: #1c1c1e;
+      color: #fff;
+    }
+    .browse-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+      border: 1px solid #e5e5ea;
+    }
+    .browse-card .browse-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 6px;
+    }
+    .browse-card .who {
+      font-size: 12px;
+      font-weight: 600;
+      color: #007aff;
+    }
+    .browse-card .when {
+      font-size: 11px;
+      color: #aeaeb2;
+    }
+    .browse-card .b-name { font-size: 15px; font-weight: 600; }
+    .browse-card .b-addr { font-size: 12px; color: #6e6e73; margin-top: 2px; }
+    .browse-card .b-note { font-size: 13px; color: #3c3c43; margin-top: 5px; font-style: italic; }
+    .browse-card .b-tags {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .tag-restaurant { background: #ffeee6; color: #c0401a; }
+    .tag-bar { background: #e6eeff; color: #1a3fc0; }
+    .tag-been { background: #d1f7dc; color: #1a7a33; }
+    .tag-want { background: #fff0d6; color: #a05c00; }
+
+    /* ── API key modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 500;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 0;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: 20px 20px 0 0;
+      padding: 24px;
+      width: 100%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .modal p { font-size: 14px; color: #6e6e73; margin-bottom: 16px; line-height: 1.5; }
+    .modal label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .btn-secondary {
+      flex: 1;
+      background: #f2f2f7;
+      color: #1c1c1e;
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* ── Share ── */
+    #share-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px 8px;
+    }
+
+    /* ── Map link ── */
+    .map-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      color: #007aff;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 2px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .map-link:hover { text-decoration: underline; }
+    .place-card .map-link { font-size: 12px; }
+    .browse-card .map-link { font-size: 12px; }
+
+    /* ── Responsive ── */
+    @media (min-width: 480px) {
+      header { padding: 16px 24px; }
+      main { padding: 20px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- API key missing banner -->
+<div id="api-banner">
+  ⚠️ No Google Places API key — search uses manual entry only.
+  <a href="#" onclick="openApiModal(); return false;">Add key →</a>
+</div>
+
+<!-- ─── Login Screen ─── -->
+<div id="login-screen">
+  <div class="logo">🍽️</div>
+  <h2>The Inner Table</h2>
+  <p>Track restaurants &amp; bars you love — and places you want to try. Share with friends.</p>
+  <div id="login-form">
+    <input type="text" id="username-input" placeholder="Enter your name to get started…" autocomplete="off" maxlength="30" />
+    <button class="btn-primary" onclick="login()">Let's Go 🚀</button>
+  </div>
+</div>
+
+<!-- ─── Main App ─── -->
+<div id="app">
+  <header>
+    <h1>The Inner Table</h1>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <button id="share-btn" title="Share" onclick="shareApp()">🔗</button>
+      <button id="user-chip" onclick="changeUser()">👤 </button>
+    </div>
+  </header>
+
+  <nav>
+    <button class="active" onclick="showTab('my-lists', this)">My Lists</button>
+    <button onclick="showTab('browse', this)">Browse All</button>
+  </nav>
+
+  <!-- ─── My Lists Tab ─── -->
+  <div id="tab-my-lists">
+    <main>
+      <!-- Category selector -->
+      <div class="cat-tabs">
+        <button class="cat-tab active" onclick="selectCat('restaurants', this)">🍴 Restaurants</button>
+        <button class="cat-tab" onclick="selectCat('bars', this)">🍸 Bars</button>
+      </div>
+
+      <!-- Add place -->
+      <div class="add-section">
+        <h3 id="add-heading">Add a Restaurant</h3>
+
+        <div class="search-wrapper">
+          <input type="text" id="place-input" placeholder="Search or type a name…"
+            autocomplete="off" oninput="onSearchInput()" onkeydown="onSearchKeydown(event)" />
+          <button class="search-clear" id="search-clear-btn" onclick="clearSearch()">✕</button>
+          <div class="autocomplete-dropdown" id="autocomplete-dropdown"></div>
+        </div>
+
+        <input type="text" id="note-input" placeholder="Note (optional)…" class="add-note-input" />
+
+        <div class="list-type-toggle">
+          <button class="toggle-btn selected" id="toggle-been" onclick="selectListType('been')">✅ Been To</button>
+          <button class="toggle-btn want" id="toggle-want" onclick="selectListType('want')">⭐ Want to Try</button>
+        </div>
+
+        <button class="btn-add" onclick="addPlace()">Add Place</button>
+      </div>
+
+      <!-- Been To list -->
+      <div class="list-section" id="been-section">
+        <h3>
+          <span id="been-heading-text">✅ Been To — Restaurants</span>
+          <span class="badge" id="been-count">0</span>
+        </h3>
+        <div id="been-list"></div>
+      </div>
+
+      <!-- Want to Try list -->
+      <div class="list-section" id="want-section">
+        <h3>
+          <span id="want-heading-text">⭐ Want to Try — Restaurants</span>
+          <span class="badge" id="want-count">0</span>
+        </h3>
+        <div id="want-list"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ─── Browse Tab ─── -->
+  <div id="tab-browse" style="display:none;">
+    <main>
+      <div class="browse-filters">
+        <button class="filter-chip active" onclick="setBrowseFilter('all', this)">All</button>
+        <button class="filter-chip" onclick="setBrowseFilter('restaurants', this)">🍴 Restaurants</button>
+        <button class="filter-chip" onclick="setBrowseFilter('bars', this)">🍸 Bars</button>
+        <button class="filter-chip" onclick="setBrowseFilter('been', this)">✅ Been To</button>
+        <button class="filter-chip" onclick="setBrowseFilter('want', this)">⭐ Want to Try</button>
+      </div>
+      <div id="browse-list"></div>
+    </main>
+  </div>
+</div>
+
+<!-- ─── API Key Modal ─── -->
+<div class="modal-overlay" id="api-modal" onclick="if(event.target===this)closeApiModal()">
+  <div class="modal">
+    <h3>🔑 Google Places API Key</h3>
+    <p>
+      Add a Google Places API key to enable live restaurant &amp; bar search from Google Maps worldwide.
+      Without it, you can still type places manually.
+    </p>
+    <label for="api-key-input">Your API Key</label>
+    <input type="text" id="api-key-input" placeholder="AIza…" autocomplete="off" />
+    <p style="margin-top:10px; font-size:12px;">
+      Get a free key at <strong>console.cloud.google.com</strong> → enable "Places API (New)" and "Maps JavaScript API".
+    </p>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeApiModal()">Cancel</button>
+      <button class="btn-primary" style="flex:1;" onclick="saveApiKey()">Save Key</button>
+    </div>
+    <button class="btn-secondary" style="width:100%;margin-top:8px;color:#ff3b30;" onclick="clearApiKey()">Remove Key</button>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  State
+// ─────────────────────────────────────────────
+const STORAGE_KEY = 'food-spots-v2';
+let currentUser = null;
+let currentCat = 'restaurants';   // 'restaurants' | 'bars'
+let currentListType = 'been';      // 'been' | 'want'
+let browseFilter = 'all';
+let apiKey = localStorage.getItem('food-spots-api-key') || 'AIzaSyBceaaaJk0AleFfXWv8yXkBOdQprgs9Uuk';
+let autocompleteResults = [];
+let highlightedIdx = -1;
+let searchTimeout = null;
+let selectedPlace = null;          // { name, address } from autocomplete
+
+function getData() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+  catch { return {}; }
+}
+function setData(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
+
+// ─────────────────────────────────────────────
+//  Auth
+// ─────────────────────────────────────────────
+function login() {
+  const name = document.getElementById('username-input').value.trim();
+  if (!name) { document.getElementById('username-input').focus(); return; }
+  currentUser = name;
+  localStorage.setItem('food-spots-user', name);
+  showApp();
+}
+
+function changeUser() {
+  if (!confirm(`Switch user? (you are "${currentUser}")`)) return;
+  currentUser = null;
+  localStorage.removeItem('food-spots-user');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('username-input').value = '';
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-chip').textContent = '👤 ' + currentUser;
+  checkApiBanner();
+  renderMyLists();
+}
+
+// ─────────────────────────────────────────────
+//  Tabs & category
+// ─────────────────────────────────────────────
+function showTab(tab, btn) {
+  document.getElementById('tab-my-lists').style.display = tab === 'my-lists' ? 'block' : 'none';
+  document.getElementById('tab-browse').style.display = tab === 'browse' ? 'block' : 'none';
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (tab === 'browse') renderBrowse();
+}
+
+function selectCat(cat, btn) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('add-heading').textContent = 'Add a ' + (cat === 'restaurants' ? 'Restaurant' : 'Bar');
+  document.getElementById('place-input').placeholder = 'Search or type a ' + (cat === 'restaurants' ? 'restaurant' : 'bar') + ' name…';
+  renderMyLists();
+}
+
+function selectListType(type) {
+  currentListType = type;
+  document.getElementById('toggle-been').classList.toggle('selected', type === 'been');
+  document.getElementById('toggle-want').classList.toggle('selected', type === 'want');
+}
+
+// ─────────────────────────────────────────────
+//  Add place
+// ─────────────────────────────────────────────
+function addPlace() {
+  const rawInput = document.getElementById('place-input').value.trim();
+  const note = document.getElementById('note-input').value.trim();
+  if (!rawInput && !selectedPlace) {
+    document.getElementById('place-input').focus(); return;
+  }
+
+  let name, address;
+  if (selectedPlace) {
+    name = selectedPlace.name;
+    address = selectedPlace.address;
+  } else {
+    name = rawInput;
+    address = '';
+  }
+
+  const data = getData();
+  if (!data[currentUser]) data[currentUser] = {};
+  if (!data[currentUser][currentCat]) data[currentUser][currentCat] = { been: [], want: [] };
+
+  data[currentUser][currentCat][currentListType].push({
+    name, address, note,
+    added: new Date().toISOString()
+  });
+  setData(data);
+
+  document.getElementById('place-input').value = '';
+  document.getElementById('note-input').value = '';
+  selectedPlace = null;
+  hideDropdown();
+  document.getElementById('search-clear-btn').style.display = 'none';
+  renderMyLists();
+}
+
+// ─────────────────────────────────────────────
+//  Remove / Move
+// ─────────────────────────────────────────────
+function removePlace(listType, idx) {
+  const data = getData();
+  data[currentUser][currentCat][listType].splice(idx, 1);
+  setData(data);
+  renderMyLists();
+}
+
+function movePlace(fromList, idx) {
+  const toList = fromList === 'been' ? 'want' : 'been';
+  const data = getData();
+  const item = data[currentUser][currentCat][fromList].splice(idx, 1)[0];
+  data[currentUser][currentCat][toList].push(item);
+  setData(data);
+  renderMyLists();
+}
+
+// ─────────────────────────────────────────────
+//  Render — My Lists
+// ─────────────────────────────────────────────
+function renderMyLists() {
+  const data = getData();
+  const userCat = data[currentUser]?.[currentCat] || { been: [], want: [] };
+  const catLabel = currentCat === 'restaurants' ? 'Restaurants' : 'Bars';
+  const icon = currentCat === 'restaurants' ? '🍴' : '🍸';
+
+  document.getElementById('been-heading-text').textContent = `✅ Been To — ${catLabel}`;
+  document.getElementById('want-heading-text').textContent = `⭐ Want to Try — ${catLabel}`;
+
+  renderList('been-list', userCat.been, 'been');
+  renderList('want-list', userCat.want, 'want');
+
+  document.getElementById('been-count').textContent = userCat.been.length;
+  document.getElementById('want-count').textContent = userCat.want.length;
+}
+
+function renderList(containerId, items, listType) {
+  const container = document.getElementById(containerId);
+  const catIcon = currentCat === 'restaurants' ? '🍴' : '🍸';
+  const moveLabel = listType === 'been' ? '⭐ Move to Want' : '✅ Move to Been';
+
+  if (!items.length) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">${catIcon}</div>
+      <p>${listType === 'been' ? 'No places added yet. Start exploring!' : 'Nothing on the list yet.'}</p>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = items.map((item, i) => {
+    const when = item.added ? new Date(item.added).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : '';
+    return `
+    <div class="place-card">
+      <div class="place-icon">${catIcon}</div>
+      <div class="place-info">
+        <div class="place-title">${escHtml(item.name)}</div>
+        ${item.address ? `<a class="map-link" onclick="openInMaps('${escAttr(item.name)}','${escAttr(item.address)}')">📍 ${escHtml(item.address)} ↗</a>` : ''}
+        ${item.note ? `<div class="place-note">"${escHtml(item.note)}"</div>` : ''}
+        <div class="place-meta">👤 ${escHtml(currentUser)}${when ? ` · ${when}` : ''}</div>
+      </div>
+      <div class="place-actions">
+        <button class="btn-icon move-btn" title="${moveLabel}" onclick="movePlace('${listType}',${i})">⇄</button>
+        <button class="btn-icon" title="Remove" onclick="removePlace('${listType}',${i})">🗑️</button>
+      </div>
+    </div>
+  `}).join('');
+}
+
+// ─────────────────────────────────────────────
+//  Render — Browse
+// ─────────────────────────────────────────────
+function setBrowseFilter(f, btn) {
+  browseFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderBrowse();
+}
+
+function renderBrowse() {
+  const data = getData();
+  const container = document.getElementById('browse-list');
+  let allItems = [];
+
+  for (const [user, cats] of Object.entries(data)) {
+    for (const [cat, lists] of Object.entries(cats)) {
+      for (const [listType, items] of Object.entries(lists)) {
+        items.forEach(item => {
+          allItems.push({ user, cat, listType, ...item });
+        });
+      }
+    }
+  }
+
+  // Filter
+  allItems = allItems.filter(item => {
+    if (browseFilter === 'all') return true;
+    if (browseFilter === 'restaurants') return item.cat === 'restaurants';
+    if (browseFilter === 'bars') return item.cat === 'bars';
+    if (browseFilter === 'been') return item.listType === 'been';
+    if (browseFilter === 'want') return item.listType === 'want';
+    return true;
+  });
+
+  // Sort newest first
+  allItems.sort((a, b) => new Date(b.added) - new Date(a.added));
+
+  if (!allItems.length) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">🗺️</div>
+      <p>No places here yet. Add some!</p>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = allItems.map(item => {
+    const catIcon = item.cat === 'restaurants' ? '🍴' : '🍸';
+    const when = item.added ? new Date(item.added).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : '';
+    return `
+    <div class="browse-card">
+      <div class="browse-meta">
+        <span class="who">👤 ${escHtml(item.user)}</span>
+        <span class="when">${when}</span>
+      </div>
+      <div class="b-name">${catIcon} ${escHtml(item.name)}</div>
+      ${item.address ? `<a class="map-link" onclick="openInMaps('${escAttr(item.name)}','${escAttr(item.address)}')">📍 ${escHtml(item.address)} ↗</a>` : ''}
+      ${item.note ? `<div class="b-note">"${escHtml(item.note)}"</div>` : ''}
+      <div class="b-tags">
+        <span class="tag ${item.cat === 'restaurants' ? 'tag-restaurant' : 'tag-bar'}">${item.cat === 'restaurants' ? 'Restaurant' : 'Bar'}</span>
+        <span class="tag ${item.listType === 'been' ? 'tag-been' : 'tag-want'}">${item.listType === 'been' ? '✅ Been To' : '⭐ Want to Try'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────
+//  Google Places Autocomplete
+// ─────────────────────────────────────────────
+function onSearchInput() {
+  const val = document.getElementById('place-input').value.trim();
+  document.getElementById('search-clear-btn').style.display = val ? 'flex' : 'none';
+  selectedPlace = null;
+  clearTimeout(searchTimeout);
+  if (val.length < 2) { hideDropdown(); return; }
+  searchTimeout = setTimeout(() => fetchPlaces(val), 300);
+}
+
+function onSearchKeydown(e) {
+  const dd = document.getElementById('autocomplete-dropdown');
+  if (dd.style.display === 'none') return;
+  if (e.key === 'ArrowDown') { highlightedIdx = Math.min(highlightedIdx + 1, autocompleteResults.length); updateHighlight(); e.preventDefault(); }
+  else if (e.key === 'ArrowUp') { highlightedIdx = Math.max(highlightedIdx - 1, 0); updateHighlight(); e.preventDefault(); }
+  else if (e.key === 'Enter') {
+    if (highlightedIdx >= 0 && highlightedIdx < autocompleteResults.length) {
+      selectAutocomplete(highlightedIdx);
+    } else {
+      hideDropdown(); addPlace();
+    }
+    e.preventDefault();
+  }
+  else if (e.key === 'Escape') { hideDropdown(); }
+}
+
+function updateHighlight() {
+  document.querySelectorAll('.autocomplete-item').forEach((el, i) => {
+    el.classList.toggle('highlighted', i === highlightedIdx);
+  });
+}
+
+async function fetchPlaces(query) {
+  if (!apiKey) {
+    showManualFallback(query); return;
+  }
+  try {
+    // Use Google Places Autocomplete (New) via fetch
+    const type = currentCat === 'restaurants' ? 'restaurant' : 'bar';
+    const resp = await fetch(`https://places.googleapis.com/v1/places:autocomplete`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': apiKey
+      },
+      body: JSON.stringify({
+        input: query,
+        includedPrimaryTypes: [type],
+        languageCode: 'en'
+      })
+    });
+    if (!resp.ok) throw new Error('API error ' + resp.status);
+    const data = await resp.json();
+    const suggestions = (data.suggestions || []).slice(0, 5);
+    autocompleteResults = suggestions.map(s => {
+      const p = s.placePrediction;
+      const text = p.text?.text || '';
+      const parts = text.split(',');
+      return {
+        name: parts[0]?.trim() || text,
+        address: parts.slice(1).join(',').trim()
+      };
+    });
+    if (autocompleteResults.length === 0) {
+      showManualFallback(query);
+    } else {
+      renderDropdown(autocompleteResults, query);
+    }
+  } catch(err) {
+    console.warn('Places API error:', err);
+    showManualFallback(query);
+  }
+}
+
+function showManualFallback(query) {
+  autocompleteResults = [];
+  const dd = document.getElementById('autocomplete-dropdown');
+  dd.style.display = 'block';
+  dd.innerHTML = `<div class="autocomplete-item manual-entry" onclick="selectManual('${escAttr(query)}')">
+    <div class="place-name">➕ Add "${escHtml(query)}" manually</div>
+    <div class="place-addr">No API key — saving as typed</div>
+  </div>`;
+  highlightedIdx = -1;
+}
+
+function renderDropdown(results, query) {
+  const dd = document.getElementById('autocomplete-dropdown');
+  if (!results.length) { hideDropdown(); return; }
+  dd.style.display = 'block';
+  dd.innerHTML = results.map((r, i) => `
+    <div class="autocomplete-item" onclick="selectAutocomplete(${i})">
+      <div class="place-name">${escHtml(r.name)}</div>
+      ${r.address ? `<div class="place-addr">📍 ${escHtml(r.address)}</div>` : ''}
+    </div>
+  `).join('') + `<div class="autocomplete-item manual-entry" onclick="selectManual('${escAttr(query)}')">
+    <div class="place-name">➕ Add "${escHtml(query)}" manually</div>
+  </div>`;
+  highlightedIdx = -1;
+}
+
+function selectAutocomplete(idx) {
+  const r = autocompleteResults[idx];
+  selectedPlace = r;
+  document.getElementById('place-input').value = r.name + (r.address ? ', ' + r.address : '');
+  hideDropdown();
+}
+
+function selectManual(name) {
+  selectedPlace = { name, address: '' };
+  document.getElementById('place-input').value = name;
+  hideDropdown();
+}
+
+function clearSearch() {
+  document.getElementById('place-input').value = '';
+  document.getElementById('search-clear-btn').style.display = 'none';
+  selectedPlace = null;
+  hideDropdown();
+  document.getElementById('place-input').focus();
+}
+
+function hideDropdown() {
+  const dd = document.getElementById('autocomplete-dropdown');
+  dd.style.display = 'none';
+  autocompleteResults = [];
+  highlightedIdx = -1;
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrapper')) hideDropdown();
+});
+
+// ─────────────────────────────────────────────
+//  API Key modal
+// ─────────────────────────────────────────────
+function openApiModal() {
+  document.getElementById('api-key-input').value = apiKey;
+  document.getElementById('api-modal').classList.add('open');
+}
+function closeApiModal() {
+  document.getElementById('api-modal').classList.remove('open');
+}
+function saveApiKey() {
+  const k = document.getElementById('api-key-input').value.trim();
+  apiKey = k;
+  if (k) localStorage.setItem('food-spots-api-key', k);
+  else localStorage.removeItem('food-spots-api-key');
+  closeApiModal();
+  checkApiBanner();
+}
+function clearApiKey() {
+  apiKey = '';
+  localStorage.removeItem('food-spots-api-key');
+  document.getElementById('api-key-input').value = '';
+  closeApiModal();
+  checkApiBanner();
+}
+function checkApiBanner() {
+  document.getElementById('api-banner').style.display = apiKey ? 'none' : 'block';
+}
+
+// ─────────────────────────────────────────────
+//  Share
+// ─────────────────────────────────────────────
+function shareApp() {
+  if (navigator.share) {
+    navigator.share({ title: 'The Inner Table', url: window.location.href })
+      .catch(() => copyToClipboard(window.location.href));
+  } else {
+    copyToClipboard(window.location.href);
+  }
+}
+function copyToClipboard(text) {
+  navigator.clipboard?.writeText(text).then(() => alert('Link copied to clipboard! 📋'))
+    .catch(() => prompt('Copy this link:', text));
+}
+
+// ─────────────────────────────────────────────
+//  Helpers
+// ─────────────────────────────────────────────
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) {
+  return String(s).replace(/'/g,"\\'").replace(/"/g,'&quot;');
+}
+
+// ─────────────────────────────────────────────
+//  Open in Maps
+//  iOS: uses maps:// scheme → system shows app chooser (Apple Maps, Google Maps, Waze, etc.)
+//  Android / desktop: opens Google Maps in a new tab
+// ─────────────────────────────────────────────
+function openInMaps(name, address) {
+  const query = encodeURIComponent(name + (address ? ' ' + address : ''));
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  if (isIOS) {
+    // maps:// triggers iOS to present the "Open in…" sheet so the user can pick any installed map app
+    window.location.href = 'maps://maps.apple.com/?q=' + query;
+  } else {
+    window.open('https://www.google.com/maps/search/?api=1&query=' + query, '_blank');
+  }
+}
+
+// ─────────────────────────────────────────────
+//  Init
+// ─────────────────────────────────────────────
+(function init() {
+  const saved = localStorage.getItem('food-spots-user');
+  if (saved) {
+    currentUser = saved;
+    document.getElementById('username-input').value = saved;
+    showApp();
+  }
+  document.getElementById('username-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') login();
+  });
+})();
+</script>
+</body>
+</html>
