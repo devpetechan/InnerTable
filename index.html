@@ -502,6 +502,70 @@
     .config-banner strong { display: block; margin-bottom: 4px; font-size: .95rem; }
     .config-banner a { color: var(--rust); font-weight: 700; }
 
+    /* ── Search / Autocomplete ── */
+    .search-wrapper { position: relative; margin-bottom: 0; }
+    .search-wrapper .form-input { padding-right: 38px; }
+    .search-clear {
+      position: absolute;
+      right: 10px; top: 50%;
+      transform: translateY(-50%);
+      background: #c7c7cc;
+      border: none;
+      border-radius: 50%;
+      width: 20px; height: 20px;
+      font-size: 11px;
+      color: #fff;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    .autocomplete-dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0; right: 0;
+      background: var(--white);
+      border: 1.5px solid var(--tan);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(44,36,22,.15);
+      z-index: 400;
+      display: none;
+    }
+    .autocomplete-item {
+      padding: 11px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--tan);
+      transition: background .1s;
+    }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:hover, .autocomplete-item.highlighted { background: #fdf1ec; }
+    .autocomplete-item .ac-name { font-weight: 600; font-size: .9rem; color: var(--text); }
+    .autocomplete-item .ac-addr { font-size: .78rem; color: var(--muted); margin-top: 2px; }
+    .autocomplete-item.manual-entry .ac-name { color: var(--rust); }
+
+    /* ── Type picker buttons ── */
+    .type-btn {
+      background: var(--cream);
+      border: 2px solid var(--tan);
+      border-radius: 14px;
+      padding: 20px 14px;
+      cursor: pointer;
+      text-align: center;
+      transition: border-color .15s, background .15s, transform .1s;
+    }
+
+    .type-btn:hover {
+      border-color: var(--rust);
+      background: #fdf1ec;
+      transform: translateY(-2px);
+    }
+
+    .type-icon { font-size: 2rem; margin-bottom: 8px; }
+    .type-label { font-size: 1rem; font-weight: 700; color: var(--text); }
+    .type-sub { font-size: .78rem; color: var(--muted); margin-top: 4px; }
+
     @media (min-width: 640px) {
       .cards-grid { grid-template-columns: 1fr 1fr; }
       .modal-overlay { align-items: center; padding: 20px; }
@@ -544,6 +608,12 @@
 
   <main>
 
+    <!-- API key banner -->
+    <div class="config-banner" id="api-banner" style="display:none;">
+      <strong>🔍 No Google Places API key</strong>
+      Search uses manual entry only. <a href="#" onclick="openApiModal();return false;">Add a key →</a>
+    </div>
+
     <!-- Config banner (shown if Firebase not set up) -->
     <div class="config-banner" id="config-banner">
       <strong>⚙️ Firebase setup needed</strong>
@@ -583,77 +653,129 @@
 <div class="modal-overlay" id="modal-overlay" onclick="closeModalOnBg(event)">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">Add a Recommendation</div>
+      <div class="modal-title" id="modal-title">Add a Place</div>
       <button class="btn-close" onclick="closeModal()">✕</button>
     </div>
 
-    <div class="form-group">
-      <label class="form-label">Restaurant Name *</label>
-      <input class="form-input" id="f-name" type="text" placeholder="e.g. Tartine Bakery" maxlength="80" />
+    <!-- Step 1: Type picker -->
+    <div id="type-picker">
+      <p style="color:var(--muted);font-size:.95rem;margin-bottom:20px;">What kind of spot is this?</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <button class="type-btn" onclick="selectType('want')">
+          <div class="type-icon">🔖</div>
+          <div class="type-label">Want to Try</div>
+          <div class="type-sub">Adding to your wishlist</div>
+        </button>
+        <button class="type-btn" onclick="selectType('been')">
+          <div class="type-icon">✅</div>
+          <div class="type-label">I've Been Here</div>
+          <div class="type-sub">Share your experience</div>
+        </button>
+      </div>
     </div>
 
-    <div class="form-row">
+    <!-- Step 2: Form -->
+    <div id="rec-form" style="display:none;">
       <div class="form-group">
-        <label class="form-label">Cuisine</label>
-        <select class="form-select" id="f-cuisine">
-          <option value="">— pick one —</option>
-          <option>American</option>
-          <option>Italian</option>
-          <option>Mexican</option>
-          <option>Japanese</option>
-          <option>Chinese</option>
-          <option>Thai</option>
-          <option>Indian</option>
-          <option>Mediterranean</option>
-          <option>French</option>
-          <option>Korean</option>
-          <option>Vietnamese</option>
-          <option>Middle Eastern</option>
-          <option>Seafood</option>
-          <option>Brunch</option>
-          <option>Pizza</option>
-          <option>Other</option>
-        </select>
+        <label class="form-label">Restaurant Name *</label>
+        <div class="search-wrapper">
+          <input class="form-input" id="f-name" type="text" placeholder="Search or type a name…"
+            autocomplete="off" oninput="onSearchInput()" onkeydown="onSearchKeydown(event)" maxlength="80" />
+          <button class="search-clear" id="search-clear-btn" onclick="clearSearch()" type="button">✕</button>
+          <div class="autocomplete-dropdown" id="autocomplete-dropdown"></div>
+        </div>
       </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Cuisine</label>
+          <select class="form-select" id="f-cuisine">
+            <option value="">— pick one —</option>
+            <option>American</option>
+            <option>Italian</option>
+            <option>Mexican</option>
+            <option>Japanese</option>
+            <option>Chinese</option>
+            <option>Thai</option>
+            <option>Indian</option>
+            <option>Mediterranean</option>
+            <option>French</option>
+            <option>Korean</option>
+            <option>Vietnamese</option>
+            <option>Middle Eastern</option>
+            <option>Seafood</option>
+            <option>Brunch</option>
+            <option>Pizza</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Price Range</label>
+          <select class="form-select" id="f-price">
+            <option value="">— pick one —</option>
+            <option value="$">$ — Cheap eats</option>
+            <option value="$$">$$ — Mid-range</option>
+            <option value="$$$">$$$ — Splurge</option>
+            <option value="$$$$">$$$$ — Fancy</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group" id="rating-group">
+        <label class="form-label">Rating</label>
+        <div class="star-picker" id="star-picker">
+          <span onclick="setStars(1)">☆</span>
+          <span onclick="setStars(2)">☆</span>
+          <span onclick="setStars(3)">☆</span>
+          <span onclick="setStars(4)">☆</span>
+          <span onclick="setStars(5)">☆</span>
+        </div>
+      </div>
+
       <div class="form-group">
-        <label class="form-label">Price Range</label>
-        <select class="form-select" id="f-price">
-          <option value="">— pick one —</option>
-          <option value="$">$ — Cheap eats</option>
-          <option value="$$">$$ — Mid-range</option>
-          <option value="$$$">$$$ — Splurge</option>
-          <option value="$$$$">$$$$ — Fancy</option>
-        </select>
+        <label class="form-label" id="notes-label">Notes</label>
+        <textarea class="form-textarea" id="f-notes" placeholder="What makes it worth visiting? Dish to order? Vibe? Best for groups?" maxlength="400"></textarea>
       </div>
-    </div>
 
-    <div class="form-group">
-      <label class="form-label">Rating</label>
-      <div class="star-picker" id="star-picker">
-        <span onclick="setStars(1)">☆</span>
-        <span onclick="setStars(2)">☆</span>
-        <span onclick="setStars(3)">☆</span>
-        <span onclick="setStars(4)">☆</span>
-        <span onclick="setStars(5)">☆</span>
+      <div class="form-group">
+        <label class="form-label">Location / Neighborhood</label>
+        <input class="form-input" id="f-location" type="text" placeholder="e.g. Mission District, SF" maxlength="80" />
       </div>
-    </div>
 
-    <div class="form-group">
-      <label class="form-label">Your take on it</label>
-      <textarea class="form-textarea" id="f-notes" placeholder="What makes it worth visiting? Dish to order? Vibe? Best for groups?" maxlength="400"></textarea>
+      <button class="btn-submit" id="submit-btn" onclick="submitRec()">Save</button>
     </div>
-
-    <div class="form-group">
-      <label class="form-label">Location / Neighborhood</label>
-      <input class="form-input" id="f-location" type="text" placeholder="e.g. Mission District, SF" maxlength="80" />
-    </div>
-
-    <button class="btn-submit" id="submit-btn" onclick="submitRec()">Save Recommendation</button>
   </div>
 </div>
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════
+     API KEY MODAL
+═══════════════════════════════════════ -->
+<div class="modal-overlay" id="api-modal" onclick="if(event.target===this)closeApiModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Google Places API Key</div>
+      <button class="btn-close" onclick="closeApiModal()">✕</button>
+    </div>
+    <p style="color:var(--muted);font-size:.9rem;line-height:1.6;margin-bottom:16px;">
+      Add a Google Places API key to enable live restaurant search from Google Maps.
+      Without it you can still type names manually.
+    </p>
+    <div class="form-group">
+      <label class="form-label">Your API Key</label>
+      <input class="form-input" id="api-key-input" type="text" placeholder="AIza…" autocomplete="off" />
+    </div>
+    <p style="color:var(--muted);font-size:.78rem;line-height:1.5;margin-bottom:16px;">
+      Get a free key at <strong>console.cloud.google.com</strong> → enable "Places API (New)".
+    </p>
+    <div style="display:flex;gap:10px;">
+      <button class="btn-submit" style="background:var(--rust);" onclick="saveApiKey()">Save Key</button>
+      <button class="btn-submit" style="background:#e0d5c8;color:var(--muted);" onclick="clearApiKey()">Remove Key</button>
+    </div>
+  </div>
+</div>
 
 
 <script>
@@ -700,6 +822,13 @@
   const colorMap = {};
   let colorIdx = 0;
 
+  // ── Google Places state ──
+  let placesApiKey = localStorage.getItem('it_places_key') || '';
+  let selectedPlace = null;   // { name, address } from autocomplete
+  let autocompleteResults = [];
+  let highlightedIdx = -1;
+  let searchTimeout = null;
+
   function getUserColor(name) {
     if (!colorMap[name]) {
       colorMap[name] = COLORS[colorIdx % COLORS.length];
@@ -737,6 +866,7 @@
     document.getElementById('header-avatar').textContent = initials;
     document.getElementById('header-name').textContent = currentUser;
 
+    checkApiBanner();
     if (!isConfigured) {
       document.getElementById('config-banner').style.display = 'block';
       renderCards(getSampleData());
@@ -834,7 +964,36 @@
   }
 
   // ── Add Rec Modal ──
-  function openModal() { document.getElementById('modal-overlay').classList.add('open'); }
+  let currentType = null;
+
+  function openModal() {
+    currentType = null;
+    document.getElementById('type-picker').style.display = 'block';
+    document.getElementById('rec-form').style.display = 'none';
+    document.getElementById('modal-title').textContent = 'Add a Place';
+    document.getElementById('modal-overlay').classList.add('open');
+  }
+
+  function selectType(type) {
+    currentType = type;
+    document.getElementById('type-picker').style.display = 'none';
+    document.getElementById('rec-form').style.display = 'block';
+
+    if (type === 'want') {
+      document.getElementById('modal-title').textContent = 'Want to Try';
+      document.getElementById('rating-group').style.display = 'none';
+      document.getElementById('notes-label').textContent = 'Why do you want to go?';
+      document.getElementById('f-notes').placeholder = 'Heard great things about the pasta, looks great for date night…';
+      document.getElementById('submit-btn').textContent = 'Add to Wishlist';
+    } else {
+      document.getElementById('modal-title').textContent = 'I\'ve Been Here';
+      document.getElementById('rating-group').style.display = 'block';
+      document.getElementById('notes-label').textContent = 'Your take on it';
+      document.getElementById('f-notes').placeholder = 'What makes it worth visiting? Dish to order? Vibe? Best for groups?';
+      document.getElementById('submit-btn').textContent = 'Save Recommendation';
+    }
+  }
+
   function closeModal() {
     document.getElementById('modal-overlay').classList.remove('open');
     clearForm();
@@ -852,17 +1011,28 @@
     document.getElementById('f-cuisine').value = '';
     document.getElementById('f-price').value = '';
     setStars(0);
+    currentType = null;
+    selectedPlace = null;
+    document.getElementById('search-clear-btn').style.display = 'none';
+    hideDropdown();
   }
 
   function submitRec() {
-    const name = document.getElementById('f-name').value.trim();
-    if (!name) { shake(document.getElementById('f-name')); return; }
+    const rawName = document.getElementById('f-name').value.trim();
+    if (!rawName) { shake(document.getElementById('f-name')); return; }
+    const name = selectedPlace ? selectedPlace.name : rawName;
+
+    // Auto-fill location from Places if not already filled
+    if (selectedPlace && selectedPlace.address && !document.getElementById('f-location').value.trim()) {
+      document.getElementById('f-location').value = selectedPlace.address;
+    }
 
     const rec = {
       name,
+      type:     currentType || 'been',
       cuisine:  document.getElementById('f-cuisine').value,
       price:    document.getElementById('f-price').value,
-      rating:   selectedStars,
+      rating:   currentType === 'want' ? 0 : selectedStars,
       notes:    document.getElementById('f-notes').value.trim(),
       location: document.getElementById('f-location').value.trim(),
       author:   currentUser,
@@ -915,6 +1085,148 @@
 
   function setupInstructions() {
     return `Firebase Setup:\n\n1. Go to firebase.google.com\n2. Create a new project\n3. Add a Web app to the project\n4. Copy the firebaseConfig values into this file\n5. Enable Realtime Database\n6. Set rules to allow read/write\n7. Push to GitHub and enable Pages`;
+  }
+
+  // ── Google Places Autocomplete ──
+  function onSearchInput() {
+    const val = document.getElementById('f-name').value.trim();
+    document.getElementById('search-clear-btn').style.display = val ? 'flex' : 'none';
+    selectedPlace = null;
+    clearTimeout(searchTimeout);
+    if (val.length < 2) { hideDropdown(); return; }
+    searchTimeout = setTimeout(() => fetchPlaces(val), 300);
+  }
+
+  function onSearchKeydown(e) {
+    const dd = document.getElementById('autocomplete-dropdown');
+    if (dd.style.display === 'none' || !dd.style.display) return;
+    if (e.key === 'ArrowDown') {
+      highlightedIdx = Math.min(highlightedIdx + 1, autocompleteResults.length);
+      updateHighlight(); e.preventDefault();
+    } else if (e.key === 'ArrowUp') {
+      highlightedIdx = Math.max(highlightedIdx - 1, 0);
+      updateHighlight(); e.preventDefault();
+    } else if (e.key === 'Enter') {
+      if (highlightedIdx >= 0 && highlightedIdx < autocompleteResults.length) {
+        selectAutocomplete(highlightedIdx);
+      } else { hideDropdown(); }
+      e.preventDefault();
+    } else if (e.key === 'Escape') { hideDropdown(); }
+  }
+
+  function updateHighlight() {
+    document.querySelectorAll('.autocomplete-item').forEach((el, i) => {
+      el.classList.toggle('highlighted', i === highlightedIdx);
+    });
+  }
+
+  async function fetchPlaces(query) {
+    if (!placesApiKey) { showManualFallback(query); return; }
+    try {
+      const resp = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': placesApiKey },
+        body: JSON.stringify({ input: query, includedPrimaryTypes: ['restaurant','bar','food'], languageCode: 'en' })
+      });
+      if (!resp.ok) throw new Error('API error ' + resp.status);
+      const data = await resp.json();
+      const suggestions = (data.suggestions || []).slice(0, 5);
+      autocompleteResults = suggestions.map(s => {
+        const text = s.placePrediction?.text?.text || '';
+        const parts = text.split(',');
+        return { name: parts[0]?.trim() || text, address: parts.slice(1).join(',').trim() };
+      });
+      autocompleteResults.length ? renderDropdown(autocompleteResults, query) : showManualFallback(query);
+    } catch(err) {
+      console.warn('Places API error:', err);
+      showManualFallback(query);
+    }
+  }
+
+  function showManualFallback(query) {
+    autocompleteResults = [];
+    const dd = document.getElementById('autocomplete-dropdown');
+    dd.style.display = 'block';
+    dd.innerHTML = `<div class="autocomplete-item manual-entry" onclick="selectManual('${esc(query)}')">
+      <div class="ac-name">➕ Add "${esc(query)}" manually</div>
+      <div class="ac-addr">${placesApiKey ? 'No results found' : 'No API key — saving as typed'}</div>
+    </div>`;
+    highlightedIdx = -1;
+  }
+
+  function renderDropdown(results, query) {
+    const dd = document.getElementById('autocomplete-dropdown');
+    dd.style.display = 'block';
+    dd.innerHTML = results.map((r, i) => `
+      <div class="autocomplete-item" onclick="selectAutocomplete(${i})">
+        <div class="ac-name">${esc(r.name)}</div>
+        ${r.address ? `<div class="ac-addr">📍 ${esc(r.address)}</div>` : ''}
+      </div>`).join('') +
+      `<div class="autocomplete-item manual-entry" onclick="selectManual('${esc(query)}')">
+        <div class="ac-name">➕ Add "${esc(query)}" manually</div>
+      </div>`;
+    highlightedIdx = -1;
+  }
+
+  function selectAutocomplete(idx) {
+    const r = autocompleteResults[idx];
+    selectedPlace = r;
+    document.getElementById('f-name').value = r.name;
+    if (r.address && !document.getElementById('f-location').value.trim()) {
+      document.getElementById('f-location').value = r.address;
+    }
+    document.getElementById('search-clear-btn').style.display = 'flex';
+    hideDropdown();
+  }
+
+  function selectManual(name) {
+    selectedPlace = { name, address: '' };
+    document.getElementById('f-name').value = name;
+    document.getElementById('search-clear-btn').style.display = 'flex';
+    hideDropdown();
+  }
+
+  function clearSearch() {
+    document.getElementById('f-name').value = '';
+    document.getElementById('search-clear-btn').style.display = 'none';
+    selectedPlace = null;
+    hideDropdown();
+    document.getElementById('f-name').focus();
+  }
+
+  function hideDropdown() {
+    const dd = document.getElementById('autocomplete-dropdown');
+    if (dd) { dd.style.display = 'none'; }
+    autocompleteResults = [];
+    highlightedIdx = -1;
+  }
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.search-wrapper')) hideDropdown();
+  });
+
+  // ── API Key modal ──
+  function openApiModal() {
+    document.getElementById('api-key-input').value = placesApiKey;
+    document.getElementById('api-modal').classList.add('open');
+  }
+  function closeApiModal() { document.getElementById('api-modal').classList.remove('open'); }
+  function saveApiKey() {
+    const k = document.getElementById('api-key-input').value.trim();
+    placesApiKey = k;
+    k ? localStorage.setItem('it_places_key', k) : localStorage.removeItem('it_places_key');
+    closeApiModal();
+    checkApiBanner();
+  }
+  function clearApiKey() {
+    placesApiKey = '';
+    localStorage.removeItem('it_places_key');
+    document.getElementById('api-key-input').value = '';
+    closeApiModal();
+    checkApiBanner();
+  }
+  function checkApiBanner() {
+    document.getElementById('api-banner').style.display = placesApiKey ? 'none' : 'block';
   }
 
   // ── Sample data (shown before Firebase is configured) ──
