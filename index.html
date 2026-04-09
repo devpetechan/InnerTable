@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>InnerTable 🍽️</title>
 
   <!-- Firebase -->
@@ -258,7 +258,7 @@
     .form-label { display: block; font-size: .8rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 7px; }
     .form-input, .form-select, .form-textarea {
       width: 100%; border: 2px solid var(--tan); border-radius: 10px; padding: 11px 13px;
-      font-size: .93rem; color: var(--text); background: var(--cream); outline: none; font-family: inherit; transition: border-color .2s;
+      font-size: 1rem; color: var(--text); background: var(--cream); outline: none; font-family: inherit; transition: border-color .2s;
     }
     .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--rust); }
     .form-textarea { resize: vertical; min-height: 75px; }
@@ -310,6 +310,44 @@
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
     .loading-spinner { text-align: center; padding: 40px; color: var(--muted); font-size: .95rem; }
+
+    /* ═══ MOBILE FIRST ═══ */
+    /* Welcome card — tighter on small screens */
+    @media (max-width: 479px) {
+      .welcome-card { padding: 32px 24px; }
+      .welcome-card h1 { font-size: 1.6rem; }
+
+      /* View tabs — smaller text so all 4 fit on one row */
+      .view-tab { font-size: .72rem; padding: 8px 4px; }
+
+      /* Filter bar — no label, just chips */
+      .filter-label { display: none; }
+
+      /* Main — less side padding, less bottom clearance */
+      main { padding: 18px 14px 90px; }
+
+      /* Modal — less padding */
+      .modal { padding: 22px 16px 32px; }
+
+      /* Form row — single column on phone */
+      .form-row { grid-template-columns: 1fr; gap: 0; }
+
+      /* Type cards — smaller padding */
+      .type-card { padding: 16px 10px; }
+      .type-card .tc-icon { font-size: 1.8rem; margin-bottom: 6px; }
+      .type-card .tc-label { font-size: .88rem; }
+      .type-card .tc-desc { font-size: .72rem; }
+
+      /* FAB — smaller */
+      .fab { padding: 13px 18px; font-size: .9rem; bottom: 20px; right: 16px; }
+
+      /* Toggle buttons — smaller */
+      .toggle-btn, .rec-btn { font-size: .8rem; padding: 9px 6px; }
+
+      /* Header — tighter */
+      .header-inner { padding: 12px 14px; }
+      .header-logo { font-size: 1.25rem; }
+    }
 
     @media (min-width: 640px) {
       .cards-grid { grid-template-columns: 1fr 1fr; }
@@ -750,12 +788,12 @@ function upgradeToTried(id) { openModal(id); }
 function selectAddType(type, skipBack) {
   addType = type;
   document.getElementById('type-step').style.display  = 'none';
-  document.getElementById('form-step').style.display  = '';
+  document.getElementById('form-step').style.display  = 'block';
   document.getElementById('form-step-title').textContent = type === 'try' ? '📌 Save a Place to Try' : '🍴 Review a Place You\'ve Visited';
-  document.getElementById('try-fields').style.display  = type === 'try'  ? '' : 'none';
-  document.getElementById('been-fields').style.display = type === 'been' ? '' : 'none';
+  document.getElementById('try-fields').style.display  = type === 'try'  ? 'block' : 'none';
+  document.getElementById('been-fields').style.display = type === 'been' ? 'block' : 'none';
   // hide back button if coming from upgrade flow
-  document.querySelector('.step-back').style.display = skipBack ? 'none' : '';
+  document.querySelector('.step-back').style.display = skipBack ? 'none' : 'flex';
 }
 
 function backToTypeStep() {
