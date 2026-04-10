@@ -1280,6 +1280,22 @@ function castVote(id, direction) {
 // ══════════════════════════════════════════════════
 //  MAP
 // ══════════════════════════════════════════════════
+
+// Called by Google Maps when the API key is invalid or has domain restrictions
+window.gm_authFailure = function() {
+  googleMapsReady = false;
+  const mapEl = document.getElementById('map-view');
+  if (mapEl) {
+    mapEl.innerHTML = `<div class="map-empty" style="flex-direction:column;gap:8px;">
+      <div style="font-size:2rem;">🗺️</div>
+      <strong style="color:var(--text);">Map unavailable</strong>
+      <p style="font-size:.82rem;max-width:320px;line-height:1.5;">The Google Maps API key needs to allow this domain.<br>
+      Go to <strong>Google Cloud Console → Credentials</strong>, edit the key, and add this domain to the allowed HTTP referrers (or remove referrer restrictions for testing).</p>
+    </div>`;
+    mapInstance = null;
+  }
+};
+
 function initGoogleAPIs() {
   googleMapsReady = true;
   initAutocomplete();
