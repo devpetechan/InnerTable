@@ -78,7 +78,11 @@
       max-width: 860px; margin: 0 auto; padding: 14px 20px;
       display: flex; align-items: center; justify-content: space-between; gap: 12px;
     }
-    .header-logo { font-size: 1.5rem; font-weight: 800; color: var(--rust); }
+    .header-logo {
+      font-size: 1.5rem; font-weight: 800; color: var(--rust);
+      cursor: pointer; transition: opacity .15s;
+    }
+    .header-logo:hover { opacity: .8; }
     .header-logo span { font-size: 1.3rem; margin-right: 6px; }
     .user-chip {
       display: flex; align-items: center; gap: 8px;
@@ -99,9 +103,36 @@
     /* ═══ MAIN ═══ */
     main { max-width: 860px; margin: 0 auto; padding: 28px 20px 100px; }
 
+    /* ═══ HOME SECTION ═══ */
+    #home-section { display: none; }
+    .home-hero {
+      background: var(--white); border-radius: 20px; padding: 44px 40px;
+      box-shadow: var(--shadow); text-align: center;
+    }
+    .home-hero-icon { font-size: 3.5rem; margin-bottom: 16px; }
+    .home-hero h2 { font-size: 1.6rem; font-weight: 800; color: var(--rust); margin-bottom: 18px; line-height: 1.25; }
+    .home-hero p { font-size: 1rem; color: var(--muted); line-height: 1.75; max-width: 500px; margin: 0 auto; }
+    .home-ctas { display: flex; flex-direction: column; gap: 12px; max-width: 380px; margin: 32px auto 0; }
+    .home-cta-btn {
+      background: var(--white); border: 2px solid var(--tan); border-radius: 14px;
+      padding: 16px 20px; font-size: 1rem; font-weight: 700; cursor: pointer;
+      color: var(--text); text-align: left; transition: all .2s;
+      display: flex; align-items: center; gap: 14px; font-family: inherit; width: 100%;
+    }
+    .home-cta-btn:hover { border-color: var(--rust); color: var(--rust); background: #fdf1ec; transform: translateY(-1px); }
+    .home-cta-btn.primary { background: var(--rust); color: var(--white); border-color: var(--rust); }
+    .home-cta-btn.primary:hover { background: var(--rust-dk); border-color: var(--rust-dk); color: var(--white); transform: translateY(-1px); }
+    .home-cta-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .home-cta-text { flex: 1; text-align: left; }
+    .home-cta-text strong { display: block; font-size: .95rem; margin-bottom: 2px; }
+    .home-cta-text span { font-size: .78rem; opacity: .75; font-weight: 500; }
+
+    /* ═══ LIST+MAP SECTION ═══ */
+    #list-map-section { display: none; }
+
     /* ═══ TABS ═══ */
     .view-tabs {
-      display: flex; gap: 6px; margin-bottom: 20px;
+      display: flex; gap: 6px; margin-bottom: 16px;
       background: var(--tan); border-radius: 12px; padding: 4px;
     }
     .view-tab {
@@ -111,8 +142,24 @@
     }
     .view-tab.active { background: var(--white); color: var(--text); box-shadow: 0 1px 4px rgba(44,36,22,.12); }
 
+    /* ═══ DISPLAY MODE TOGGLE ═══ */
+    .display-mode-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px; gap: 12px;
+    }
+    .display-mode-toggle {
+      display: flex; gap: 3px;
+      background: var(--tan); border-radius: 10px; padding: 3px;
+    }
+    .display-mode-btn {
+      border: none; border-radius: 7px; padding: 7px 16px;
+      font-size: .82rem; font-weight: 700; cursor: pointer;
+      background: none; color: var(--muted); transition: all .2s; font-family: inherit;
+    }
+    .display-mode-btn.active { background: var(--white); color: var(--text); box-shadow: 0 1px 4px rgba(44,36,22,.12); }
+
     /* ═══ FILTER BAR ═══ */
-    .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
+    .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
     .filter-label { font-size: .78rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; flex-shrink: 0; }
     .filter-chip {
       background: var(--white); border: 1.5px solid var(--tan); border-radius: 50px;
@@ -132,25 +179,15 @@
     /* ═══ CARDS ═══ */
     .cards-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
 
-    /* --- Base card --- */
     .rec-card {
       background: var(--white); border-radius: var(--radius); padding: 18px 20px;
       box-shadow: var(--shadow); border: 1.5px solid transparent;
       transition: border-color .2s, transform .15s; position: relative;
     }
     .rec-card:hover { border-color: var(--tan); transform: translateY(-2px); }
-
-    /* --- Recommended card --- */
     .rec-card.recommended { border-left: 4px solid #6b7c4a; }
-
-    /* --- Not recommended card --- */
     .rec-card.not-recommended { border-left: 4px solid #b0a090; opacity: .85; }
-
-    /* --- Want to try card --- */
-    .rec-card.want-to-try {
-      background: #fdfaf6;
-      border: 1.5px dashed #d4c4b0;
-    }
+    .rec-card.want-to-try { background: #fdfaf6; border: 1.5px dashed #d4c4b0; }
     .rec-card.want-to-try:hover { border-color: #c0a888; }
 
     .card-top {
@@ -179,7 +216,7 @@
 
     .card-footer {
       display: flex; align-items: center; justify-content: space-between;
-      font-size: .78rem; color: #bdb0a0; gap: 8px;
+      font-size: .78rem; color: #bdb0a0; gap: 8px; margin-top: 10px;
     }
     .card-author { display: flex; align-items: center; gap: 6px; }
     .avatar-sm {
@@ -199,6 +236,21 @@
     .card-btn:hover { border-color: var(--rust); color: var(--rust); background: #fdf1ec; }
     .card-btn.primary-action { background: var(--rust); color: var(--white); border-color: var(--rust); }
     .card-btn.primary-action:hover { background: var(--rust-dk); }
+
+    /* ═══ VOTE BUTTONS ═══ */
+    .vote-row {
+      display: flex; gap: 8px; align-items: center;
+      margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--tan);
+    }
+    .vote-btn {
+      background: var(--cream); border: 1.5px solid var(--tan); border-radius: 8px;
+      padding: 5px 13px; font-size: .9rem; cursor: pointer; color: var(--muted);
+      transition: all .15s; font-family: inherit; line-height: 1.4;
+    }
+    .vote-btn:hover { border-color: var(--tan); background: #f5f0eb; }
+    .vote-btn.active-up   { background: #fdf1ec; border-color: var(--rust);  }
+    .vote-btn.active-down { background: #eef2f5; border-color: var(--slate); }
+    .vote-hint { font-size: .72rem; color: #ccc0b0; margin-left: 2px; }
 
     /* ═══ COMMENTS ═══ */
     .card-comments { margin-top: 10px; border-top: 1px solid var(--tan); padding-top: 10px; }
@@ -225,6 +277,19 @@
     .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
     .empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; }
     .empty-state p { font-size: 1rem; line-height: 1.5; }
+
+    /* ═══ MAP ═══ */
+    #map-container { display: none; }
+    #map-view {
+      width: 100%; height: 480px; border-radius: var(--radius);
+      overflow: hidden; box-shadow: var(--shadow);
+      background: var(--tan);
+    }
+    .map-empty {
+      display: flex; align-items: center; justify-content: center;
+      height: 100%; color: var(--muted); font-size: .95rem; text-align: center;
+      padding: 20px;
+    }
 
     /* ═══ FAB ═══ */
     .fab {
@@ -333,6 +398,25 @@
     .star-picker span { transition: transform .1s; user-select: none; }
     .star-picker span:hover { transform: scale(1.2); }
 
+    /* ═══ FACTOR RATINGS ═══ */
+    .factor-ratings-section {
+      border: 1.5px solid var(--tan); border-radius: 12px; padding: 16px 16px 12px;
+      margin-bottom: 16px; background: #fdfaf6;
+    }
+    .factor-ratings-title {
+      font-size: .8rem; font-weight: 700; color: var(--muted); text-transform: uppercase;
+      letter-spacing: .4px; margin-bottom: 14px;
+    }
+    .factor-ratings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .factor-label { font-size: .82rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .factor-star-picker { display: flex; gap: 4px; font-size: 1.25rem; cursor: pointer; }
+    .factor-star-picker span { transition: transform .1s; user-select: none; line-height: 1; }
+    .factor-star-picker span:hover { transform: scale(1.2); }
+    .factor-hint {
+      font-size: .76rem; color: var(--rust); margin-top: 12px; font-style: italic;
+      display: none; padding: 8px 10px; background: #fdf1ec; border-radius: 8px;
+    }
+
     .btn-submit {
       width: 100%; background: var(--rust); color: var(--white); border: none; border-radius: 12px;
       padding: 15px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: background .2s; margin-top: 8px;
@@ -351,54 +435,46 @@
 
     .loading-spinner { text-align: center; padding: 40px; color: var(--muted); font-size: .95rem; }
 
-    /* ═══ MOBILE FIRST ═══ */
+    /* ═══ MOBILE ═══ */
     @media (max-width: 479px) {
       .welcome-card { padding: 32px 24px; }
       .welcome-card h1 { font-size: 1.6rem; }
 
-      /* View tabs — shrink to fit 4 on one row, allow overflow scroll as fallback */
+      .home-hero { padding: 28px 18px; }
+      .home-hero h2 { font-size: 1.2rem; }
+      .home-hero-icon { font-size: 2.6rem; }
+      .home-ctas { max-width: 100%; }
+      .home-cta-btn { padding: 13px 14px; font-size: .9rem; }
+
       .view-tabs { overflow-x: auto; scrollbar-width: none; flex-wrap: nowrap; gap: 4px; padding: 3px; }
       .view-tabs::-webkit-scrollbar { display: none; }
       .view-tab { font-size: .68rem; padding: 8px 3px; white-space: nowrap; flex-shrink: 0; flex-basis: 0; flex-grow: 1; }
 
-      /* Filter bar — horizontal scroll, no label */
       .filter-label { display: none; }
       .filter-bar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
       .filter-bar::-webkit-scrollbar { display: none; }
       .filter-chip { white-space: nowrap; flex-shrink: 0; font-size: .76rem; padding: 4px 10px; }
 
-      /* Main — less side padding */
       main { padding: 16px 12px 90px; }
-
-      /* Modal — less padding */
       .modal { padding: 20px 14px 32px; }
-
-      /* Form row — single column on phone */
       .form-row { grid-template-columns: 1fr; gap: 0; }
+      .factor-ratings-grid { grid-template-columns: 1fr; gap: 10px; }
 
-      /* Type cards — smaller padding */
       .type-card { padding: 14px 10px; }
       .type-card .tc-icon { font-size: 1.8rem; margin-bottom: 6px; }
       .type-card .tc-label { font-size: .88rem; }
       .type-card .tc-desc { font-size: .72rem; }
 
-      /* FAB — smaller */
       .fab { padding: 13px 18px; font-size: .9rem; bottom: 20px; right: 16px; }
-
-      /* Toggle buttons — smaller */
       .toggle-btn, .rec-btn { font-size: .8rem; padding: 9px 6px; }
-
-      /* Header — tighter, clamp user chip */
       .header-inner { padding: 12px 14px; }
       .header-logo { font-size: 1.2rem; }
       .user-chip { max-width: 140px; font-size: .8rem; padding: 5px 10px 5px 6px; }
-
-      /* Cards — smaller text */
       .card-name { font-size: 1rem; }
       .tag { font-size: .7rem; padding: 2px 8px; }
+      #map-view { height: 360px; }
     }
 
-    /* Extra-narrow (iPhone SE 320px) */
     @media (max-width: 359px) {
       .view-tab { font-size: .62rem; padding: 7px 2px; }
       .header-logo { font-size: 1.05rem; }
@@ -430,7 +506,7 @@
 <div id="app">
   <header>
     <div class="header-inner">
-      <div class="header-logo"><span>🍽️</span>InnerTable</div>
+      <div class="header-logo" onclick="goHome()" title="Home"><span>🍽️</span>InnerTable</div>
       <div class="user-chip" onclick="switchUser()" title="Switch user">
         <div class="avatar" id="header-avatar">?</div>
         <span id="header-name">You</span>
@@ -439,28 +515,88 @@
   </header>
 
   <main>
-    <!-- View tabs -->
-    <div class="view-tabs">
-      <button class="view-tab active" data-view="all"         onclick="setView('all',this)">🗂 All</button>
-      <button class="view-tab"        data-view="try"         onclick="setView('try',this)">📌 Want to Try</button>
-      <button class="view-tab"        data-view="recommended" onclick="setView('recommended',this)">✅ Recommended</button>
-      <button class="view-tab"        data-view="no"          onclick="setView('no',this)">👎 Skip</button>
+
+    <!-- ── HOME SECTION ── -->
+    <div id="home-section">
+      <div class="home-hero">
+        <div class="home-hero-icon">🍽️</div>
+        <h2>Welcome to my Inner Table.</h2>
+        <p>The Inner Table is a curated list of food and drink spots that your trusted inner circle of friends like or want to try. Add to the Inner Table list — but don't add crap places! Your friends will hate you.</p>
+        <div class="home-ctas">
+          <button class="home-cta-btn primary" onclick="openModal()">
+            <span class="home-cta-icon">➕</span>
+            <span class="home-cta-text">
+              <strong>Add a New Place</strong>
+              <span>Share a spot with the group</span>
+            </span>
+          </button>
+          <button class="home-cta-btn" onclick="navigateToList('restaurant')">
+            <span class="home-cta-icon">🍽</span>
+            <span class="home-cta-text">
+              <strong>View Restaurants</strong>
+              <span>Browse the full restaurant list</span>
+            </span>
+          </button>
+          <button class="home-cta-btn" onclick="navigateToList('bar')">
+            <span class="home-cta-icon">🍸</span>
+            <span class="home-cta-text">
+              <strong>View Bars</strong>
+              <span>See bars and cocktail spots</span>
+            </span>
+          </button>
+        </div>
+      </div>
     </div>
 
-    <!-- Friend filter -->
-    <div class="filter-bar">
-      <span class="filter-label">By:</span>
-      <div class="filter-chip active" data-filter="all" onclick="setFilter('all',this)">Everyone</div>
-      <div class="filter-chip" data-filter="mine" onclick="setFilter('mine',this)">Just mine</div>
-      <div id="friend-filters"></div>
-    </div>
+    <!-- ── LIST + MAP SECTION ── -->
+    <div id="list-map-section">
 
-    <div class="section-title">
-      Places <span class="count-badge" id="rec-count">0</span>
-    </div>
+      <!-- Status view tabs -->
+      <div class="view-tabs">
+        <button class="view-tab active" data-view="all"         onclick="setView('all',this)">🗂 All</button>
+        <button class="view-tab"        data-view="try"         onclick="setView('try',this)">📌 Want to Try</button>
+        <button class="view-tab"        data-view="recommended" onclick="setView('recommended',this)">✅ Recommended</button>
+        <button class="view-tab"        data-view="no"          onclick="setView('no',this)">👎 Skip</button>
+      </div>
 
-    <div id="cards-container">
-      <div class="loading-spinner">Loading…</div>
+      <!-- List | Map toggle -->
+      <div class="display-mode-row">
+        <div class="display-mode-toggle">
+          <button class="display-mode-btn active" id="mode-list" onclick="setDisplayMode('list')">☰ List</button>
+          <button class="display-mode-btn"        id="mode-map"  onclick="setDisplayMode('map')">🗺 Map</button>
+        </div>
+      </div>
+
+      <!-- Friend filter (list only) -->
+      <div class="filter-bar" id="friend-filter-bar">
+        <span class="filter-label">By:</span>
+        <div class="filter-chip active" data-filter="all" onclick="setFilter('all',this)">Everyone</div>
+        <div class="filter-chip" data-filter="mine" onclick="setFilter('mine',this)">Just mine</div>
+        <div id="friend-filters"></div>
+      </div>
+
+      <!-- Type filter chips -->
+      <div class="filter-bar" id="type-filter-bar">
+        <span class="filter-label">Type:</span>
+        <div class="filter-chip active" data-type="all"        onclick="setTypeFilter('all',this)">All</div>
+        <div class="filter-chip"        data-type="restaurant" onclick="setTypeFilter('restaurant',this)">🍽 Restaurants</div>
+        <div class="filter-chip"        data-type="bar"        onclick="setTypeFilter('bar',this)">🍸 Bars</div>
+      </div>
+
+      <div class="section-title" id="count-title">
+        Places <span class="count-badge" id="rec-count">0</span>
+      </div>
+
+      <!-- List view -->
+      <div id="cards-container">
+        <div class="loading-spinner">Loading…</div>
+      </div>
+
+      <!-- Map view -->
+      <div id="map-container">
+        <div id="map-view"></div>
+      </div>
+
     </div>
   </main>
 
@@ -568,12 +704,60 @@
         </div>
 
         <div id="rating-group" class="form-group">
-          <label class="form-label">Rating</label>
+          <label class="form-label">Overall Rating</label>
           <div class="star-picker" id="star-picker">
             <span onclick="setStars(1)">☆</span><span onclick="setStars(2)">☆</span>
             <span onclick="setStars(3)">☆</span><span onclick="setStars(4)">☆</span>
             <span onclick="setStars(5)">☆</span>
           </div>
+        </div>
+
+        <!-- Factor Ratings -->
+        <div class="factor-ratings-section" id="factor-ratings-group">
+          <div class="factor-ratings-title">Detailed Ratings (optional)</div>
+          <div class="factor-ratings-grid">
+            <div class="factor-item">
+              <div class="factor-label">Quality</div>
+              <div class="factor-star-picker" id="fp-quality">
+                <span onclick="setFactorStar('quality',1)">☆</span>
+                <span onclick="setFactorStar('quality',2)">☆</span>
+                <span onclick="setFactorStar('quality',3)">☆</span>
+                <span onclick="setFactorStar('quality',4)">☆</span>
+                <span onclick="setFactorStar('quality',5)">☆</span>
+              </div>
+            </div>
+            <div class="factor-item">
+              <div class="factor-label">Service</div>
+              <div class="factor-star-picker" id="fp-service">
+                <span onclick="setFactorStar('service',1)">☆</span>
+                <span onclick="setFactorStar('service',2)">☆</span>
+                <span onclick="setFactorStar('service',3)">☆</span>
+                <span onclick="setFactorStar('service',4)">☆</span>
+                <span onclick="setFactorStar('service',5)">☆</span>
+              </div>
+            </div>
+            <div class="factor-item">
+              <div class="factor-label">Value</div>
+              <div class="factor-star-picker" id="fp-value">
+                <span onclick="setFactorStar('value',1)">☆</span>
+                <span onclick="setFactorStar('value',2)">☆</span>
+                <span onclick="setFactorStar('value',3)">☆</span>
+                <span onclick="setFactorStar('value',4)">☆</span>
+                <span onclick="setFactorStar('value',5)">☆</span>
+              </div>
+            </div>
+            <div class="factor-item">
+              <div class="factor-label">Ambiance</div>
+              <div class="factor-star-picker" id="fp-ambiance">
+                <span onclick="setFactorStar('ambiance',1)">☆</span>
+                <span onclick="setFactorStar('ambiance',2)">☆</span>
+                <span onclick="setFactorStar('ambiance',3)">☆</span>
+                <span onclick="setFactorStar('ambiance',4)">☆</span>
+                <span onclick="setFactorStar('ambiance',5)">☆</span>
+              </div>
+            </div>
+          </div>
+          <div class="factor-hint" id="factor-hint">Adding factor ratings helps your friends find great matches!</div>
         </div>
 
         <div class="form-group">
@@ -594,9 +778,9 @@
 ════════════════════════════════════════════════════ -->
 <script>
 // ══════════════════════════════════════════════════
-//  CONFIG — replace with your own values
+//  CONFIG
 // ══════════════════════════════════════════════════
-const GOOGLE_MAPS_API_KEY = "AIzaSyBceaaaJk0AleFfXWv8yXkBOdQprgs9Uuk"; // ← paste your key here
+const GOOGLE_MAPS_API_KEY = "AIzaSyBceaaaJk0AleFfXWv8yXkBOdQprgs9Uuk";
 
 const firebaseConfig = {
   apiKey:            "AIzaSyDVemZ2c93K06gQRrMRdc3X-GTgkkElxfE",
@@ -614,28 +798,37 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Load Google Places API dynamically
+// Load Google Maps + Places API
 if (GOOGLE_MAPS_API_KEY !== "YOUR_GOOGLE_MAPS_API_KEY") {
   const s = document.createElement('script');
-  s.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&v=weekly&callback=initAutocomplete`;
+  s.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&v=weekly&callback=initGoogleAPIs`;
   s.async = true; s.defer = true;
   document.head.appendChild(s);
 } else {
-  window.initAutocomplete = function() {}; // no-op
+  window.initGoogleAPIs = function() {};
 }
 
 // ══════════════════════════════════════════════════
 //  STATE
 // ══════════════════════════════════════════════════
-let currentUser  = null;
-let currentView   = 'all';
-let currentFilter = 'all';
-let selectedStars = 0;
-let addType       = null;  // 'try' | 'been'
-let placeType     = 'restaurant';
-let willRecommend = true;
-let editingId     = null;  // for "mark as tried" upgrade flow
-let allRecs       = {};
+let currentUser        = null;
+let currentView        = 'all';
+let currentFilter      = 'all';
+let currentTypeFilter  = 'all';
+let currentDisplayMode = 'list';
+let selectedStars      = 0;
+let addType            = null;   // 'try' | 'been'
+let placeType          = 'restaurant';
+let willRecommend      = true;
+let editingId          = null;
+let allRecs            = {};
+let factorRatings      = { quality: 0, service: 0, value: 0, ambiance: 0 };
+let selectedPlaceLat   = null;
+let selectedPlaceLng   = null;
+let mapInstance        = null;
+let mapMarkers         = [];
+let mapInfoWindow      = null;
+let googleMapsReady    = false;
 
 const COLORS   = ['c0','c1','c2','c3','c4'];
 const colorMap = {};
@@ -646,7 +839,7 @@ function getUserColor(name) {
 }
 
 // ══════════════════════════════════════════════════
-//  WELCOME
+//  WELCOME / AUTH
 // ══════════════════════════════════════════════════
 window.onload = function() {
   const saved = localStorage.getItem('it_user');
@@ -668,6 +861,7 @@ function showApp() {
   document.getElementById('app').style.display = 'block';
   document.getElementById('header-avatar').textContent = currentUser.slice(0,2).toUpperCase();
   document.getElementById('header-name').textContent = currentUser;
+  goHome();
   loadRecs();
 }
 
@@ -676,12 +870,56 @@ function switchUser() {
 }
 
 // ══════════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════════
+function goHome() {
+  document.getElementById('home-section').style.display = 'block';
+  document.getElementById('list-map-section').style.display = 'none';
+}
+
+function navigateToList(typeFilter) {
+  // Update type filter state and chips
+  currentTypeFilter = typeFilter || 'all';
+  document.querySelectorAll('[data-type]').forEach(c => {
+    c.classList.toggle('active', c.dataset.type === currentTypeFilter);
+  });
+
+  // Ensure we have a valid view
+  if (!['all','try','recommended','no'].includes(currentView)) {
+    currentView = 'all';
+  }
+
+  // Sync view tab highlight
+  document.querySelectorAll('.view-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.view === currentView);
+  });
+
+  // Show list section
+  document.getElementById('home-section').style.display = 'none';
+  document.getElementById('list-map-section').style.display = 'block';
+
+  // Ensure list mode is active
+  if (currentDisplayMode !== 'list') {
+    setDisplayMode('list');
+  } else {
+    renderCards();
+  }
+}
+
+// ══════════════════════════════════════════════════
 //  FIREBASE
 // ══════════════════════════════════════════════════
 function loadRecs() {
   db.ref('recommendations').on('value', snap => {
     allRecs = snap.val() || {};
-    renderCards();
+    // Only re-render if the list section is visible
+    if (document.getElementById('list-map-section').style.display !== 'none') {
+      if (currentDisplayMode === 'map' && mapInstance) {
+        renderMapMarkers();
+      } else {
+        renderCards();
+      }
+    }
     updateFriendFilters();
   });
 }
@@ -692,25 +930,65 @@ function loadRecs() {
 function setView(view, el) {
   currentView = view;
   document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  renderCards();
+  if (el) el.classList.add('active');
+  if (currentDisplayMode === 'map' && mapInstance) {
+    renderMapMarkers();
+  } else {
+    renderCards();
+  }
 }
 
 function setFilter(filter, el) {
   currentFilter = filter;
-  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('#friend-filter-bar .filter-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
   renderCards();
 }
 
+function setTypeFilter(type, el) {
+  currentTypeFilter = type;
+  document.querySelectorAll('[data-type]').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  if (currentDisplayMode === 'map' && mapInstance) {
+    renderMapMarkers();
+  } else {
+    renderCards();
+  }
+}
+
+function setDisplayMode(mode) {
+  currentDisplayMode = mode;
+  document.getElementById('mode-list').classList.toggle('active', mode === 'list');
+  document.getElementById('mode-map').classList.toggle('active', mode === 'map');
+
+  const listContainer  = document.getElementById('cards-container');
+  const mapContainer   = document.getElementById('map-container');
+  const friendBar      = document.getElementById('friend-filter-bar');
+  const countTitle     = document.getElementById('count-title');
+
+  if (mode === 'list') {
+    listContainer.style.display = '';
+    mapContainer.style.display  = 'none';
+    friendBar.style.display     = '';
+    countTitle.style.display    = '';
+    renderCards();
+  } else {
+    listContainer.style.display = 'none';
+    mapContainer.style.display  = 'block';
+    friendBar.style.display     = 'none';
+    countTitle.style.display    = 'none';
+    initMap();
+  }
+}
+
 // ══════════════════════════════════════════════════
-//  RENDER
+//  RENDER CARDS
 // ══════════════════════════════════════════════════
 function renderCards() {
   const container = document.getElementById('cards-container');
   let entries = Object.entries(allRecs);
 
-  // view filter
+  // Status filter
   entries = entries.filter(([,r]) => {
     if (currentView === 'try')         return r.status === 'try';
     if (currentView === 'recommended') return r.status === 'recommended';
@@ -718,7 +996,12 @@ function renderCards() {
     return true;
   });
 
-  // author filter
+  // Type filter
+  if (currentTypeFilter !== 'all') {
+    entries = entries.filter(([,r]) => r.placeType === currentTypeFilter);
+  }
+
+  // Author filter
   entries = entries.filter(([,r]) => {
     if (currentFilter === 'all')  return true;
     if (currentFilter === 'mine') return r.author === currentUser;
@@ -737,12 +1020,12 @@ function renderCards() {
 }
 
 function cardHTML(id, r) {
-  const isMine  = r.author === currentUser;
+  const isMine      = r.author === currentUser;
   const statusClass = r.status === 'recommended' ? 'recommended' : r.status === 'not-recommended' ? 'not-recommended' : 'want-to-try';
-  const color   = getUserColor(r.author);
-  const initials= (r.author||'?').slice(0,2).toUpperCase();
-  const date    = r.ts ? new Date(r.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
-  const stars   = r.rating ? '★'.repeat(r.rating)+'☆'.repeat(5-r.rating) : '';
+  const color       = getUserColor(r.author);
+  const initials    = (r.author||'?').slice(0,2).toUpperCase();
+  const date        = r.ts ? new Date(r.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+  const stars       = r.rating ? '★'.repeat(r.rating)+'☆'.repeat(5-r.rating) : '';
 
   const typeTag = r.placeType === 'bar'
     ? `<span class="tag type-bar">🍸 Bar</span>`
@@ -771,7 +1054,7 @@ function cardHTML(id, r) {
     ? `<div class="card-url"><a href="${esc(r.url)}" target="_blank" rel="noopener">🔗 See review</a></div>`
     : '';
 
-  // Actions
+  // Edit / upgrade actions (own entries only)
   let actions = '';
   if (isMine) {
     let btns = `<button class="card-btn" onclick="editEntry('${id}')">✏️ Edit</button>`;
@@ -779,6 +1062,18 @@ function cardHTML(id, r) {
       btns += `<button class="card-btn primary-action" onclick="upgradeToTried('${id}')">🍴 I've Been Here</button>`;
     }
     actions = `<div class="card-actions">${btns}</div>`;
+  }
+
+  // Vote buttons (hidden on own entries)
+  let voteRow = '';
+  if (!isMine) {
+    const myVote    = r.votes ? r.votes[currentUser] : null;
+    const upClass   = myVote === 'up'   ? 'vote-btn active-up'   : 'vote-btn';
+    const downClass = myVote === 'down' ? 'vote-btn active-down' : 'vote-btn';
+    voteRow = `<div class="vote-row">
+      <button class="${upClass}"   onclick="castVote('${id}','up')"  title="Agree with this pick">👍</button>
+      <button class="${downClass}" onclick="castVote('${id}','down')" title="Disagree with this pick">👎</button>
+    </div>`;
   }
 
   // Comments
@@ -795,6 +1090,7 @@ function cardHTML(id, r) {
       </div>
     </div>`;
   }).join('')}</div>` : '';
+
   const commentLabel = commentEntries.length ? `💬 ${commentEntries.length} comment${commentEntries.length !== 1 ? 's' : ''}` : '💬 Comment';
   const comments = `<div class="card-comments">
     ${commentsList}
@@ -818,6 +1114,7 @@ function cardHTML(id, r) {
       ${notes}
       ${urlEl}
       ${actions}
+      ${voteRow}
       ${comments}
       <div class="card-footer">
         <div class="card-author">
@@ -837,6 +1134,144 @@ function updateFriendFilters() {
 }
 
 // ══════════════════════════════════════════════════
+//  VOTING
+// ══════════════════════════════════════════════════
+function castVote(id, direction) {
+  const existing = allRecs[id] && allRecs[id].votes ? allRecs[id].votes[currentUser] : null;
+  // Toggle off if clicking the same direction again
+  const newVote = existing === direction ? null : direction;
+  const update = {};
+  update[`recommendations/${id}/votes/${currentUser}`] = newVote;
+  db.ref().update(update).catch(err => {
+    console.error(err);
+    showToast('❌ Could not save vote.');
+  });
+}
+
+// ══════════════════════════════════════════════════
+//  MAP
+// ══════════════════════════════════════════════════
+function initGoogleAPIs() {
+  googleMapsReady = true;
+  initAutocomplete();
+  // If map view was requested before API loaded, init now
+  if (currentDisplayMode === 'map') initMap();
+}
+
+function initMap() {
+  if (!googleMapsReady) {
+    document.getElementById('map-view').innerHTML =
+      '<div class="map-empty">🗺 Map loading…<br><small>If this persists, check your API key.</small></div>';
+    return;
+  }
+  if (!mapInstance) {
+    mapInstance = new google.maps.Map(document.getElementById('map-view'), {
+      zoom: 12,
+      center: { lat: 37.7749, lng: -122.4194 },
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: false,
+      styles: [{ featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] }]
+    });
+    mapInfoWindow = new google.maps.InfoWindow();
+  }
+  renderMapMarkers();
+}
+
+function renderMapMarkers() {
+  if (!mapInstance) return;
+
+  // Clear existing markers
+  mapMarkers.forEach(m => m.setMap(null));
+  mapMarkers = [];
+
+  let entries = Object.entries(allRecs);
+
+  // Apply same status filter as list view
+  entries = entries.filter(([,r]) => {
+    if (currentView === 'try')         return r.status === 'try';
+    if (currentView === 'recommended') return r.status === 'recommended';
+    if (currentView === 'no')          return r.status === 'not-recommended';
+    return true;
+  });
+
+  // Type filter
+  if (currentTypeFilter !== 'all') {
+    entries = entries.filter(([,r]) => r.placeType === currentTypeFilter);
+  }
+
+  // Only entries with coordinates
+  const withCoords = entries.filter(([,r]) => r.lat && r.lng);
+
+  if (!withCoords.length) {
+    document.getElementById('map-view').innerHTML =
+      '<div class="map-empty">No mapped locations yet.<br><small>Locations are captured automatically when you pick a place from the search suggestions.</small></div>';
+    return;
+  }
+
+  // Ensure the map div is intact (clear any empty state message)
+  if (document.getElementById('map-view').querySelector('.map-empty')) {
+    document.getElementById('map-view').innerHTML = '';
+    mapInstance = null;
+    mapInfoWindow = null;
+    mapInstance = new google.maps.Map(document.getElementById('map-view'), {
+      zoom: 12,
+      center: { lat: 37.7749, lng: -122.4194 },
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: false,
+      styles: [{ featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] }]
+    });
+    mapInfoWindow = new google.maps.InfoWindow();
+  }
+
+  const bounds = new google.maps.LatLngBounds();
+
+  withCoords.forEach(([, r]) => {
+    const pos      = { lat: r.lat, lng: r.lng };
+    const pinColor = r.placeType === 'bar' ? '#4a6b7c' : '#c0522a';
+
+    const marker = new google.maps.Marker({
+      position: pos,
+      map: mapInstance,
+      title: r.name,
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 9,
+        fillColor: pinColor,
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 2,
+      }
+    });
+
+    marker.addListener('click', () => {
+      const starsStr  = r.rating ? '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating) : '';
+      const typeLabel = r.placeType === 'bar' ? '🍸 Bar' : '🍽 Restaurant';
+      mapInfoWindow.setContent(`
+        <div style="font-family:'Segoe UI',system-ui,sans-serif;padding:4px 2px;min-width:150px;">
+          <div style="font-weight:700;font-size:14px;color:#2c2416;margin-bottom:4px;">${esc(r.name)}</div>
+          <div style="font-size:12px;color:#8a7560;">${typeLabel}</div>
+          ${starsStr ? `<div style="color:#e8b844;font-size:13px;margin-top:4px;">${starsStr}</div>` : ''}
+          ${r.location ? `<div style="font-size:11px;color:#bdb0a0;margin-top:3px;">📍 ${esc(r.location)}</div>` : ''}
+        </div>
+      `);
+      mapInfoWindow.open(mapInstance, marker);
+    });
+
+    mapMarkers.push(marker);
+    bounds.extend(pos);
+  });
+
+  if (mapMarkers.length === 1) {
+    mapInstance.setCenter(bounds.getCenter());
+    mapInstance.setZoom(15);
+  } else {
+    mapInstance.fitBounds(bounds);
+  }
+}
+
+// ══════════════════════════════════════════════════
 //  MODAL
 // ══════════════════════════════════════════════════
 function openModal(prefillId) {
@@ -847,9 +1282,7 @@ function openModal(prefillId) {
   document.getElementById('modal-title').textContent = editingId ? 'Mark as Tried' : 'Add a Place';
 
   if (editingId) {
-    // skip straight to been-here form
     selectAddType('been', true);
-    // pre-fill name & location
     const r = allRecs[editingId];
     if (r) {
       document.getElementById('f-name').value     = r.name     || '';
@@ -887,7 +1320,7 @@ function editEntry(id) {
     document.getElementById('f-url').value       = r.url     || '';
   } else {
     addType = 'been';
-    document.getElementById('form-step-title').textContent = '🍴 Review a Place You\'ve Visited';
+    document.getElementById('form-step-title').textContent = "🍴 Review a Place You've Visited";
     document.getElementById('try-fields').style.display  = 'none';
     document.getElementById('been-fields').style.display = 'block';
     setRecommend(r.status === 'recommended');
@@ -895,6 +1328,11 @@ function editEntry(id) {
     document.getElementById('f-price').value   = r.price   || '';
     if (r.rating) setStars(r.rating);
     document.getElementById('f-notes').value   = r.notes   || '';
+    if (r.factorRatings) {
+      ['quality','service','value','ambiance'].forEach(f => {
+        if (r.factorRatings[f]) setFactorStar(f, r.factorRatings[f]);
+      });
+    }
   }
 
   document.getElementById('f-name').value     = r.name     || '';
@@ -905,7 +1343,7 @@ function editEntry(id) {
 }
 
 function toggleCommentForm(id) {
-  const form = document.getElementById('cf-' + id);
+  const form    = document.getElementById('cf-' + id);
   const opening = form.style.display !== 'block';
   form.style.display = opening ? 'block' : 'none';
   if (opening) document.getElementById('ci-' + id).focus();
@@ -917,9 +1355,7 @@ function submitComment(id, btn) {
   if (!text) { input.focus(); return; }
   btn.disabled = true;
   db.ref('recommendations/' + id + '/comments').push({
-    author: currentUser,
-    text,
-    ts: Date.now()
+    author: currentUser, text, ts: Date.now()
   }).then(() => {
     btn.disabled = false;
   }).catch(err => {
@@ -933,12 +1369,10 @@ function selectAddType(type, skipBack) {
   addType = type;
   document.getElementById('type-step').style.display  = 'none';
   document.getElementById('form-step').style.display  = 'block';
-  document.getElementById('form-step-title').textContent = type === 'try' ? '📌 Save a Place to Try' : '🍴 Review a Place You\'ve Visited';
+  document.getElementById('form-step-title').textContent = type === 'try' ? '📌 Save a Place to Try' : "🍴 Review a Place You've Visited";
   document.getElementById('try-fields').style.display  = type === 'try'  ? 'block' : 'none';
   document.getElementById('been-fields').style.display = type === 'been' ? 'block' : 'none';
-  // hide back button if coming from upgrade flow
   document.querySelector('.step-back').style.display = skipBack ? 'none' : 'flex';
-  // scroll modal to top so form is visible
   document.querySelector('.modal').scrollTop = 0;
 }
 
@@ -952,9 +1386,9 @@ function backToTypeStep() {
 // ══════════════════════════════════════════════════
 function setPlaceType(t) {
   placeType = t;
-  document.getElementById('tog-restaurant').classList.toggle('active',    t === 'restaurant');
+  document.getElementById('tog-restaurant').classList.toggle('active',      t === 'restaurant');
   document.getElementById('tog-restaurant').classList.toggle('rest-active', t === 'restaurant');
-  document.getElementById('tog-bar').classList.toggle('active',   t === 'bar');
+  document.getElementById('tog-bar').classList.toggle('active',    t === 'bar');
   document.getElementById('tog-bar').classList.toggle('bar-active', t === 'bar');
 }
 
@@ -962,12 +1396,20 @@ function setRecommend(val) {
   willRecommend = val;
   document.getElementById('rec-yes').classList.toggle('active', val);
   document.getElementById('rec-no').classList.toggle('active', !val);
-  document.getElementById('rating-group').style.display = val ? '' : 'none';
+  document.getElementById('rating-group').style.display       = val ? '' : 'none';
+  document.getElementById('factor-ratings-group').style.display = val ? '' : 'none';
 }
 
 function setStars(n) {
   selectedStars = n;
   document.querySelectorAll('#star-picker span').forEach((s,i) => { s.textContent = i < n ? '★' : '☆'; });
+}
+
+function setFactorStar(factor, n) {
+  factorRatings[factor] = n;
+  document.querySelectorAll(`#fp-${factor} span`).forEach((s,i) => { s.textContent = i < n ? '★' : '☆'; });
+  // Hide hint once user starts rating
+  document.getElementById('factor-hint').style.display = 'none';
 }
 
 function clearForm() {
@@ -981,8 +1423,16 @@ function clearForm() {
   setPlaceType('restaurant');
   willRecommend = true;
   setRecommend(true);
-  addType   = null;
+  addType  = null;
   editingId = null;
+  // Reset factor ratings
+  factorRatings = { quality: 0, service: 0, value: 0, ambiance: 0 };
+  ['quality','service','value','ambiance'].forEach(f => {
+    document.querySelectorAll(`#fp-${f} span`).forEach(s => { s.textContent = '☆'; });
+  });
+  document.getElementById('factor-hint').style.display = 'none';
+  selectedPlaceLat = null;
+  selectedPlaceLng = null;
 }
 
 // ══════════════════════════════════════════════════
@@ -1003,6 +1453,12 @@ function submitRec() {
     ts:       Date.now()
   };
 
+  // Store coordinates for map view
+  if (selectedPlaceLat !== null && selectedPlaceLng !== null) {
+    rec.lat = selectedPlaceLat;
+    rec.lng = selectedPlaceLng;
+  }
+
   if (addType === 'try') {
     rec.status  = 'try';
     rec.tryNote = document.getElementById('f-try-note').value.trim();
@@ -1013,11 +1469,27 @@ function submitRec() {
     rec.price   = document.getElementById('f-price').value;
     rec.rating  = willRecommend ? selectedStars : 0;
     rec.notes   = document.getElementById('f-notes').value.trim();
+
+    // Factor ratings (only save if at least one is set)
+    if (willRecommend) {
+      const anyRated = Object.values(factorRatings).some(v => v > 0);
+      if (anyRated) {
+        rec.factorRatings = { ...factorRatings };
+      } else {
+        // Show soft prompt but still save
+        document.getElementById('factor-hint').style.display = 'block';
+      }
+    }
   }
 
   if (editingId) {
     const orig = allRecs[editingId];
-    if (orig) { rec.author = orig.author; rec.ts = orig.ts; }
+    if (orig) {
+      rec.author = orig.author;
+      rec.ts     = orig.ts;
+      // Preserve existing coordinates if no new ones were selected
+      if (orig.lat && rec.lat === undefined) { rec.lat = orig.lat; rec.lng = orig.lng; }
+    }
   }
 
   const op = editingId
@@ -1036,13 +1508,12 @@ function submitRec() {
 }
 
 // ══════════════════════════════════════════════════
-//  GOOGLE PLACES AUTOCOMPLETE (Places API New)
+//  GOOGLE PLACES AUTOCOMPLETE
 // ══════════════════════════════════════════════════
 async function initAutocomplete() {
   const input = document.getElementById('f-name');
   let sessionToken = new google.maps.places.AutocompleteSessionToken();
 
-  // Build dropdown
   const wrap = input.parentElement;
   const dropdown = document.createElement('ul');
   dropdown.id = 'places-dropdown';
@@ -1066,7 +1537,7 @@ async function initAutocomplete() {
       dropdown.innerHTML = '';
       suggestions.slice(0, 5).forEach((s) => {
         const pred = s.placePrediction;
-        const li = document.createElement('li');
+        const li   = document.createElement('li');
         li.className = 'pac-item-custom';
         li.innerHTML = `<span class="pac-main">${esc(pred.mainText.text)}</span>`
           + (pred.secondaryText ? `<span class="pac-secondary">${esc(pred.secondaryText.text)}</span>` : '');
@@ -1078,9 +1549,9 @@ async function initAutocomplete() {
 
           try {
             const place = pred.toPlace();
-            await place.fetchFields({ fields: ['displayName','formattedAddress','types','priceLevel'] });
+            await place.fetchFields({ fields: ['displayName','formattedAddress','types','priceLevel','location'] });
 
-            if (place.displayName)      input.value = place.displayName;
+            if (place.displayName) input.value = place.displayName;
             if (place.formattedAddress) {
               const parts = place.formattedAddress.split(',');
               document.getElementById('f-location').value = parts.slice(1, 3).join(',').trim();
@@ -1098,9 +1569,14 @@ async function initAutocomplete() {
               const p = priceMap[place.priceLevel];
               if (p) document.getElementById('f-price').value = p;
             }
+            // Capture coordinates for map view
+            if (place.location) {
+              selectedPlaceLat = place.location.lat();
+              selectedPlaceLng = place.location.lng();
+            }
           } catch (err) { console.error('Place detail fetch error:', err); }
 
-          sessionToken = new google.maps.places.AutocompleteSessionToken(); // reset after selection
+          sessionToken = new google.maps.places.AutocompleteSessionToken();
         });
 
         dropdown.appendChild(li);
