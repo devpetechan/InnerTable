@@ -1,1 +1,85 @@
-{}
+{
+  "app": {
+    "name": "InnerTable",
+    "tagline": "Get food recs from your trusted inner circle and pull a seat up to your inner table.",
+    "vision": "In 3 years, Inner Table will be the category-defining recommendation app for friend groups who believe the best reviews come from people who know you.",
+    "mission": "We believe the best restaurant recommendation isn't from an algorithm or a stranger — it's from a friend who knows you. Inner Table is where your inner circle keeps its list: the places worth going, the ones worth skipping, and the ones you can't wait to try together.",
+    "personas": [
+      {
+        "name": "",
+        "role": "",
+        "needs": "",
+        "painPoints": ""
+      },
+      {
+        "name": "",
+        "role": "",
+        "needs": "",
+        "painPoints": ""
+      }
+    ],
+    "strategicThemes": [
+      {
+        "title": "Core Experience",
+        "description": ""
+      },
+      {
+        "title": "Performance & Reliability",
+        "description": ""
+      },
+      {
+        "title": "Growth & Retention",
+        "description": ""
+      }
+    ],
+    "okrs": [
+      {
+        "objective": "",
+        "keyResults": [
+          "",
+          "",
+          ""
+        ],
+        "progress": [
+          0,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  "items": [
+    {
+      "id": "1775835621555",
+      "itemId": "IT-001",
+      "type": "enhancement",
+      "title": "Edit/update comments",
+      "description": "Current Behaviour: Once comments are saved, they cannot be changed even by the original commenter.\n\nExpected Behaviour: Comments should be editable or delete-able by the original commenter.  \"Comments deleted\" should be shown for deleted entries so that subsequent replies would still show in the correct order.",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "M",
+      "status": "done",
+      "acceptanceCriteria": "- Comments can be edited within the app by the original commenter.\n- Comment can be deleted within the app by the original commenter.\n- Comments cannot be edited or delted by someone who did not make the comment.",
+      "reproSteps": "",
+      "affectedFiles": "",
+      "tags": [],
+      "updatedAt": "2026-04-10T15:58:49.692Z",
+      "releaseId": "REL-1",
+      "createdAt": "2026-04-10T15:40:21.555Z"
+    }
+  ],
+  "releases": [
+    {
+      "id": "REL-1",
+      "version": "0.0.3",
+      "name": "bug fixes",
+      "targetDate": "2026-04-10",
+      "goals": "Add early feedback bug fixes and enhancements.",
+      "status": "released",
+      "createdAt": "2026-04-10T15:44:56.704Z",
+      "releasedAt": "2026-04-10T15:58:49.692Z"
+    }
+  ],
+  "nextItemId": 2,
+  "nextReleaseId": 2
+}
