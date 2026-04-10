@@ -1288,9 +1288,8 @@ window.gm_authFailure = function() {
   if (mapEl) {
     mapEl.innerHTML = `<div class="map-empty" style="flex-direction:column;gap:8px;">
       <div style="font-size:2rem;">🗺️</div>
-      <strong style="color:var(--text);">Map unavailable</strong>
-      <p style="font-size:.82rem;max-width:320px;line-height:1.5;">The Google Maps API key needs to allow this domain.<br>
-      Go to <strong>Google Cloud Console → Credentials</strong>, edit the key, and add this domain to the allowed HTTP referrers (or remove referrer restrictions for testing).</p>
+      <strong style="color:var(--text);">Maps JavaScript API not enabled</strong>
+      <p style="font-size:.82rem;max-width:320px;line-height:1.5;">Go to <strong>Google Cloud Console → APIs &amp; Services → Library</strong>, search for <strong>"Maps JavaScript API"</strong>, and click Enable.</p>
     </div>`;
     mapInstance = null;
   }
