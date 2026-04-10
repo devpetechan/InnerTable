@@ -877,6 +877,7 @@ const pendingUserRatings = {}; // { [id]: { overall, quality, service, value, am
 const COLORS   = ['c0','c1','c2','c3','c4'];
 const colorMap = {};
 let   colorIdx = 0;
+const geocodingCache = new Set(); // ids currently being geocoded (prevent duplicate requests)
 function getUserColor(name) {
   if (!colorMap[name]) { colorMap[name] = COLORS[colorIdx++ % COLORS.length]; }
   return colorMap[name];
@@ -1316,7 +1317,7 @@ function initMap() {
   }
   if (!mapInstance) {
     mapInstance = new google.maps.Map(mapEl, {
-      zoom: 12,
+      zoom: 10,
       center: { lat: 37.7749, lng: -122.4194 },
       mapTypeControl: false,
       streetViewControl: false,
@@ -1326,6 +1327,20 @@ function initMap() {
     mapInfoWindow = new google.maps.InfoWindow();
   }
   renderMapMarkers();
+}
+
+function geocodeEntry(id, r) {
+  if (!googleMapsReady) return;
+  const query = [r.name, r.location].filter(Boolean).join(', ');
+  const geocoder = new google.maps.Geocoder();
+  geocoder.geocode({ address: query }, (results, status) => {
+    geocodingCache.delete(id);
+    if (status !== 'OK' || !results[0]) return;
+    const lat = results[0].geometry.location.lat();
+    const lng = results[0].geometry.location.lng();
+    // Save coords to Firebase — the on('value') listener will auto re-render the map
+    db.ref(`recommendations/${id}`).update({ lat, lng });
+  });
 }
 
 function renderMapMarkers() {
@@ -1358,13 +1373,22 @@ function renderMapMarkers() {
     return r.author === currentFilter;
   });
 
-  const withCoords = entries.filter(([,r]) => r.lat && r.lng);
-
-  if (!withCoords.length) {
+  if (!entries.length) {
     noCoordsBanner.style.display = 'block';
     return;
   }
   noCoordsBanner.style.display = 'none';
+
+  // Geocode entries that don't yet have coordinates (fire-and-forget; Firebase update re-renders)
+  entries.filter(([,r]) => !r.lat || !r.lng).forEach(([id, r]) => {
+    if (!geocodingCache.has(id)) {
+      geocodingCache.add(id);
+      geocodeEntry(id, r);
+    }
+  });
+
+  const withCoords = entries.filter(([,r]) => r.lat && r.lng);
+  if (!withCoords.length) return; // geocoding in progress — markers will appear on next re-render
 
   const bounds = new google.maps.LatLngBounds();
 
@@ -1394,9 +1418,9 @@ function renderMapMarkers() {
 
   if (mapMarkers.length === 1) {
     mapInstance.setCenter(bounds.getCenter());
-    mapInstance.setZoom(15);
+    mapInstance.setZoom(14);
   } else {
-    mapInstance.fitBounds(bounds);
+    mapInstance.fitBounds(bounds, { padding: 60 });
   }
 }
 
