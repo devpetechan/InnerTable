@@ -279,7 +279,7 @@
     .empty-state p { font-size: 1rem; line-height: 1.5; }
 
     /* ═══ MAP ═══ */
-    #map-container { display: none; }
+    #map-container { display: none; position: relative; }
     #map-view {
       width: 100%; height: 480px; border-radius: var(--radius);
       overflow: hidden; box-shadow: var(--shadow);
@@ -289,6 +289,47 @@
       display: flex; align-items: center; justify-content: center;
       height: 100%; color: var(--muted); font-size: .95rem; text-align: center;
       padding: 20px;
+    }
+    #map-no-coords {
+      position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+      background: rgba(44,36,22,.72); color: #fff; border-radius: 20px;
+      padding: 7px 18px; font-size: .8rem; pointer-events: none; white-space: nowrap;
+      display: none;
+    }
+
+    /* ═══ INLINE USER RATING ═══ */
+    .inline-rating-form {
+      border: 1.5px solid var(--tan); border-radius: 10px;
+      padding: 14px; background: #fdfaf6; margin-top: 10px;
+    }
+    .card-btn.danger { color: #b03020; border-color: #f0d0c8; }
+    .card-btn.danger:hover { background: #fdf1ec; border-color: var(--rust); color: var(--rust); }
+    .card-factors-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+      margin: 6px 0 4px; padding: 8px 10px;
+      background: #fdfaf6; border-radius: 8px; border: 1px solid var(--tan); font-size: .78rem;
+    }
+    .factor-display { display: flex; flex-direction: column; gap: 1px; }
+    .factor-display-label { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: .68rem; letter-spacing: .3px; }
+    .factor-display-stars { color: #e8b844; font-size: .82rem; }
+    .card-tried-note { font-size: .78rem; color: var(--olive); margin-bottom: 6px; font-weight: 600; }
+
+    /* ═══ PLACE DETAIL PANEL ═══ */
+    #place-detail-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(44,36,22,.45); z-index: 400;
+      align-items: flex-end; justify-content: center;
+    }
+    #place-detail-overlay.open { display: flex; }
+    #place-detail-panel {
+      background: var(--white); border-radius: 24px 24px 0 0;
+      width: 100%; max-width: 600px; padding: 28px 26px 40px;
+      box-shadow: 0 -8px 40px rgba(44,36,22,.18);
+      max-height: 85vh; overflow-y: auto;
+    }
+    @media (min-width: 640px) {
+      #place-detail-overlay { align-items: center; padding: 20px; }
+      #place-detail-panel { border-radius: 24px; }
     }
 
     /* ═══ FAB ═══ */
@@ -556,7 +597,6 @@
         <button class="view-tab active" data-view="all"         onclick="setView('all',this)">🗂 All</button>
         <button class="view-tab"        data-view="try"         onclick="setView('try',this)">📌 Want to Try</button>
         <button class="view-tab"        data-view="recommended" onclick="setView('recommended',this)">✅ Recommended</button>
-        <button class="view-tab"        data-view="no"          onclick="setView('no',this)">👎 Skip</button>
       </div>
 
       <!-- List | Map toggle -->
@@ -595,6 +635,7 @@
       <!-- Map view -->
       <div id="map-container">
         <div id="map-view"></div>
+        <div id="map-no-coords">No map locations for current filters</div>
       </div>
 
     </div>
@@ -669,14 +710,6 @@
 
       <!-- BEEN-HERE fields -->
       <div id="been-fields" style="display:none">
-        <div class="form-group">
-          <label class="form-label">Would you recommend it?</label>
-          <div class="rec-toggle">
-            <button class="rec-btn yes active" id="rec-yes" onclick="setRecommend(true)">✅ Yes, recommend</button>
-            <button class="rec-btn no"         id="rec-no"  onclick="setRecommend(false)">👎 Skip it</button>
-          </div>
-        </div>
-
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Cuisine</label>
@@ -771,6 +804,17 @@
   </div>
 </div>
 
+<!-- ═══════════════ PLACE DETAIL PANEL ═══════════════ -->
+<div id="place-detail-overlay" onclick="closeDetailOnBg(event)">
+  <div id="place-detail-panel">
+    <div class="modal-header">
+      <div class="modal-title" id="detail-panel-title"></div>
+      <button class="btn-close" onclick="closeDetailPanel()">✕</button>
+    </div>
+    <div id="detail-panel-content"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- ════════════════════════════════════════════════════
@@ -819,7 +863,6 @@ let currentDisplayMode = 'list';
 let selectedStars      = 0;
 let addType            = null;   // 'try' | 'been'
 let placeType          = 'restaurant';
-let willRecommend      = true;
 let editingId          = null;
 let allRecs            = {};
 let factorRatings      = { quality: 0, service: 0, value: 0, ambiance: 0 };
@@ -829,6 +872,7 @@ let mapInstance        = null;
 let mapMarkers         = [];
 let mapInfoWindow      = null;
 let googleMapsReady    = false;
+const pendingUserRatings = {}; // { [id]: { overall, quality, service, value, ambiance } }
 
 const COLORS   = ['c0','c1','c2','c3','c4'];
 const colorMap = {};
@@ -942,7 +986,11 @@ function setFilter(filter, el) {
   currentFilter = filter;
   document.querySelectorAll('#friend-filter-bar .filter-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
-  renderCards();
+  if (currentDisplayMode === 'map' && mapInstance) {
+    renderMapMarkers();
+  } else {
+    renderCards();
+  }
 }
 
 function setTypeFilter(type, el) {
@@ -975,7 +1023,7 @@ function setDisplayMode(mode) {
   } else {
     listContainer.style.display = 'none';
     mapContainer.style.display  = 'block';
-    friendBar.style.display     = 'none';
+    friendBar.style.display     = '';
     countTitle.style.display    = 'none';
     initMap();
   }
@@ -1025,7 +1073,11 @@ function cardHTML(id, r) {
   const color       = getUserColor(r.author);
   const initials    = (r.author||'?').slice(0,2).toUpperCase();
   const date        = r.ts ? new Date(r.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
-  const stars       = r.rating ? '★'.repeat(r.rating)+'☆'.repeat(5-r.rating) : '';
+
+  const { avg, count } = computeAvgRating(r);
+  const roundedAvg = Math.round(avg * 2) / 2;
+  const avgStars   = avg > 0 ? '★'.repeat(Math.round(avg)) + '☆'.repeat(5 - Math.round(avg)) : '';
+  const avgFactors = computeAvgFactors(r);
 
   const typeTag = r.placeType === 'bar'
     ? `<span class="tag type-bar">🍸 Bar</span>`
@@ -1054,17 +1106,89 @@ function cardHTML(id, r) {
     ? `<div class="card-url"><a href="${esc(r.url)}" target="_blank" rel="noopener">🔗 See review</a></div>`
     : '';
 
-  // Edit / upgrade actions (own entries only)
+  // Factor ratings average display (recommended entries only)
+  let factorsDisplay = '';
+  if (avgFactors && r.status === 'recommended') {
+    const items = ['quality','service','value','ambiance'].map(f => {
+      if (!avgFactors[f]) return '';
+      const fStars = '★'.repeat(Math.round(avgFactors[f])) + '☆'.repeat(5 - Math.round(avgFactors[f]));
+      return `<div class="factor-display"><div class="factor-display-label">${f.charAt(0).toUpperCase()+f.slice(1)}</div><div class="factor-display-stars">${fStars}</div></div>`;
+    }).filter(Boolean).join('');
+    if (items) factorsDisplay = `<div class="card-factors-grid">${items}</div>`;
+  }
+
+  // "Tried by" note for want-to-try entries
+  let triedNote = '';
+  if (r.status === 'try' && r.triedBy) {
+    const triedNames = Object.keys(r.triedBy).filter(n => n !== r.author);
+    if (triedNames.length) {
+      triedNote = `<div class="card-tried-note">✅ Tried by: ${triedNames.map(esc).join(', ')}</div>`;
+    }
+  }
+
+  // Owner actions
   let actions = '';
   if (isMine) {
     let btns = `<button class="card-btn" onclick="editEntry('${id}')">✏️ Edit</button>`;
     if (r.status === 'try') {
       btns += `<button class="card-btn primary-action" onclick="upgradeToTried('${id}')">🍴 I've Been Here</button>`;
     }
+    btns += `<button class="card-btn danger" onclick="deleteEntry('${id}')">🗑 Delete</button>`;
     actions = `<div class="card-actions">${btns}</div>`;
   }
 
-  // Vote buttons (hidden on own entries)
+  // Non-author actions + inline rating form
+  let nonAuthorSection = '';
+  if (!isMine) {
+    const hasTried  = r.triedBy  && r.triedBy[currentUser];
+    const hasRated  = r.userRatings && r.userRatings[currentUser];
+    let actionBtns = '';
+
+    if (r.status === 'try' && !hasTried) {
+      actionBtns += `<button class="card-btn primary-action" onclick="markAsTried('${id}')">🍴 I've Been Here</button>`;
+    }
+    if (r.status === 'recommended' || hasTried) {
+      if (!hasRated) {
+        actionBtns += `<button class="card-btn" onclick="toggleRatingForm('${id}')">✍️ Rate This</button>`;
+      } else {
+        const myR    = r.userRatings[currentUser];
+        const myStars = (myR.overall > 0) ? '★'.repeat(myR.overall)+'☆'.repeat(5-myR.overall) : '';
+        actionBtns += `<button class="card-btn" onclick="toggleRatingForm('${id}')" title="Edit your rating">${myStars ? myStars+' ' : ''}My Rating</button>`;
+      }
+    }
+    if (actionBtns) {
+      nonAuthorSection += `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">${actionBtns}</div>`;
+    }
+
+    // Inline rating form
+    nonAuthorSection += `
+    <div class="inline-rating-form" id="rf-${id}" style="display:none">
+      <div class="form-label" style="margin-bottom:8px;">Your Overall Rating</div>
+      <div class="star-picker" id="ur-stars-${id}">
+        <span onclick="setUserRatingStar('${id}',1)">☆</span><span onclick="setUserRatingStar('${id}',2)">☆</span>
+        <span onclick="setUserRatingStar('${id}',3)">☆</span><span onclick="setUserRatingStar('${id}',4)">☆</span>
+        <span onclick="setUserRatingStar('${id}',5)">☆</span>
+      </div>
+      <div class="form-label" style="margin-top:12px;margin-bottom:8px;">Detailed Ratings (optional)</div>
+      <div class="factor-ratings-grid">
+        ${['quality','service','value','ambiance'].map(f => `
+        <div class="factor-item">
+          <div class="factor-label">${f.charAt(0).toUpperCase()+f.slice(1)}</div>
+          <div class="factor-star-picker" id="ur-${f}-${id}">
+            <span onclick="setUserFactorStar('${id}','${f}',1)">☆</span><span onclick="setUserFactorStar('${id}','${f}',2)">☆</span>
+            <span onclick="setUserFactorStar('${id}','${f}',3)">☆</span><span onclick="setUserFactorStar('${id}','${f}',4)">☆</span>
+            <span onclick="setUserFactorStar('${id}','${f}',5)">☆</span>
+          </div>
+        </div>`).join('')}
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button class="card-btn primary-action" onclick="submitUserRating('${id}')">Save Rating</button>
+        <button class="card-btn" onclick="toggleRatingForm('${id}')">Cancel</button>
+      </div>
+    </div>`;
+  }
+
+  // Vote buttons (non-authors only)
   let voteRow = '';
   if (!isMine) {
     const myVote    = r.votes ? r.votes[currentUser] : null;
@@ -1104,16 +1228,21 @@ function cardHTML(id, r) {
     <button class="card-btn" onclick="toggleCommentForm('${id}')">${commentLabel}</button>
   </div>`;
 
+  const ratingTip = count > 0 ? ` title="${avg.toFixed(1)} avg (${count} rating${count!==1?'s':''})"` : '';
+
   return `
     <div class="rec-card ${statusClass}">
       <div class="card-top">
         <div class="card-name">${esc(r.name)}</div>
-        ${stars ? `<div class="stars">${stars}</div>` : ''}
+        ${avg > 0 ? `<div class="stars"${ratingTip}>${avgStars}</div>` : ''}
       </div>
       ${meta}
       ${notes}
       ${urlEl}
+      ${factorsDisplay}
+      ${triedNote}
       ${actions}
+      ${nonAuthorSection}
       ${voteRow}
       ${comments}
       <div class="card-footer">
@@ -1164,8 +1293,14 @@ function initMap() {
       '<div class="map-empty">🗺 Map loading…<br><small>If this persists, check your API key.</small></div>';
     return;
   }
+  const mapEl = document.getElementById('map-view');
+  if (mapEl.querySelector('.map-empty')) {
+    mapEl.innerHTML = '';
+    mapInstance = null;
+    mapInfoWindow = null;
+  }
   if (!mapInstance) {
-    mapInstance = new google.maps.Map(document.getElementById('map-view'), {
+    mapInstance = new google.maps.Map(mapEl, {
       zoom: 12,
       center: { lat: 37.7749, lng: -122.4194 },
       mapTypeControl: false,
@@ -1181,13 +1316,14 @@ function initMap() {
 function renderMapMarkers() {
   if (!mapInstance) return;
 
-  // Clear existing markers
   mapMarkers.forEach(m => m.setMap(null));
   mapMarkers = [];
 
+  const noCoordsBanner = document.getElementById('map-no-coords');
+
   let entries = Object.entries(allRecs);
 
-  // Apply same status filter as list view
+  // Status filter
   entries = entries.filter(([,r]) => {
     if (currentView === 'try')         return r.status === 'try';
     if (currentView === 'recommended') return r.status === 'recommended';
@@ -1200,34 +1336,24 @@ function renderMapMarkers() {
     entries = entries.filter(([,r]) => r.placeType === currentTypeFilter);
   }
 
-  // Only entries with coordinates
+  // Friend/author filter (same as list view)
+  entries = entries.filter(([,r]) => {
+    if (currentFilter === 'all')  return true;
+    if (currentFilter === 'mine') return r.author === currentUser;
+    return r.author === currentFilter;
+  });
+
   const withCoords = entries.filter(([,r]) => r.lat && r.lng);
 
   if (!withCoords.length) {
-    document.getElementById('map-view').innerHTML =
-      '<div class="map-empty">No mapped locations yet.<br><small>Locations are captured automatically when you pick a place from the search suggestions.</small></div>';
+    noCoordsBanner.style.display = 'block';
     return;
   }
-
-  // Ensure the map div is intact (clear any empty state message)
-  if (document.getElementById('map-view').querySelector('.map-empty')) {
-    document.getElementById('map-view').innerHTML = '';
-    mapInstance = null;
-    mapInfoWindow = null;
-    mapInstance = new google.maps.Map(document.getElementById('map-view'), {
-      zoom: 12,
-      center: { lat: 37.7749, lng: -122.4194 },
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: false,
-      styles: [{ featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] }]
-    });
-    mapInfoWindow = new google.maps.InfoWindow();
-  }
+  noCoordsBanner.style.display = 'none';
 
   const bounds = new google.maps.LatLngBounds();
 
-  withCoords.forEach(([, r]) => {
+  withCoords.forEach(([id, r]) => {
     const pos      = { lat: r.lat, lng: r.lng };
     const pinColor = r.placeType === 'bar' ? '#4a6b7c' : '#c0522a';
 
@@ -1245,19 +1371,7 @@ function renderMapMarkers() {
       }
     });
 
-    marker.addListener('click', () => {
-      const starsStr  = r.rating ? '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating) : '';
-      const typeLabel = r.placeType === 'bar' ? '🍸 Bar' : '🍽 Restaurant';
-      mapInfoWindow.setContent(`
-        <div style="font-family:'Segoe UI',system-ui,sans-serif;padding:4px 2px;min-width:150px;">
-          <div style="font-weight:700;font-size:14px;color:#2c2416;margin-bottom:4px;">${esc(r.name)}</div>
-          <div style="font-size:12px;color:#8a7560;">${typeLabel}</div>
-          ${starsStr ? `<div style="color:#e8b844;font-size:13px;margin-top:4px;">${starsStr}</div>` : ''}
-          ${r.location ? `<div style="font-size:11px;color:#bdb0a0;margin-top:3px;">📍 ${esc(r.location)}</div>` : ''}
-        </div>
-      `);
-      mapInfoWindow.open(mapInstance, marker);
-    });
+    marker.addListener('click', () => openPlaceDetail(id));
 
     mapMarkers.push(marker);
     bounds.extend(pos);
@@ -1323,14 +1437,16 @@ function editEntry(id) {
     document.getElementById('form-step-title').textContent = "🍴 Review a Place You've Visited";
     document.getElementById('try-fields').style.display  = 'none';
     document.getElementById('been-fields').style.display = 'block';
-    setRecommend(r.status === 'recommended');
     document.getElementById('f-cuisine').value = r.cuisine || '';
     document.getElementById('f-price').value   = r.price   || '';
-    if (r.rating) setStars(r.rating);
+    // Use author's own rating if in userRatings, else fall back to top-level rating
+    const authorRating = r.userRatings && r.userRatings[r.author] ? r.userRatings[r.author] : r;
+    if (authorRating.rating || authorRating.overall) setStars(authorRating.overall || authorRating.rating || 0);
     document.getElementById('f-notes').value   = r.notes   || '';
-    if (r.factorRatings) {
+    const fr = authorRating.factorRatings || (r.userRatings && r.userRatings[r.author]) || r.factorRatings;
+    if (fr) {
       ['quality','service','value','ambiance'].forEach(f => {
-        if (r.factorRatings[f]) setFactorStar(f, r.factorRatings[f]);
+        if (fr[f]) setFactorStar(f, fr[f]);
       });
     }
   }
@@ -1393,11 +1509,7 @@ function setPlaceType(t) {
 }
 
 function setRecommend(val) {
-  willRecommend = val;
-  document.getElementById('rec-yes').classList.toggle('active', val);
-  document.getElementById('rec-no').classList.toggle('active', !val);
-  document.getElementById('rating-group').style.display       = val ? '' : 'none';
-  document.getElementById('factor-ratings-group').style.display = val ? '' : 'none';
+  // Skip-it removed; ratings always shown
 }
 
 function setStars(n) {
@@ -1421,8 +1533,6 @@ function clearForm() {
   document.getElementById('f-price').value   = '';
   setStars(0);
   setPlaceType('restaurant');
-  willRecommend = true;
-  setRecommend(true);
   addType  = null;
   editingId = null;
   // Reset factor ratings
@@ -1464,21 +1574,17 @@ function submitRec() {
     rec.tryNote = document.getElementById('f-try-note').value.trim();
     rec.url     = document.getElementById('f-url').value.trim();
   } else {
-    rec.status  = willRecommend ? 'recommended' : 'not-recommended';
+    rec.status  = 'recommended';
     rec.cuisine = document.getElementById('f-cuisine').value;
     rec.price   = document.getElementById('f-price').value;
-    rec.rating  = willRecommend ? selectedStars : 0;
+    rec.rating  = selectedStars;
     rec.notes   = document.getElementById('f-notes').value.trim();
 
-    // Factor ratings (only save if at least one is set)
-    if (willRecommend) {
-      const anyRated = Object.values(factorRatings).some(v => v > 0);
-      if (anyRated) {
-        rec.factorRatings = { ...factorRatings };
-      } else {
-        // Show soft prompt but still save
-        document.getElementById('factor-hint').style.display = 'block';
-      }
+    const anyRated = Object.values(factorRatings).some(v => v > 0);
+    if (anyRated) {
+      rec.factorRatings = { ...factorRatings };
+    } else {
+      document.getElementById('factor-hint').style.display = 'block';
     }
   }
 
@@ -1487,7 +1593,6 @@ function submitRec() {
     if (orig) {
       rec.author = orig.author;
       rec.ts     = orig.ts;
-      // Preserve existing coordinates if no new ones were selected
       if (orig.lat && rec.lat === undefined) { rec.lat = orig.lat; rec.lng = orig.lng; }
     }
   }
@@ -1496,7 +1601,18 @@ function submitRec() {
     ? db.ref('recommendations/' + editingId).update(rec)
     : db.ref('recommendations').push(rec);
 
-  op.then(() => {
+  op.then((ref) => {
+    // Write author's rating to userRatings (separate path to avoid clobbering others)
+    if (addType === 'been' || (addType === null && editingId)) {
+      const savedId = editingId || ref.key;
+      if (savedId && selectedStars > 0) {
+        const authorRating = { overall: selectedStars };
+        if (Object.values(factorRatings).some(v => v > 0)) {
+          Object.assign(authorRating, factorRatings);
+        }
+        db.ref(`recommendations/${savedId}/userRatings/${currentUser}`).set(authorRating);
+      }
+    }
     showToast(addType === 'try' ? '📌 Saved to your list!' : '🎉 Review saved!');
     closeModal();
     btn.disabled = false; btn.textContent = 'Save';
@@ -1590,6 +1706,317 @@ async function initAutocomplete() {
   });
 
   input.addEventListener('blur', () => setTimeout(hideDropdown, 200));
+}
+
+// ══════════════════════════════════════════════════
+//  RATINGS — AVERAGE COMPUTATION
+// ══════════════════════════════════════════════════
+function computeAvgRating(r) {
+  if (r.userRatings) {
+    const vals = Object.values(r.userRatings).map(u => u.overall || 0).filter(v => v > 0);
+    if (vals.length) return { avg: vals.reduce((a,b)=>a+b,0)/vals.length, count: vals.length };
+  }
+  if (r.rating) return { avg: r.rating, count: 1 };
+  return { avg: 0, count: 0 };
+}
+
+function computeAvgFactors(r) {
+  const factors = ['quality','service','value','ambiance'];
+  const result  = {};
+  let   hasAny  = false;
+  if (r.userRatings) {
+    factors.forEach(f => {
+      const vals = Object.values(r.userRatings).map(u => u[f]||0).filter(v => v > 0);
+      if (vals.length) { result[f] = vals.reduce((a,b)=>a+b,0)/vals.length; hasAny = true; }
+    });
+  } else if (r.factorRatings) {
+    factors.forEach(f => { if (r.factorRatings[f]) { result[f] = r.factorRatings[f]; hasAny = true; } });
+  }
+  return hasAny ? result : null;
+}
+
+// ══════════════════════════════════════════════════
+//  DELETE
+// ══════════════════════════════════════════════════
+function deleteEntry(id) {
+  if (!confirm('Delete this entry? This cannot be undone.')) return;
+  db.ref('recommendations/' + id).remove()
+    .then(() => showToast('🗑 Entry deleted.'))
+    .catch(err => { console.error(err); showToast('❌ Could not delete.'); });
+}
+
+// ══════════════════════════════════════════════════
+//  MARK AS TRIED + USER RATINGS
+// ══════════════════════════════════════════════════
+function markAsTried(id) {
+  const updates = {};
+  updates[`recommendations/${id}/triedBy/${currentUser}`] = true;
+  db.ref().update(updates)
+    .then(() => { showToast('✅ Marked as tried!'); toggleRatingForm(id); })
+    .catch(err => { console.error(err); showToast('❌ Could not save.'); });
+}
+
+function toggleRatingForm(id) {
+  // Pre-fill with existing user rating if available
+  if (!pendingUserRatings[id]) {
+    const r = allRecs[id];
+    const existing = r && r.userRatings && r.userRatings[currentUser];
+    pendingUserRatings[id] = existing
+      ? { overall: existing.overall||0, quality: existing.quality||0, service: existing.service||0, value: existing.value||0, ambiance: existing.ambiance||0 }
+      : { overall: 0, quality: 0, service: 0, value: 0, ambiance: 0 };
+  }
+  const form = document.getElementById('rf-' + id);
+  if (!form) return;
+  const opening = form.style.display === 'none';
+  form.style.display = opening ? 'block' : 'none';
+  if (opening) renderUserRatingStars(id);
+}
+
+function renderUserRatingStars(id) {
+  const state = pendingUserRatings[id];
+  if (!state) return;
+  const starsEl = document.getElementById('ur-stars-' + id);
+  if (starsEl) starsEl.querySelectorAll('span').forEach((s,i) => { s.textContent = i < state.overall ? '★' : '☆'; });
+  ['quality','service','value','ambiance'].forEach(f => {
+    const el = document.getElementById(`ur-${f}-${id}`);
+    if (el) el.querySelectorAll('span').forEach((s,i) => { s.textContent = i < (state[f]||0) ? '★' : '☆'; });
+  });
+}
+
+function setUserRatingStar(id, n) {
+  if (!pendingUserRatings[id]) pendingUserRatings[id] = { overall:0, quality:0, service:0, value:0, ambiance:0 };
+  pendingUserRatings[id].overall = n;
+  const el = document.getElementById('ur-stars-' + id);
+  if (el) el.querySelectorAll('span').forEach((s,i) => { s.textContent = i < n ? '★' : '☆'; });
+}
+
+function setUserFactorStar(id, factor, n) {
+  if (!pendingUserRatings[id]) pendingUserRatings[id] = { overall:0, quality:0, service:0, value:0, ambiance:0 };
+  pendingUserRatings[id][factor] = n;
+  const el = document.getElementById(`ur-${factor}-${id}`);
+  if (el) el.querySelectorAll('span').forEach((s,i) => { s.textContent = i < n ? '★' : '☆'; });
+}
+
+function submitUserRating(id) {
+  const state = pendingUserRatings[id] || { overall:0, quality:0, service:0, value:0, ambiance:0 };
+  db.ref(`recommendations/${id}/userRatings/${currentUser}`).set(state)
+    .then(() => {
+      showToast('⭐ Rating saved!');
+      delete pendingUserRatings[id];
+      const form = document.getElementById('rf-' + id);
+      if (form) form.style.display = 'none';
+    })
+    .catch(err => { console.error(err); showToast('❌ Could not save rating.'); });
+}
+
+// ══════════════════════════════════════════════════
+//  PLACE DETAIL PANEL (from map)
+// ══════════════════════════════════════════════════
+function openPlaceDetail(id) {
+  const r = allRecs[id];
+  if (!r) return;
+
+  const isMine = r.author === currentUser;
+  const { avg, count } = computeAvgRating(r);
+  const avgStars = avg > 0 ? '★'.repeat(Math.round(avg))+'☆'.repeat(5-Math.round(avg)) : '';
+  const avgFactors = computeAvgFactors(r);
+  const color = getUserColor(r.author);
+  const initials = (r.author||'?').slice(0,2).toUpperCase();
+  const date = r.ts ? new Date(r.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+
+  const typeLabel = r.placeType === 'bar' ? '🍸 Bar' : '🍽 Restaurant';
+  const statusLabel = r.status === 'try' ? '📌 Want to Try' : r.status === 'not-recommended' ? '👎 Skip it' : '✅ Recommended';
+
+  // Factor ratings display
+  let factorsHtml = '';
+  if (avgFactors) {
+    const items = ['quality','service','value','ambiance'].map(f => {
+      if (!avgFactors[f]) return '';
+      const fStars = '★'.repeat(Math.round(avgFactors[f]))+'☆'.repeat(5-Math.round(avgFactors[f]));
+      return `<div class="factor-display"><div class="factor-display-label">${f.charAt(0).toUpperCase()+f.slice(1)}</div><div class="factor-display-stars">${fStars}</div></div>`;
+    }).filter(Boolean).join('');
+    if (items) factorsHtml = `<div class="card-factors-grid" style="margin:10px 0;">${items}</div>`;
+  }
+
+  // Per-user ratings breakdown
+  let userRatingsHtml = '';
+  if (r.userRatings && Object.keys(r.userRatings).length > 0) {
+    const rows = Object.entries(r.userRatings).map(([uname, ur]) => {
+      const uStars = (ur.overall||0) > 0 ? '★'.repeat(ur.overall)+'☆'.repeat(5-ur.overall) : '—';
+      const uColor = getUserColor(uname);
+      const uInit = uname.slice(0,2).toUpperCase();
+      return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <div class="avatar-sm ${uColor}">${uInit}</div>
+        <span style="font-size:.8rem;color:var(--muted);min-width:70px;">${esc(uname)}</span>
+        <span style="color:#e8b844;font-size:.85rem;">${uStars}</span>
+      </div>`;
+    }).join('');
+    userRatingsHtml = `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--tan);">
+      <div class="form-label" style="margin-bottom:8px;">Ratings by</div>${rows}</div>`;
+  }
+
+  // "Tried by" for want-to-try
+  let triedHtml = '';
+  if (r.status === 'try' && r.triedBy) {
+    const names = Object.keys(r.triedBy).filter(n => n !== r.author);
+    if (names.length) triedHtml = `<div class="card-tried-note" style="margin-top:8px;">✅ Tried by: ${names.map(esc).join(', ')}</div>`;
+  }
+
+  // Non-author action buttons + inline form
+  let nonAuthorHtml = '';
+  if (!isMine) {
+    const hasTried = r.triedBy && r.triedBy[currentUser];
+    const hasRated = r.userRatings && r.userRatings[currentUser];
+    let actionBtns = '';
+    if (r.status === 'try' && !hasTried) {
+      actionBtns += `<button class="card-btn primary-action" onclick="markAsTriedFromDetail('${id}')">🍴 I've Been Here</button>`;
+    }
+    if (r.status === 'recommended' || hasTried) {
+      if (!hasRated) {
+        actionBtns += `<button class="card-btn" onclick="toggleDetailRatingForm('${id}')">✍️ Rate This</button>`;
+      } else {
+        const myR = r.userRatings[currentUser];
+        const myStars = (myR.overall||0) > 0 ? '★'.repeat(myR.overall)+'☆'.repeat(5-myR.overall) : '';
+        actionBtns += `<button class="card-btn" onclick="toggleDetailRatingForm('${id}')">${myStars ? myStars+' ' : ''}My Rating</button>`;
+      }
+    }
+    if (actionBtns) nonAuthorHtml += `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;">${actionBtns}</div>`;
+
+    nonAuthorHtml += `
+    <div class="inline-rating-form" id="drf-${id}" style="display:none;margin-top:10px;">
+      <div class="form-label" style="margin-bottom:8px;">Your Overall Rating</div>
+      <div class="star-picker" id="dur-stars-${id}">
+        <span onclick="setDetailUserRatingStar('${id}',1)">☆</span><span onclick="setDetailUserRatingStar('${id}',2)">☆</span>
+        <span onclick="setDetailUserRatingStar('${id}',3)">☆</span><span onclick="setDetailUserRatingStar('${id}',4)">☆</span>
+        <span onclick="setDetailUserRatingStar('${id}',5)">☆</span>
+      </div>
+      <div class="form-label" style="margin-top:12px;margin-bottom:8px;">Detailed Ratings (optional)</div>
+      <div class="factor-ratings-grid">
+        ${['quality','service','value','ambiance'].map(f => `
+        <div class="factor-item">
+          <div class="factor-label">${f.charAt(0).toUpperCase()+f.slice(1)}</div>
+          <div class="factor-star-picker" id="dur-${f}-${id}">
+            <span onclick="setDetailUserFactorStar('${id}','${f}',1)">☆</span><span onclick="setDetailUserFactorStar('${id}','${f}',2)">☆</span>
+            <span onclick="setDetailUserFactorStar('${id}','${f}',3)">☆</span><span onclick="setDetailUserFactorStar('${id}','${f}',4)">☆</span>
+            <span onclick="setDetailUserFactorStar('${id}','${f}',5)">☆</span>
+          </div>
+        </div>`).join('')}
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button class="card-btn primary-action" onclick="submitDetailUserRating('${id}')">Save Rating</button>
+        <button class="card-btn" onclick="toggleDetailRatingForm('${id}')">Cancel</button>
+      </div>
+    </div>`;
+  }
+
+  // Owner buttons
+  let ownerHtml = '';
+  if (isMine) {
+    ownerHtml = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+      <button class="card-btn" onclick="closeDetailPanel();editEntry('${id}')">✏️ Edit</button>
+      ${r.status === 'try' ? `<button class="card-btn primary-action" onclick="closeDetailPanel();upgradeToTried('${id}')">🍴 I've Been Here</button>` : ''}
+      <button class="card-btn danger" onclick="closeDetailPanel();deleteEntry('${id}')">🗑 Delete</button>
+    </div>`;
+  }
+
+  const notes = r.status === 'try'
+    ? (r.tryNote ? `<div class="card-notes" style="margin:10px 0;">${esc(r.tryNote)}</div>` : '')
+    : (r.notes   ? `<div class="card-notes" style="margin:10px 0;">${esc(r.notes)}</div>`   : '');
+
+  const urlEl = r.status === 'try' && r.url
+    ? `<div class="card-url" style="margin-bottom:8px;"><a href="${esc(r.url)}" target="_blank" rel="noopener">🔗 See review</a></div>`
+    : '';
+
+  document.getElementById('detail-panel-title').textContent = r.name;
+  document.getElementById('detail-panel-content').innerHTML = `
+    <div class="card-meta" style="margin-bottom:10px;">
+      ${r.placeType === 'bar' ? `<span class="tag type-bar">🍸 Bar</span>` : `<span class="tag type-restaurant">🍽 Restaurant</span>`}
+      ${r.status === 'try' ? `<span class="tag status-try">📌 Want to Try</span>` : ''}
+      ${r.cuisine  ? `<span class="tag cuisine">${esc(r.cuisine)}</span>`  : ''}
+      ${r.price    ? `<span class="tag price">${esc(r.price)}</span>`      : ''}
+      ${r.location ? `<span class="tag">📍 ${esc(r.location)}</span>`     : ''}
+    </div>
+    ${avg > 0 ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span class="stars">${avgStars}</span><span style="font-size:.82rem;font-weight:700;">${avg.toFixed(1)}</span><span style="font-size:.75rem;color:var(--muted);">(${count} rating${count!==1?'s':''})</span></div>` : ''}
+    ${factorsHtml}
+    ${notes}
+    ${urlEl}
+    ${triedHtml}
+    ${userRatingsHtml}
+    ${nonAuthorHtml}
+    ${ownerHtml}
+    <div class="card-footer" style="margin-top:16px;padding-top:12px;border-top:1px solid var(--tan);">
+      <div class="card-author">
+        <div class="avatar-sm ${color}">${initials}</div>
+        <span>Added by ${esc(r.author)}${isMine ? ' (you)' : ''}</span>
+      </div>
+      <span>${date}</span>
+    </div>`;
+
+  document.getElementById('place-detail-overlay').classList.add('open');
+}
+
+function closeDetailPanel() {
+  document.getElementById('place-detail-overlay').classList.remove('open');
+}
+
+function closeDetailOnBg(e) {
+  if (e.target === document.getElementById('place-detail-overlay')) closeDetailPanel();
+}
+
+function markAsTriedFromDetail(id) {
+  const updates = {};
+  updates[`recommendations/${id}/triedBy/${currentUser}`] = true;
+  db.ref().update(updates)
+    .then(() => { showToast('✅ Marked as tried!'); openPlaceDetail(id); })
+    .catch(err => { console.error(err); showToast('❌ Could not save.'); });
+}
+
+function toggleDetailRatingForm(id) {
+  if (!pendingUserRatings[id]) {
+    const r = allRecs[id];
+    const existing = r && r.userRatings && r.userRatings[currentUser];
+    pendingUserRatings[id] = existing
+      ? { overall: existing.overall||0, quality: existing.quality||0, service: existing.service||0, value: existing.value||0, ambiance: existing.ambiance||0 }
+      : { overall: 0, quality: 0, service: 0, value: 0, ambiance: 0 };
+  }
+  const form = document.getElementById('drf-' + id);
+  if (!form) return;
+  const opening = form.style.display === 'none';
+  form.style.display = opening ? 'block' : 'none';
+  if (opening) {
+    const state = pendingUserRatings[id];
+    const starsEl = document.getElementById('dur-stars-' + id);
+    if (starsEl) starsEl.querySelectorAll('span').forEach((s,i) => { s.textContent = i < state.overall ? '★' : '☆'; });
+    ['quality','service','value','ambiance'].forEach(f => {
+      const el = document.getElementById(`dur-${f}-${id}`);
+      if (el) el.querySelectorAll('span').forEach((s,i) => { s.textContent = i < (state[f]||0) ? '★' : '☆'; });
+    });
+  }
+}
+
+function setDetailUserRatingStar(id, n) {
+  if (!pendingUserRatings[id]) pendingUserRatings[id] = { overall:0, quality:0, service:0, value:0, ambiance:0 };
+  pendingUserRatings[id].overall = n;
+  const el = document.getElementById('dur-stars-' + id);
+  if (el) el.querySelectorAll('span').forEach((s,i) => { s.textContent = i < n ? '★' : '☆'; });
+}
+
+function setDetailUserFactorStar(id, factor, n) {
+  if (!pendingUserRatings[id]) pendingUserRatings[id] = { overall:0, quality:0, service:0, value:0, ambiance:0 };
+  pendingUserRatings[id][factor] = n;
+  const el = document.getElementById(`dur-${factor}-${id}`);
+  if (el) el.querySelectorAll('span').forEach((s,i) => { s.textContent = i < n ? '★' : '☆'; });
+}
+
+function submitDetailUserRating(id) {
+  const state = pendingUserRatings[id] || { overall:0, quality:0, service:0, value:0, ambiance:0 };
+  db.ref(`recommendations/${id}/userRatings/${currentUser}`).set(state)
+    .then(() => {
+      showToast('⭐ Rating saved!');
+      delete pendingUserRatings[id];
+      openPlaceDetail(id); // refresh panel
+    })
+    .catch(err => { console.error(err); showToast('❌ Could not save rating.'); });
 }
 
 // ══════════════════════════════════════════════════
