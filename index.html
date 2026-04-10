@@ -1735,7 +1735,7 @@ async function initAutocomplete() {
       const { suggestions } = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
         input: val,
         sessionToken,
-        includedPrimaryTypes: ['restaurant', 'bar', 'cafe', 'night_club', 'bakery'],
+        includedPrimaryTypes: ['restaurant', 'bar', 'cafe', 'night_club', 'bakery', 'liquor_store', 'wine_store'],
       });
 
       if (!suggestions.length) { hideDropdown(); return; }
