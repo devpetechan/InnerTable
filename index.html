@@ -373,17 +373,19 @@
     .btn-close:hover { background: var(--tan); }
 
     /* Step 1 — pick type */
-    .type-chooser { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
+    .type-chooser { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 4px; }
     .type-card {
-      border: 2px solid var(--tan); border-radius: 16px; padding: 22px 14px;
-      text-align: center; cursor: pointer; transition: all .2s;
+      border: 2px solid var(--tan); border-radius: 14px; padding: 14px 18px;
+      text-align: left; cursor: pointer; transition: all .2s;
       background: var(--white); font-family: inherit; -webkit-appearance: none; appearance: none;
-      width: 100%;
+      width: 100%; display: flex; align-items: center; gap: 14px;
     }
+    .type-card.selected { border-color: var(--rust); background: #fdf1ec; }
     .type-card:hover, .type-card:focus { border-color: var(--rust); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(192,82,42,.15); outline: none; }
     .type-card:active { transform: scale(.97); }
-    .type-card .tc-icon { font-size: 2.2rem; margin-bottom: 10px; display: block; }
-    .type-card .tc-label { font-size: .95rem; font-weight: 800; color: var(--text); margin-bottom: 5px; display: block; }
+    .type-card .tc-icon { font-size: 2rem; flex-shrink: 0; }
+    .tc-text { text-align: left; }
+    .type-card .tc-label { font-size: .95rem; font-weight: 800; color: var(--text); margin-bottom: 3px; display: block; }
     .type-card .tc-desc { font-size: .78rem; color: var(--muted); line-height: 1.4; display: block; }
 
     /* Step 2 — form */
@@ -471,6 +473,23 @@
     .btn-submit:hover { background: var(--rust-dk); }
     .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
 
+    /* ═══ SOCIAL SIGNALS ═══ */
+    .social-signals {
+      display: flex; gap: 10px; align-items: center;
+      margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--tan);
+    }
+    .signal-btn {
+      background: none; border: 1.5px solid var(--tan); cursor: pointer; padding: 4px 10px;
+      border-radius: 20px; font-size: .82rem; color: var(--muted);
+      display: flex; align-items: center; gap: 4px; transition: all .15s; font-family: inherit;
+    }
+    .signal-btn:hover { border-color: var(--rust); color: var(--rust); background: #fdf1ec; }
+    .signal-count { font-weight: 700; }
+
+    /* ═══ STATUS DETAIL PANEL ═══ */
+    .status-names-list { margin-top: 6px; display: flex; flex-direction: column; gap: 6px; }
+    .status-name-item { display: flex; align-items: center; gap: 8px; font-size: .88rem; color: var(--muted); }
+
     /* ═══ TOAST ═══ */
     .toast {
       position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
@@ -507,8 +526,8 @@
       .form-row { grid-template-columns: 1fr; gap: 0; }
       .factor-ratings-grid { grid-template-columns: 1fr; gap: 10px; }
 
-      .type-card { padding: 14px 10px; }
-      .type-card .tc-icon { font-size: 1.8rem; margin-bottom: 6px; }
+      .type-card { padding: 12px 14px; gap: 10px; }
+      .type-card .tc-icon { font-size: 1.6rem; }
       .type-card .tc-label { font-size: .88rem; }
       .type-card .tc-desc { font-size: .72rem; }
 
@@ -629,6 +648,12 @@
         <div class="filter-chip"        data-type="bar"        onclick="setTypeFilter('bar',this)">🍸 Bars</div>
       </div>
 
+      <!-- Hide my skips filter -->
+      <div class="filter-bar" id="skip-filter-bar">
+        <span class="filter-label">Hide:</span>
+        <div class="filter-chip" id="hide-skips-chip" onclick="toggleHideMySkips(this)">My Skips</div>
+      </div>
+
       <div class="section-title" id="count-title">
         Places <span class="count-badge" id="rec-count">0</span>
       </div>
@@ -661,15 +686,26 @@
     <!-- Step 1: choose type -->
     <div id="type-step">
       <div class="type-chooser">
-        <button type="button" class="type-card" onclick="selectAddType('try')">
+        <button type="button" class="type-card" id="tc-want-to-go" onclick="selectAddType('want-to-go')">
           <span class="tc-icon">📌</span>
-          <span class="tc-label">Want to Try</span>
-          <span class="tc-desc">Save a spot you've heard about or seen online</span>
+          <div class="tc-text">
+            <span class="tc-label">Want to Go</span>
+            <span class="tc-desc">Save a spot you want to visit</span>
+          </div>
         </button>
-        <button type="button" class="type-card" onclick="selectAddType('been')">
-          <span class="tc-icon">🍴</span>
-          <span class="tc-label">I've Been Here</span>
-          <span class="tc-desc">Rate and review somewhere you've already visited</span>
+        <button type="button" class="type-card" id="tc-been-recommend" onclick="selectAddType('been-recommend')">
+          <span class="tc-icon">✅</span>
+          <div class="tc-text">
+            <span class="tc-label">Been + Recommend</span>
+            <span class="tc-desc">You've been and would send a friend here</span>
+          </div>
+        </button>
+        <button type="button" class="type-card" id="tc-been-skip" onclick="selectAddType('been-skip')">
+          <span class="tc-icon">👎</span>
+          <div class="tc-text">
+            <span class="tc-label">Been + Skip</span>
+            <span class="tc-desc">You've been but wouldn't go back</span>
+          </div>
         </button>
       </div>
     </div>
@@ -716,7 +752,7 @@
 
       <!-- BEEN-HERE fields -->
       <div id="been-fields" style="display:none">
-        <div class="form-row">
+        <div class="form-row" id="been-details-row">
           <div class="form-group">
             <label class="form-label">Cuisine</label>
             <select class="form-select" id="f-cuisine">
@@ -799,13 +835,98 @@
           <div class="factor-hint" id="factor-hint">Adding factor ratings helps your friends find great matches!</div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" id="been-notes-group">
           <label class="form-label">Your take</label>
           <textarea class="form-textarea" id="f-notes" placeholder="What to order? Best for groups? Vibe?" maxlength="400"></textarea>
         </div>
       </div>
 
       <button class="btn-submit" id="submit-btn" onclick="submitRec()">Save</button>
+    </div>
+
+    <!-- Attach step: add your status to an existing entry -->
+    <div id="attach-step" style="display:none">
+      <div class="step-title">Add Your Status</div>
+      <p style="font-size:.85rem;color:var(--muted);margin-bottom:16px;" id="attach-place-name"></p>
+      <div class="form-label" style="margin-bottom:10px;">Your relationship with this place</div>
+      <div class="type-chooser" style="margin-bottom:16px;">
+        <button type="button" class="type-card" id="atc-want-to-go" onclick="setAttachStatus('want-to-go',this)">
+          <span class="tc-icon">📌</span>
+          <div class="tc-text">
+            <span class="tc-label">Want to Go</span>
+            <span class="tc-desc">You want to visit</span>
+          </div>
+        </button>
+        <button type="button" class="type-card" id="atc-been-recommend" onclick="setAttachStatus('been-recommend',this)">
+          <span class="tc-icon">✅</span>
+          <div class="tc-text">
+            <span class="tc-label">Been + Recommend</span>
+            <span class="tc-desc">You'd send a friend</span>
+          </div>
+        </button>
+        <button type="button" class="type-card" id="atc-been-skip" onclick="setAttachStatus('been-skip',this)">
+          <span class="tc-icon">👎</span>
+          <div class="tc-text">
+            <span class="tc-label">Been + Skip</span>
+            <span class="tc-desc">Wouldn't go back</span>
+          </div>
+        </button>
+      </div>
+      <div id="attach-rating-section" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Overall Rating</label>
+          <div class="star-picker" id="attach-star-picker">
+            <span onclick="setAttachStars(1)">☆</span><span onclick="setAttachStars(2)">☆</span>
+            <span onclick="setAttachStars(3)">☆</span><span onclick="setAttachStars(4)">☆</span>
+            <span onclick="setAttachStars(5)">☆</span>
+          </div>
+        </div>
+        <div class="factor-ratings-section">
+          <div class="factor-ratings-title">Detailed Ratings (optional)</div>
+          <div class="factor-ratings-grid">
+            <div class="factor-item">
+              <div class="factor-label">Quality</div>
+              <div class="factor-star-picker" id="afp-quality">
+                <span onclick="setAttachFactorStar('quality',1)">☆</span><span onclick="setAttachFactorStar('quality',2)">☆</span><span onclick="setAttachFactorStar('quality',3)">☆</span><span onclick="setAttachFactorStar('quality',4)">☆</span><span onclick="setAttachFactorStar('quality',5)">☆</span>
+              </div>
+            </div>
+            <div class="factor-item">
+              <div class="factor-label">Service</div>
+              <div class="factor-star-picker" id="afp-service">
+                <span onclick="setAttachFactorStar('service',1)">☆</span><span onclick="setAttachFactorStar('service',2)">☆</span><span onclick="setAttachFactorStar('service',3)">☆</span><span onclick="setAttachFactorStar('service',4)">☆</span><span onclick="setAttachFactorStar('service',5)">☆</span>
+              </div>
+            </div>
+            <div class="factor-item">
+              <div class="factor-label">Value</div>
+              <div class="factor-star-picker" id="afp-value">
+                <span onclick="setAttachFactorStar('value',1)">☆</span><span onclick="setAttachFactorStar('value',2)">☆</span><span onclick="setAttachFactorStar('value',3)">☆</span><span onclick="setAttachFactorStar('value',4)">☆</span><span onclick="setAttachFactorStar('value',5)">☆</span>
+              </div>
+            </div>
+            <div class="factor-item">
+              <div class="factor-label">Ambiance</div>
+              <div class="factor-star-picker" id="afp-ambiance">
+                <span onclick="setAttachFactorStar('ambiance',1)">☆</span><span onclick="setAttachFactorStar('ambiance',2)">☆</span><span onclick="setAttachFactorStar('ambiance',3)">☆</span><span onclick="setAttachFactorStar('ambiance',4)">☆</span><span onclick="setAttachFactorStar('ambiance',5)">☆</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-submit" id="attach-submit-btn" onclick="submitAttach()" disabled style="margin-top:8px;">Save My Status</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ DUPLICATE PROMPT ═══════════════ -->
+<div class="modal-overlay" id="dup-overlay" onclick="closeDupOnBg(event)">
+  <div class="modal" style="max-height:fit-content">
+    <div class="modal-header">
+      <div class="modal-title">Already on InnerTable</div>
+      <button class="btn-close" onclick="closeDupPrompt()">✕</button>
+    </div>
+    <p style="color:var(--muted);font-size:.9rem;line-height:1.6;margin-bottom:20px;" id="dup-message"></p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="btn-primary" id="dup-primary-btn" onclick="confirmDup()"></button>
+      <button class="btn-ghost" onclick="closeDupPromptAndContinue()">No, add as a separate entry</button>
     </div>
   </div>
 </div>
@@ -831,6 +952,8 @@
 //  CONFIG
 // ══════════════════════════════════════════════════
 const GOOGLE_MAPS_API_KEY = "AIzaSyBceaaaJk0AleFfXWv8yXkBOdQprgs9Uuk";
+const ADMIN_USER     = "Admin";
+const ADMIN_PASSWORD = "sactown";
 
 const firebaseConfig = {
   apiKey:            "AIzaSyDVemZ2c93K06gQRrMRdc3X-GTgkkElxfE",
@@ -862,18 +985,27 @@ if (GOOGLE_MAPS_API_KEY !== "YOUR_GOOGLE_MAPS_API_KEY") {
 //  STATE
 // ══════════════════════════════════════════════════
 let currentUser        = null;
+let isAdmin            = false;
 let currentView        = 'all';
 let currentFilter      = 'all';
 let currentTypeFilter  = 'all';
 let currentDisplayMode = 'list';
 let selectedStars      = 0;
-let addType            = null;   // 'try' | 'been'
+let addType            = null;   // 'want-to-go' | 'been-recommend' | 'been-skip' (also accepts legacy 'try'/'been')
 let placeType          = 'restaurant';
 let editingId          = null;
 let allRecs            = {};
 let factorRatings      = { quality: 0, service: 0, value: 0, ambiance: 0 };
 let selectedPlaceLat   = null;
 let selectedPlaceLng   = null;
+let selectedPlaceId    = null;   // Google Place ID for duplicate detection
+let hideMySkips        = false;
+let pendingDupId       = null;   // Firebase key of detected duplicate entry
+let pendingDupIsOwn    = false;  // true if current user is the author of the duplicate
+let attachingToId      = null;   // Firebase key of entry being attached to
+let attachStatus       = null;   // 'want-to-go' | 'been-recommend' | 'been-skip'
+let attachStars        = 0;
+let attachFactorRatings = { quality: 0, service: 0, value: 0, ambiance: 0 };
 let mapInstance        = null;
 let mapMarkers         = [];
 let googleMapsReady    = false;
@@ -893,7 +1025,11 @@ function getUserColor(name) {
 // ══════════════════════════════════════════════════
 window.onload = function() {
   const saved = localStorage.getItem('it_user');
-  if (saved) { currentUser = saved; showApp(); }
+  if (saved) {
+    currentUser = saved;
+    isAdmin = localStorage.getItem('it_admin') === '1';
+    showApp();
+  }
 };
 
 document.getElementById('name-input').addEventListener('keydown', e => { if (e.key === 'Enter') enterApp(); });
@@ -901,6 +1037,15 @@ document.getElementById('name-input').addEventListener('keydown', e => { if (e.k
 function enterApp() {
   const val = document.getElementById('name-input').value.trim();
   if (!val) { shake(document.getElementById('name-input')); return; }
+  if (val === ADMIN_USER) {
+    const pw = prompt('Enter admin password:');
+    if (pw !== ADMIN_PASSWORD) { alert('Incorrect password.'); return; }
+    isAdmin = true;
+    localStorage.setItem('it_admin', '1');
+  } else {
+    isAdmin = false;
+    localStorage.removeItem('it_admin');
+  }
   currentUser = val;
   localStorage.setItem('it_user', val);
   showApp();
@@ -916,7 +1061,11 @@ function showApp() {
 }
 
 function switchUser() {
-  if (confirm(`Switch from "${currentUser}"?`)) { localStorage.removeItem('it_user'); location.reload(); }
+  if (confirm(`Switch from "${currentUser}"?`)) {
+    localStorage.removeItem('it_user');
+    localStorage.removeItem('it_admin');
+    location.reload();
+  }
 }
 
 // ══════════════════════════════════════════════════
@@ -1042,13 +1191,21 @@ function renderCards() {
   const container = document.getElementById('cards-container');
   let entries = Object.entries(allRecs);
 
-  // Status filter
+  // Status filter (view tabs)
   entries = entries.filter(([,r]) => {
     if (currentView === 'try')         return r.status === 'try';
     if (currentView === 'recommended') return r.status === 'recommended';
     if (currentView === 'no')          return r.status === 'not-recommended';
     return true;
   });
+
+  // Hide my skips filter
+  if (hideMySkips) {
+    entries = entries.filter(([,r]) => {
+      const myStatus = r.userStatuses && r.userStatuses[currentUser];
+      return !(myStatus && myStatus.status === 'been-skip');
+    });
+  }
 
   // Type filter
   if (currentTypeFilter !== 'all') {
@@ -1074,7 +1231,7 @@ function renderCards() {
 }
 
 function cardHTML(id, r) {
-  const isMine      = r.author === currentUser;
+  const isMine      = isAdmin || r.author === currentUser;
   const statusClass = r.status === 'recommended' ? 'recommended' : r.status === 'not-recommended' ? 'not-recommended' : 'want-to-try';
   const color       = getUserColor(r.author);
   const initials    = (r.author||'?').slice(0,2).toUpperCase();
@@ -1255,6 +1412,9 @@ function cardHTML(id, r) {
 
   const ratingTip = count > 0 ? ` title="${avg.toFixed(1)} avg (${count} rating${count!==1?'s':''})"` : '';
 
+  // Social signals from userStatuses
+  const socialSignals = buildSocialSignals(id, r);
+
   return `
     <div class="rec-card ${statusClass}">
       <div class="card-top">
@@ -1266,6 +1426,7 @@ function cardHTML(id, r) {
       ${urlEl}
       ${factorsDisplay}
       ${triedNote}
+      ${socialSignals}
       ${actions}
       ${nonAuthorSection}
       ${voteRow}
@@ -1448,8 +1609,9 @@ function renderMapMarkers() {
 function openModal(prefillId) {
   editingId = prefillId || null;
   document.getElementById('modal-overlay').classList.add('open');
-  document.getElementById('type-step').style.display = '';
-  document.getElementById('form-step').style.display  = 'none';
+  document.getElementById('type-step').style.display   = '';
+  document.getElementById('form-step').style.display   = 'none';
+  document.getElementById('attach-step').style.display = 'none';
   document.getElementById('modal-title').textContent = editingId ? 'Mark as Tried' : 'Add a Place';
 
   if (editingId) {
@@ -1465,8 +1627,12 @@ function openModal(prefillId) {
 
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
+  document.getElementById('attach-step').style.display = 'none';
+  document.getElementById('type-step').style.display   = '';
   clearForm();
-  editingId = null;
+  editingId     = null;
+  attachingToId = null;
+  attachStatus  = null;
 }
 
 function closeModalOnBg(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
@@ -1494,6 +1660,9 @@ function editEntry(id) {
     document.getElementById('form-step-title').textContent = "🍴 Review a Place You've Visited";
     document.getElementById('try-fields').style.display  = 'none';
     document.getElementById('been-fields').style.display = 'block';
+    // Always show cuisine/price/notes in edit mode
+    document.getElementById('been-details-row').style.display = '';
+    document.getElementById('been-notes-group').style.display = '';
     document.getElementById('f-cuisine').value = r.cuisine || '';
     document.getElementById('f-price').value   = r.price   || '';
     // Use author's own rating if in userRatings, else fall back to top-level rating
@@ -1575,9 +1744,31 @@ function selectAddType(type, skipBack) {
   addType = type;
   document.getElementById('type-step').style.display  = 'none';
   document.getElementById('form-step').style.display  = 'block';
-  document.getElementById('form-step-title').textContent = type === 'try' ? '📌 Save a Place to Try' : "🍴 Review a Place You've Visited";
-  document.getElementById('try-fields').style.display  = type === 'try'  ? 'block' : 'none';
-  document.getElementById('been-fields').style.display = type === 'been' ? 'block' : 'none';
+
+  const isTry  = (type === 'try'  || type === 'want-to-go');
+  const isBeen = (type === 'been' || type === 'been-recommend' || type === 'been-skip');
+
+  const titleMap = {
+    'want-to-go':     '📌 Save a Place to Try',
+    'been-recommend': '✅ Review a Place You Recommend',
+    'been-skip':      '👎 Add a Place You\'d Skip',
+    'try':            '📌 Save a Place to Try',
+    'been':           "🍴 Review a Place You've Visited",
+  };
+  document.getElementById('form-step-title').textContent = titleMap[type] || '📌 Save a Place';
+
+  document.getElementById('try-fields').style.display  = isTry  ? 'block' : 'none';
+  document.getElementById('been-fields').style.display = isBeen ? 'block' : 'none';
+
+  // For new been entries (not editing), hide cuisine/price/notes — ratings only
+  if (isBeen && !editingId) {
+    document.getElementById('been-details-row').style.display = 'none';
+    document.getElementById('been-notes-group').style.display = 'none';
+  } else if (isBeen) {
+    document.getElementById('been-details-row').style.display = '';
+    document.getElementById('been-notes-group').style.display = '';
+  }
+
   document.querySelector('.step-back').style.display = skipBack ? 'none' : 'flex';
   document.querySelector('.modal').scrollTop = 0;
 }
@@ -1633,6 +1824,7 @@ function clearForm() {
   document.getElementById('factor-hint').style.display = 'none';
   selectedPlaceLat = null;
   selectedPlaceLng = null;
+  selectedPlaceId  = null;
 }
 
 // ══════════════════════════════════════════════════
@@ -1659,24 +1851,47 @@ function submitRec() {
     rec.lng = selectedPlaceLng;
   }
 
-  if (addType === 'try') {
-    rec.status  = 'try';
+  // Normalize addType for legacy and new values
+  const isTryType  = (addType === 'try'  || addType === 'want-to-go');
+  const isBeenType = (addType === 'been' || addType === 'been-recommend' || addType === 'been-skip');
+
+  // Map addType to top-level status (for backward compat and card filtering)
+  let topStatus;
+  if (addType === 'been-skip') topStatus = 'not-recommended';
+  else if (isTryType)          topStatus = 'try';
+  else                         topStatus = 'recommended';
+
+  // Map addType to userStatuses value
+  let userStatusValue;
+  if (addType === 'want-to-go' || addType === 'try') userStatusValue = 'want-to-go';
+  else if (addType === 'been-skip')                  userStatusValue = 'been-skip';
+  else                                               userStatusValue = 'been-recommend';
+
+  if (isTryType) {
+    rec.status  = topStatus;
     rec.tryNote = document.getElementById('f-try-note').value.trim();
     rec.url     = document.getElementById('f-url').value.trim();
   } else {
-    rec.status  = 'recommended';
-    rec.cuisine = document.getElementById('f-cuisine').value;
-    rec.price   = document.getElementById('f-price').value;
+    rec.status  = topStatus;
+    // cuisine/price/notes only in edit mode (hidden for new been adds)
+    if (editingId) {
+      rec.cuisine = document.getElementById('f-cuisine').value;
+      rec.price   = document.getElementById('f-price').value;
+      rec.notes   = document.getElementById('f-notes').value.trim();
+    }
     rec.rating  = selectedStars;
-    rec.notes   = document.getElementById('f-notes').value.trim();
 
     const anyRated = Object.values(factorRatings).some(v => v > 0);
     if (anyRated) {
       rec.factorRatings = { ...factorRatings };
-    } else {
+    } else if (addType === 'been') {
+      // legacy been adds show the hint
       document.getElementById('factor-hint').style.display = 'block';
     }
   }
+
+  // Store placeId when available
+  if (selectedPlaceId) rec.placeId = selectedPlaceId;
 
   if (editingId) {
     const orig = allRecs[editingId];
@@ -1684,6 +1899,7 @@ function submitRec() {
       rec.author = orig.author;
       rec.ts     = orig.ts;
       if (orig.lat && rec.lat === undefined) { rec.lat = orig.lat; rec.lng = orig.lng; }
+      if (orig.placeId && !rec.placeId) rec.placeId = orig.placeId;
     }
   }
 
@@ -1692,18 +1908,24 @@ function submitRec() {
     : db.ref('recommendations').push(rec);
 
   op.then((ref) => {
-    // Write author's rating to userRatings (separate path to avoid clobbering others)
-    if (addType === 'been' || (addType === null && editingId)) {
-      const savedId = editingId || ref.key;
-      if (savedId && selectedStars > 0) {
-        const authorRating = { overall: selectedStars };
-        if (Object.values(factorRatings).some(v => v > 0)) {
-          Object.assign(authorRating, factorRatings);
-        }
-        db.ref(`recommendations/${savedId}/userRatings/${currentUser}`).set(authorRating);
-      }
+    const savedId = editingId || ref.key;
+
+    // Write userStatuses for the author
+    if (savedId) {
+      db.ref(`recommendations/${savedId}/userStatuses/${currentUser}`).set({ status: userStatusValue, ts: Date.now() });
     }
-    showToast(addType === 'try' ? '📌 Saved to your list!' : '🎉 Review saved!');
+
+    // Write author's rating to userRatings for been entries
+    if (isBeenType && savedId && selectedStars > 0) {
+      const authorRating = { overall: selectedStars };
+      if (Object.values(factorRatings).some(v => v > 0)) {
+        Object.assign(authorRating, factorRatings);
+      }
+      db.ref(`recommendations/${savedId}/userRatings/${currentUser}`).set(authorRating);
+    }
+
+    const toastMsg = isTryType ? '📌 Saved to your list!' : addType === 'been-skip' ? '👎 Skip noted!' : '🎉 Review saved!';
+    showToast(toastMsg);
     closeModal();
     btn.disabled = false; btn.textContent = 'Save';
   }).catch(err => {
@@ -1735,7 +1957,6 @@ async function initAutocomplete() {
       const { suggestions } = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
         input: val,
         sessionToken,
-        includedPrimaryTypes: ['restaurant', 'bar', 'cafe', 'night_club', 'bakery', 'liquor_store', 'wine_store'],
       });
 
       if (!suggestions.length) { hideDropdown(); return; }
@@ -1755,7 +1976,7 @@ async function initAutocomplete() {
 
           try {
             const place = pred.toPlace();
-            await place.fetchFields({ fields: ['displayName','formattedAddress','types','priceLevel','location'] });
+            await place.fetchFields({ fields: ['displayName','formattedAddress','types','priceLevel','location','id'] });
 
             if (place.displayName) input.value = place.displayName;
             if (place.formattedAddress) {
@@ -1763,7 +1984,7 @@ async function initAutocomplete() {
               document.getElementById('f-location').value = parts.slice(1, 3).join(',').trim();
             }
             if (place.types) {
-              const isBar = place.types.some(t => ['bar','night_club','liquor_store'].includes(t));
+              const isBar = place.types.some(t => ['bar','night_club','liquor_store','wine_store'].includes(t));
               setPlaceType(isBar ? 'bar' : 'restaurant');
             }
             if (place.priceLevel != null) {
@@ -1779,6 +2000,12 @@ async function initAutocomplete() {
             if (place.location) {
               selectedPlaceLat = place.location.lat();
               selectedPlaceLng = place.location.lng();
+            }
+            // Store Place ID for duplicate detection
+            if (place.id) {
+              selectedPlaceId = place.id;
+              // Only check for duplicates when adding (not editing)
+              if (!editingId) checkForDuplicate(place.id, place.displayName || input.value);
             }
           } catch (err) { console.error('Place detail fetch error:', err); }
 
@@ -1906,7 +2133,7 @@ function openPlaceDetail(id) {
   const r = allRecs[id];
   if (!r) return;
 
-  const isMine = r.author === currentUser;
+  const isMine = isAdmin || r.author === currentUser;
   const { avg, count } = computeAvgRating(r);
   const avgStars = avg > 0 ? '★'.repeat(Math.round(avg))+'☆'.repeat(5-Math.round(avg)) : '';
   const avgFactors = computeAvgFactors(r);
@@ -2125,6 +2352,209 @@ function shake(el) {
   el.style.borderColor = 'var(--rust)';
   el.focus();
   setTimeout(() => el.style.borderColor = '', 1200);
+}
+
+// ══════════════════════════════════════════════════
+//  HIDE MY SKIPS FILTER
+// ══════════════════════════════════════════════════
+function toggleHideMySkips(el) {
+  hideMySkips = !hideMySkips;
+  el.classList.toggle('active', hideMySkips);
+  renderCards();
+}
+
+// ══════════════════════════════════════════════════
+//  SOCIAL SIGNALS
+// ══════════════════════════════════════════════════
+function buildSocialSignals(id, r) {
+  if (!r.userStatuses) return '';
+  const statuses = Object.entries(r.userStatuses);
+  const recommends = statuses.filter(([,s]) => s.status === 'been-recommend');
+  const skips      = statuses.filter(([,s]) => s.status === 'been-skip');
+  if (!recommends.length && !skips.length) return '';
+
+  const recBtn  = recommends.length
+    ? `<button class="signal-btn" onclick="openStatusDetail('${id}','been-recommend')" title="See who recommends">✅ <span class="signal-count">${recommends.length}</span></button>`
+    : '';
+  const skipBtn = skips.length
+    ? `<button class="signal-btn" onclick="openStatusDetail('${id}','been-skip')" title="See who'd skip">👎 <span class="signal-count">${skips.length}</span></button>`
+    : '';
+
+  return `<div class="social-signals">${recBtn}${skipBtn}</div>`;
+}
+
+function openStatusDetail(id, filterStatus) {
+  const r = allRecs[id];
+  if (!r) return;
+
+  const statuses = r.userStatuses ? Object.entries(r.userStatuses) : [];
+  const recommends = statuses.filter(([,s]) => s.status === 'been-recommend').map(([n]) => n);
+  const skips      = statuses.filter(([,s]) => s.status === 'been-skip').map(([n]) => n);
+
+  const nameList = (names, emoji, label) => {
+    if (!names.length) return '';
+    const items = names.map(n => {
+      const c = getUserColor(n);
+      return `<div class="status-name-item"><div class="avatar-sm ${c}">${n.slice(0,2).toUpperCase()}</div>${esc(n)}</div>`;
+    }).join('');
+    return `<div style="margin-bottom:14px;"><div class="form-label" style="margin-bottom:8px;">${emoji} ${label}</div><div class="status-names-list">${items}</div></div>`;
+  };
+
+  document.getElementById('detail-panel-title').textContent = r.name;
+  document.getElementById('detail-panel-content').innerHTML =
+    nameList(recommends, '✅', 'Recommends') +
+    nameList(skips,      '👎', 'Skips') +
+    `<div class="card-footer" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--tan);">
+      <span style="font-size:.8rem;color:var(--muted);">Tap a name to see their other picks — coming soon</span>
+    </div>`;
+  document.getElementById('place-detail-overlay').classList.add('open');
+}
+
+// ══════════════════════════════════════════════════
+//  DUPLICATE DETECTION
+// ══════════════════════════════════════════════════
+function checkForDuplicate(placeId, placeName) {
+  if (!placeId) return;
+  db.ref('recommendations').orderByChild('placeId').equalTo(placeId).once('value', snap => {
+    if (!snap.exists()) return;
+    const entries = Object.entries(snap.val());
+    if (!entries.length) return;
+    const [existingId, existingRec] = entries[0];
+
+    pendingDupId    = existingId;
+    pendingDupIsOwn = existingRec.author === currentUser;
+
+    if (pendingDupIsOwn) {
+      document.getElementById('dup-message').textContent =
+        `You already added "${existingRec.name}" to InnerTable. Would you like to edit your existing entry?`;
+      document.getElementById('dup-primary-btn').textContent = 'Yes, edit my existing entry';
+    } else {
+      document.getElementById('dup-message').textContent =
+        `"${existingRec.name}" is already on InnerTable (added by ${existingRec.author}). Would you like to add your status to the existing entry instead?`;
+      document.getElementById('dup-primary-btn').textContent = 'Yes, add my status to the existing entry';
+    }
+
+    document.getElementById('dup-overlay').classList.add('open');
+  });
+}
+
+function closeDupOnBg(e) {
+  if (e.target === document.getElementById('dup-overlay')) closeDupPrompt();
+}
+
+function closeDupPrompt() {
+  document.getElementById('dup-overlay').classList.remove('open');
+  pendingDupId    = null;
+  pendingDupIsOwn = false;
+}
+
+function closeDupPromptAndContinue() {
+  document.getElementById('dup-overlay').classList.remove('open');
+  pendingDupId    = null;
+  pendingDupIsOwn = false;
+}
+
+function confirmDup() {
+  if (pendingDupIsOwn) {
+    // Author: close prompt and open edit modal for their existing entry
+    const targetId = pendingDupId;
+    pendingDupId    = null;
+    pendingDupIsOwn = false;
+    document.getElementById('dup-overlay').classList.remove('open');
+    closeModal();
+    editEntry(targetId);
+  } else {
+    confirmAttach();
+  }
+}
+
+function confirmAttach() {
+  if (!pendingDupId) return;
+  const targetId = pendingDupId;  // save before closeModal resets state
+  pendingDupId   = null;
+  document.getElementById('dup-overlay').classList.remove('open');
+
+  // Open modal in attach mode
+  const r = allRecs[targetId];
+  closeModal(); // reset form state (clears attachingToId — we re-set below)
+  attachingToId = targetId;
+
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('modal-title').textContent  = 'Add Your Status';
+  document.getElementById('type-step').style.display  = 'none';
+  document.getElementById('form-step').style.display  = 'none';
+  document.getElementById('attach-step').style.display = 'block';
+  document.getElementById('attach-place-name').textContent = r ? r.name : '';
+
+  // Reset attach state
+  attachStatus = null;
+  attachStars  = 0;
+  attachFactorRatings = { quality: 0, service: 0, value: 0, ambiance: 0 };
+  document.getElementById('attach-submit-btn').disabled = true;
+  document.getElementById('attach-rating-section').style.display = 'none';
+  document.querySelectorAll('.modal #attach-step .type-card').forEach(c => c.classList.remove('selected'));
+  resetAttachStars();
+  document.querySelector('.modal').scrollTop = 0;
+}
+
+// ══════════════════════════════════════════════════
+//  ATTACH FORM CONTROLS
+// ══════════════════════════════════════════════════
+function setAttachStatus(status, el) {
+  attachStatus = status;
+  document.querySelectorAll('#attach-step .type-card').forEach(c => c.classList.remove('selected'));
+  if (el) el.classList.add('selected');
+  const isBeen = (status === 'been-recommend' || status === 'been-skip');
+  document.getElementById('attach-rating-section').style.display = isBeen ? 'block' : 'none';
+  document.getElementById('attach-submit-btn').disabled = false;
+}
+
+function setAttachStars(n) {
+  attachStars = n;
+  document.querySelectorAll('#attach-star-picker span').forEach((s,i) => { s.textContent = i < n ? '★' : '☆'; });
+}
+
+function setAttachFactorStar(factor, n) {
+  attachFactorRatings[factor] = n;
+  document.querySelectorAll(`#afp-${factor} span`).forEach((s,i) => { s.textContent = i < n ? '★' : '☆'; });
+}
+
+function resetAttachStars() {
+  attachStars = 0;
+  document.querySelectorAll('#attach-star-picker span').forEach(s => { s.textContent = '☆'; });
+  attachFactorRatings = { quality: 0, service: 0, value: 0, ambiance: 0 };
+  ['quality','service','value','ambiance'].forEach(f => {
+    document.querySelectorAll(`#afp-${f} span`).forEach(s => { s.textContent = '☆'; });
+  });
+}
+
+function submitAttach() {
+  if (!attachingToId || !attachStatus) return;
+  const btn = document.getElementById('attach-submit-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const updates = {};
+  updates[`recommendations/${attachingToId}/userStatuses/${currentUser}`] = { status: attachStatus, ts: Date.now() };
+
+  const isBeen = (attachStatus === 'been-recommend' || attachStatus === 'been-skip');
+  if (isBeen && attachStars > 0) {
+    const rating = { overall: attachStars };
+    if (Object.values(attachFactorRatings).some(v => v > 0)) Object.assign(rating, attachFactorRatings);
+    updates[`recommendations/${attachingToId}/userRatings/${currentUser}`] = rating;
+  }
+
+  db.ref().update(updates)
+    .then(() => {
+      const toastMsg = attachStatus === 'been-recommend' ? '✅ Status saved!' : attachStatus === 'been-skip' ? '👎 Skip noted!' : '📌 Want-to-go saved!';
+      showToast(toastMsg);
+      closeModal();
+      btn.disabled = false; btn.textContent = 'Save My Status';
+    })
+    .catch(err => {
+      console.error(err);
+      showToast('❌ Could not save status.');
+      btn.disabled = false; btn.textContent = 'Save My Status';
+    });
 }
 </script>
 </body>
