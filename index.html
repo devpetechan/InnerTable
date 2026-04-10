@@ -845,7 +845,7 @@ const db = firebase.database();
 // Load Google Maps + Places API
 if (GOOGLE_MAPS_API_KEY !== "YOUR_GOOGLE_MAPS_API_KEY") {
   const s = document.createElement('script');
-  s.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&v=weekly&loading=async&callback=initGoogleAPIs`;
+  s.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places,marker&v=weekly&loading=async&callback=initGoogleAPIs`;
   s.async = true; s.defer = true;
   document.head.appendChild(s);
 } else {
@@ -870,7 +870,6 @@ let selectedPlaceLat   = null;
 let selectedPlaceLng   = null;
 let mapInstance        = null;
 let mapMarkers         = [];
-let mapInfoWindow      = null;
 let googleMapsReady    = false;
 const pendingUserRatings = {}; // { [id]: { overall, quality, service, value, ambiance } }
 
@@ -1313,18 +1312,16 @@ function initMap() {
   if (mapEl.querySelector('.map-empty')) {
     mapEl.innerHTML = '';
     mapInstance = null;
-    mapInfoWindow = null;
   }
   if (!mapInstance) {
     mapInstance = new google.maps.Map(mapEl, {
       zoom: 10,
       center: { lat: 37.7749, lng: -122.4194 },
+      mapId: 'DEMO_MAP_ID',
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: false,
-      styles: [{ featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] }]
     });
-    mapInfoWindow = new google.maps.InfoWindow();
   }
   renderMapMarkers();
 }
@@ -1396,18 +1393,14 @@ function renderMapMarkers() {
     const pos      = { lat: r.lat, lng: r.lng };
     const pinColor = r.placeType === 'bar' ? '#4a6b7c' : '#c0522a';
 
-    const marker = new google.maps.Marker({
+    const pinEl = document.createElement('div');
+    pinEl.style.cssText = `width:16px;height:16px;border-radius:50%;background:${pinColor};border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);cursor:pointer;`;
+
+    const marker = new google.maps.marker.AdvancedMarkerElement({
       position: pos,
       map: mapInstance,
       title: r.name,
-      icon: {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 9,
-        fillColor: pinColor,
-        fillOpacity: 1,
-        strokeColor: '#ffffff',
-        strokeWeight: 2,
-      }
+      content: pinEl,
     });
 
     marker.addListener('click', () => openPlaceDetail(id));
