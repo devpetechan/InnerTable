@@ -272,6 +272,12 @@
     .comment-submit:hover { background: var(--rust-dk); }
     .comment-cancel { background: none; border: 1px solid var(--tan); border-radius: 8px; padding: 6px 10px; font-size: .78rem; color: var(--muted); cursor: pointer; }
     .comment-cancel:hover { border-color: var(--rust); color: var(--rust); }
+    .comment-edit-actions { display: flex; gap: 10px; margin-top: 4px; }
+    .comment-action-btn { background: none; border: none; font-size: .72rem; color: var(--muted); cursor: pointer; padding: 0; text-decoration: underline; }
+    .comment-action-btn:hover { color: var(--rust); }
+    .comment-action-btn.danger:hover { color: #c0392b; }
+    .comment-edit-form { margin-top: 4px; }
+    .comment-deleted { font-size: .83rem; color: var(--tan); font-style: italic; display: block; line-height: 1.4; margin-top: 2px; }
 
     /* ═══ EMPTY STATE ═══ */
     .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
@@ -1202,20 +1208,39 @@ function cardHTML(id, r) {
 
   // Comments
   const commentEntries = r.comments ? Object.entries(r.comments).sort((a,b) => (a[1].ts||0)-(b[1].ts||0)) : [];
-  const commentsList = commentEntries.length ? `<div class="comments-list">${commentEntries.map(([,c]) => {
+  const commentsList = commentEntries.length ? `<div class="comments-list">${commentEntries.map(([ck, c]) => {
+    if (c.deleted) {
+      return `<div class="comment-item"><div class="comment-body"><span class="comment-deleted">Comment deleted.</span></div></div>`;
+    }
     const cc = getUserColor(c.author);
     const ci = (c.author||'?').slice(0,2).toUpperCase();
     const cd = c.ts ? new Date(c.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+    const isMyComment = c.author === currentUser;
+    const editActions = isMyComment ? `<div class="comment-edit-actions">
+      <button class="comment-action-btn" onclick="startEditComment('${id}','${ck}')">Edit</button>
+      <button class="comment-action-btn danger" onclick="deleteComment('${id}','${ck}')">Delete</button>
+    </div>` : '';
     return `<div class="comment-item">
       <div class="avatar-sm ${cc}">${ci}</div>
       <div class="comment-body">
         <span class="comment-author">${esc(c.author)}</span><span class="comment-date">${cd}</span>
-        <span class="comment-text">${esc(c.text)}</span>
+        <div id="cv-${id}-${ck}">
+          <span class="comment-text">${esc(c.text)}</span>
+          ${editActions}
+        </div>
+        <div class="comment-edit-form" id="cef-${id}-${ck}" style="display:none">
+          <textarea class="comment-input" id="cet-${id}-${ck}" rows="2" maxlength="300">${esc(c.text)}</textarea>
+          <div class="comment-actions">
+            <button class="comment-submit" onclick="saveCommentEdit('${id}','${ck}',this)">Save</button>
+            <button class="comment-cancel" onclick="cancelEditComment('${id}','${ck}')">Cancel</button>
+          </div>
+        </div>
       </div>
     </div>`;
   }).join('')}</div>` : '';
 
-  const commentLabel = commentEntries.length ? `💬 ${commentEntries.length} comment${commentEntries.length !== 1 ? 's' : ''}` : '💬 Comment';
+  const visibleCommentCount = commentEntries.filter(([,c]) => !c.deleted).length;
+  const commentLabel = visibleCommentCount ? `💬 ${visibleCommentCount} comment${visibleCommentCount !== 1 ? 's' : ''}` : '💬 Comment';
   const comments = `<div class="card-comments">
     ${commentsList}
     <div class="comment-form" id="cf-${id}">
@@ -1510,6 +1535,39 @@ function submitComment(id, btn) {
     console.error(err);
     showToast('❌ Could not post comment.');
     btn.disabled = false;
+  });
+}
+
+function startEditComment(recId, commentKey) {
+  document.getElementById('cv-'  + recId + '-' + commentKey).style.display = 'none';
+  document.getElementById('cef-' + recId + '-' + commentKey).style.display = 'block';
+  document.getElementById('cet-' + recId + '-' + commentKey).focus();
+}
+
+function cancelEditComment(recId, commentKey) {
+  document.getElementById('cef-' + recId + '-' + commentKey).style.display = 'none';
+  document.getElementById('cv-'  + recId + '-' + commentKey).style.display = 'block';
+}
+
+function saveCommentEdit(recId, commentKey, btn) {
+  const textarea = document.getElementById('cet-' + recId + '-' + commentKey);
+  const text = textarea.value.trim();
+  if (!text) { textarea.focus(); return; }
+  btn.disabled = true;
+  db.ref('recommendations/' + recId + '/comments/' + commentKey).update({ text }).then(() => {
+    btn.disabled = false;
+  }).catch(err => {
+    console.error(err);
+    showToast('❌ Could not save edit.');
+    btn.disabled = false;
+  });
+}
+
+function deleteComment(recId, commentKey) {
+  if (!confirm('Delete this comment? This cannot be undone.')) return;
+  db.ref('recommendations/' + recId + '/comments/' + commentKey).update({ deleted: true, text: null }).catch(err => {
+    console.error(err);
+    showToast('❌ Could not delete comment.');
   });
 }
 
