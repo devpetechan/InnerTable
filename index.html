@@ -845,7 +845,7 @@ const db = firebase.database();
 // Load Google Maps + Places API
 if (GOOGLE_MAPS_API_KEY !== "YOUR_GOOGLE_MAPS_API_KEY") {
   const s = document.createElement('script');
-  s.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&v=weekly&callback=initGoogleAPIs`;
+  s.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&v=weekly&loading=async&callback=initGoogleAPIs`;
   s.async = true; s.defer = true;
   document.head.appendChild(s);
 } else {
