@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InnerTable — Dev Workspace</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .tab-btn { padding: 12px 18px; border-bottom: 3px solid transparent; cursor: pointer; font-size: 14px; font-weight: 500; color: #64748b; transition: all 0.15s; white-space: nowrap; }
+    .tab-btn:hover { color: #6366f1; background: #f8fafc; }
+    .tab-btn.active { border-bottom-color: #6366f1; color: #6366f1; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .drag-item { cursor: grab; transition: all 0.15s; }
+    .drag-item:active { cursor: grabbing; }
+    .drag-item.dragging { opacity: 0.3; transform: scale(0.97); }
+    .drop-zone { min-height: 80px; border-radius: 8px; transition: all 0.2s; }
+    .drop-zone.drag-over { background: #eef2ff; outline: 2px dashed #818cf8; }
+    .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .badge-bug { background: #fee2e2; color: #991b1b; }
+    .badge-enhancement { background: #ede9fe; color: #5b21b6; }
+    .badge-p0 { background: #fecaca; color: #7f1d1d; }
+    .badge-p1 { background: #fed7aa; color: #7c2d12; }
+    .badge-p2 { background: #fef08a; color: #713f12; }
+    .badge-p3 { background: #bbf7d0; color: #14532d; }
+    .badge-planning { background: #dbeafe; color: #1e3a8a; }
+    .badge-active { background: #d1fae5; color: #064e3b; }
+    .badge-released { background: #e0e7ff; color: #312e81; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+    .modal-box { background: white; border-radius: 14px; padding: 28px; max-width: 640px; width: 100%; max-height: 92vh; overflow-y: auto; box-shadow: 0 25px 60px rgba(0,0,0,0.25); }
+    .form-label { display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .form-input { border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 12px; font-size: 14px; width: 100%; outline: none; background: #fafafa; transition: border 0.15s, box-shadow 0.15s; }
+    .form-input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px #e0e7ff; background: white; }
+    textarea.form-input { resize: vertical; min-height: 80px; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; }
+    .btn-primary { background: #6366f1; color: white; }
+    .btn-primary:hover { background: #4f46e5; }
+    .btn-secondary { background: #f1f5f9; color: #374151; border: 1px solid #e2e8f0; }
+    .btn-secondary:hover { background: #e2e8f0; }
+    .btn-danger { background: #fee2e2; color: #991b1b; }
+    .btn-danger:hover { background: #fecaca; }
+    .btn-sm { padding: 4px 10px; font-size: 12px; border-radius: 6px; }
+    .card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; }
+    .item-card { background: white; border-radius: 10px; border: 1px solid #e2e8f0; padding: 12px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .item-card:hover { border-color: #a5b4fc; box-shadow: 0 2px 8px rgba(99,102,241,0.1); }
+    .release-col { background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; min-width: 260px; max-width: 300px; flex-shrink: 0; }
+    .stat-card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 20px; }
+    .prompt-output { background: #1e293b; color: #e2e8f0; padding: 16px; border-radius: 10px; font-size: 13px; font-family: 'Courier New', monospace; white-space: pre-wrap; word-break: break-word; line-height: 1.6; max-height: 450px; overflow-y: auto; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    .okr-row { background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; padding: 12px; margin-bottom: 8px; }
+    .progress-bar { background: #e2e8f0; border-radius: 4px; height: 6px; }
+    .progress-fill { background: #6366f1; border-radius: 4px; height: 6px; transition: width 0.3s; }
+    .roadmap-cell { border-right: 1px solid #e2e8f0; padding: 8px; min-height: 60px; vertical-align: top; }
+    .roadmap-item { background: #e0e7ff; color: #3730a3; border-radius: 6px; padding: 4px 8px; font-size: 12px; font-weight: 500; margin-bottom: 4px; cursor: pointer; }
+    .roadmap-item.active { background: #d1fae5; color: #064e3b; }
+    .roadmap-item.released { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    .section-title { font-size: 13px; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+    .empty-state { text-align: center; padding: 40px 20px; color: #94a3b8; }
+    .empty-state svg { margin: 0 auto 12px; opacity: 0.4; }
+    .changelog-item { border-left: 3px solid #6366f1; padding: 8px 12px; margin-bottom: 6px; background: #f8fafc; border-radius: 0 6px 6px 0; font-size: 13px; }
+    .export-textarea { width: 100%; height: 200px; font-size: 12px; font-family: monospace; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px; resize: vertical; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- HEADER -->
+<header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+  <div class="max-w-screen-2xl mx-auto px-4">
+    <div class="flex items-center justify-between py-3">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        </div>
+        <div>
+          <div class="font-bold text-gray-900 text-base leading-tight" id="header-app-name">InnerTable</div>
+          <div class="text-xs text-gray-400 leading-tight" id="header-app-tagline">Dev Workspace</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="exportData()" class="btn btn-secondary btn-sm">⬆ Export</button>
+        <button onclick="importData()" class="btn btn-secondary btn-sm">⬇ Import</button>
+        <span class="text-xs text-gray-400 ml-2" id="save-indicator">✓ Saved</span>
+      </div>
+    </div>
+    <!-- TABS -->
+    <div class="flex overflow-x-auto" id="tab-nav">
+      <button class="tab-btn active" onclick="showTab('dashboard')">🏠 Dashboard</button>
+      <button class="tab-btn" onclick="showTab('vision')">🎯 Vision</button>
+      <button class="tab-btn" onclick="showTab('backlog')">📋 Backlog</button>
+      <button class="tab-btn" onclick="showTab('releases')">🚀 Releases</button>
+      <button class="tab-btn" onclick="showTab('roadmap')">🗺️ Roadmap</button>
+      <button class="tab-btn" onclick="showTab('prompt')">🤖 Prompt Builder</button>
+      <button class="tab-btn" onclick="showTab('changelog')">📝 Changelog</button>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="max-w-screen-2xl mx-auto px-4 py-6">
+
+  <!-- DASHBOARD TAB -->
+  <div id="tab-dashboard" class="tab-panel active">
+    <div id="dashboard-content"></div>
+  </div>
+
+  <!-- VISION TAB -->
+  <div id="tab-vision" class="tab-panel">
+    <div id="vision-content"></div>
+  </div>
+
+  <!-- BACKLOG TAB -->
+  <div id="tab-backlog" class="tab-panel">
+    <div id="backlog-content"></div>
+  </div>
+
+  <!-- RELEASES TAB -->
+  <div id="tab-releases" class="tab-panel">
+    <div id="releases-content"></div>
+  </div>
+
+  <!-- ROADMAP TAB -->
+  <div id="tab-roadmap" class="tab-panel">
+    <div id="roadmap-content"></div>
+  </div>
+
+  <!-- PROMPT BUILDER TAB -->
+  <div id="tab-prompt" class="tab-panel">
+    <div id="prompt-content"></div>
+  </div>
+
+  <!-- CHANGELOG TAB -->
+  <div id="tab-changelog" class="tab-panel">
+    <div id="changelog-content"></div>
+  </div>
+
+</main>
+
+<!-- MODALS (rendered by JS) -->
+<div id="modal-container"></div>
+
+<script>
+// ===== STATE =====
+const DEFAULT_STATE = {
+  app: {
+    name: "InnerTable",
+    tagline: "Your app tagline here",
+    vision: "",
+    mission: "",
+    personas: [
+      { name: "", role: "", needs: "", painPoints: "" },
+      { name: "", role: "", needs: "", painPoints: "" }
+    ],
+    strategicThemes: [
+      { title: "Core Experience", description: "" },
+      { title: "Performance & Reliability", description: "" },
+      { title: "Growth & Retention", description: "" }
+    ],
+    okrs: [
+      { objective: "", keyResults: ["", "", ""], progress: [0, 0, 0] }
+    ]
+  },
+  items: [],
+  releases: [],
+  nextItemId: 1,
+  nextReleaseId: 1
+};
+
+let state = loadState();
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('innertable_workspace');
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_STATE));
+}
+
+function saveState() {
+  try {
+    localStorage.setItem('innertable_workspace', JSON.stringify(state));
+    const el = document.getElementById('save-indicator');
+    if (el) { el.textContent = '✓ Saved'; el.style.color = '#22c55e'; setTimeout(() => { el.textContent = '✓ Saved'; el.style.color = ''; }, 1500); }
+  } catch(e) {}
+}
+
+// ===== TABS =====
+let currentTab = 'dashboard';
+function showTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  const btns = document.querySelectorAll('.tab-btn');
+  btns.forEach(b => { if (b.textContent.toLowerCase().includes(tab === 'dashboard' ? '🏠' : tab === 'vision' ? '🎯' : tab === 'backlog' ? '📋' : tab === 'releases' ? '🚀' : tab === 'roadmap' ? '🗺️' : tab === 'prompt' ? '🤖' : '📝')) b.classList.add('active'); });
+  currentTab = tab;
+  renderTab(tab);
+}
+
+function renderTab(tab) {
+  if (tab === 'dashboard') renderDashboard();
+  else if (tab === 'vision') renderVision();
+  else if (tab === 'backlog') renderBacklog();
+  else if (tab === 'releases') renderReleases();
+  else if (tab === 'roadmap') renderRoadmap();
+  else if (tab === 'prompt') renderPromptBuilder();
+  else if (tab === 'changelog') renderChangelog();
+}
+
+// ===== UTILITIES =====
+function genItemId() {
+  const id = state.nextItemId++;
+  saveState();
+  return 'IT-' + String(id).padStart(3, '0');
+}
+
+function genReleaseId() {
+  return 'REL-' + (state.nextReleaseId++);
+}
+
+function priorityLabel(p) {
+  return { P0: '🔴 P0 Critical', P1: '🟠 P1 High', P2: '🟡 P2 Medium', P3: '🟢 P3 Low' }[p] || p;
+}
+
+function effortLabel(e) {
+  return { S: 'S (Small)', M: 'M (Medium)', L: 'L (Large)', XL: 'XL (Extra Large)' }[e] || e;
+}
+
+function getItemsByRelease(releaseId) {
+  return state.items.filter(i => i.releaseId === releaseId);
+}
+
+function getStagedItems() {
+  return state.items.filter(i => i.status === 'staged' && !i.releaseId);
+}
+
+function getBacklogItems() {
+  return state.items.filter(i => i.status === 'backlog');
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function slugify(str) {
+  return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 40);
+}
+
+// ===== DASHBOARD =====
+function renderDashboard() {
+  const totalItems = state.items.length;
+  const bugs = state.items.filter(i => i.type === 'bug').length;
+  const enhancements = state.items.filter(i => i.type === 'enhancement').length;
+  const open = state.items.filter(i => i.status !== 'done').length;
+  const done = state.items.filter(i => i.status === 'done').length;
+  const p0 = state.items.filter(i => i.priority === 'P0' && i.status !== 'done').length;
+  const p1 = state.items.filter(i => i.priority === 'P1' && i.status !== 'done').length;
+  const staged = state.items.filter(i => i.status === 'staged').length;
+  const activeReleases = state.releases.filter(r => r.status === 'active').length;
+
+  const recentItems = [...state.items].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
+  const upcomingReleases = state.releases.filter(r => r.status !== 'released').sort((a,b) => new Date(a.targetDate) - new Date(b.targetDate)).slice(0, 3);
+
+  document.getElementById('dashboard-content').innerHTML = `
+    <div class="mb-6">
+      <h2 class="text-xl font-bold text-gray-900">Dashboard</h2>
+      <p class="text-sm text-gray-500 mt-1">Overview of your product development workspace</p>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div class="stat-card">
+        <div class="text-3xl font-bold text-indigo-600">${open}</div>
+        <div class="text-sm text-gray-500 mt-1">Open Items</div>
+        <div class="text-xs text-gray-400 mt-1">${totalItems} total</div>
+      </div>
+      <div class="stat-card">
+        <div class="text-3xl font-bold text-red-500">${bugs}</div>
+        <div class="text-sm text-gray-500 mt-1">Bugs</div>
+        <div class="text-xs text-gray-400 mt-1">${p0} critical open</div>
+      </div>
+      <div class="stat-card">
+        <div class="text-3xl font-bold text-purple-600">${enhancements}</div>
+        <div class="text-sm text-gray-500 mt-1">Enhancements</div>
+        <div class="text-xs text-gray-400 mt-1">${staged} staged</div>
+      </div>
+      <div class="stat-card">
+        <div class="text-3xl font-bold text-green-600">${done}</div>
+        <div class="text-sm text-gray-500 mt-1">Completed</div>
+        <div class="text-xs text-gray-400 mt-1">${state.releases.filter(r=>r.status==='released').length} releases shipped</div>
+      </div>
+    </div>
+
+    ${p0 > 0 ? `<div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+      <span class="text-2xl">🚨</span>
+      <div>
+        <div class="font-semibold text-red-800">Critical Items Need Attention</div>
+        <div class="text-sm text-red-600 mt-1">You have <strong>${p0} P0 critical</strong> ${p0 === 1 ? 'item' : 'items'} and <strong>${p1} P1 high priority</strong> ${p1 === 1 ? 'item' : 'items'} open.</div>
+        <button onclick="showTab('backlog'); setTimeout(()=>setFilter('P0'),100)" class="btn btn-secondary btn-sm mt-2">View Critical Items →</button>
+      </div>
+    </div>` : ''}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="card p-4">
+        <div class="section-title">Recent Items</div>
+        ${recentItems.length === 0 ? `<div class="empty-state"><p>No items yet. <a href="#" onclick="showTab('backlog')" class="text-indigo-600">Add your first item →</a></p></div>` :
+          recentItems.map(item => `
+          <div class="item-card cursor-pointer" onclick="viewItem('${item.id}')">
+            <div class="flex items-start gap-2">
+              <span class="badge badge-${item.type}">${item.type === 'bug' ? '🐛' : '✨'} ${item.type}</span>
+              <span class="badge badge-${item.priority.toLowerCase()}">${item.priority}</span>
+              <span class="text-xs text-gray-400 ml-auto">${item.itemId}</span>
+            </div>
+            <div class="font-medium text-gray-800 text-sm mt-2">${escHtml(item.title)}</div>
+            <div class="text-xs text-gray-400 mt-1">${item.area} · ${item.effort} effort · ${item.status}</div>
+          </div>`).join('')}
+      </div>
+
+      <div class="card p-4">
+        <div class="section-title">Upcoming Releases</div>
+        ${upcomingReleases.length === 0 ? `<div class="empty-state"><p>No releases planned. <a href="#" onclick="showTab('releases')" class="text-indigo-600">Plan a release →</a></p></div>` :
+          upcomingReleases.map(rel => {
+            const items = getItemsByRelease(rel.id);
+            return `<div class="bg-gray-50 rounded-xl border border-gray-200 p-3 mb-3">
+              <div class="flex items-center justify-between">
+                <div>
+                  <span class="font-semibold text-gray-800">${escHtml(rel.version)}</span>
+                  <span class="text-gray-500 text-sm ml-2">${escHtml(rel.name)}</span>
+                </div>
+                <span class="badge badge-${rel.status}">${rel.status}</span>
+              </div>
+              <div class="text-xs text-gray-400 mt-1">${rel.targetDate ? '📅 ' + rel.targetDate : 'No date set'} · ${items.length} items</div>
+              <div class="flex gap-1 mt-2 flex-wrap">
+                ${items.slice(0,4).map(i => `<span class="badge badge-${i.type}">${i.itemId}</span>`).join('')}
+                ${items.length > 4 ? `<span class="text-xs text-gray-400">+${items.length - 4} more</span>` : ''}
+              </div>
+            </div>`;
+          }).join('')}
+        <button onclick="showTab('releases')" class="btn btn-secondary btn-sm mt-1">Manage Releases →</button>
+      </div>
+    </div>
+
+    <div class="card p-4 mt-6">
+      <div class="section-title">Quick Actions</div>
+      <div class="flex flex-wrap gap-2">
+        <button onclick="openAddItemModal('bug')" class="btn btn-secondary">🐛 Log Bug</button>
+        <button onclick="openAddItemModal('enhancement')" class="btn btn-secondary">✨ Add Enhancement</button>
+        <button onclick="openAddReleaseModal()" class="btn btn-secondary">🚀 New Release</button>
+        <button onclick="showTab('prompt')" class="btn btn-secondary">🤖 Build Prompt</button>
+      </div>
+    </div>
+  `;
+}
+
+// ===== VISION TAB =====
+function renderVision() {
+  const a = state.app;
+  document.getElementById('vision-content').innerHTML = `
+    <div class="mb-6 flex items-center justify-between">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900">Vision & Strategy</h2>
+        <p class="text-sm text-gray-500 mt-1">Steven Haines Product Management Framework</p>
+      </div>
+      <button onclick="saveVision()" class="btn btn-primary">Save Vision</button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div class="card p-5">
+        <div class="section-title">🏷️ App Identity</div>
+        <div class="mb-4">
+          <label class="form-label">App Name</label>
+          <input type="text" id="v-name" class="form-input" value="${escHtml(a.name)}" placeholder="Your App Name">
+        </div>
+        <div>
+          <label class="form-label">Tagline</label>
+          <input type="text" id="v-tagline" class="form-input" value="${escHtml(a.tagline)}" placeholder="One sentence that defines your app">
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <div class="section-title">🔭 Vision Statement</div>
+        <p class="text-xs text-gray-400 mb-3 italic">"In [X] years, [app name] will be the [category leader] for [target customers] who [key need]."</p>
+        <textarea id="v-vision" class="form-input" rows="4" placeholder="Describe the long-term future state of your product...">${escHtml(a.vision)}</textarea>
+      </div>
+
+      <div class="card p-5">
+        <div class="section-title">🎯 Mission Statement</div>
+        <p class="text-xs text-gray-400 mb-3 italic">"We [verb] [target customers] [achieve what outcome] by [your approach/differentiator]."</p>
+        <textarea id="v-mission" class="form-input" rows="4" placeholder="What problem do you solve, for whom, and how?">${escHtml(a.mission)}</textarea>
+      </div>
+
+      <div class="card p-5">
+        <div class="section-title">👥 Target Users / Personas</div>
+        ${(a.personas || []).map((p, i) => `
+          <div class="bg-indigo-50 rounded-lg p-3 mb-3 border border-indigo-100">
+            <div class="text-xs font-bold text-indigo-600 mb-2">PERSONA ${i+1}</div>
+            <input type="text" class="form-input mb-2" id="v-persona-name-${i}" placeholder="Persona name (e.g., 'Restaurant Manager')" value="${escHtml(p.name)}">
+            <input type="text" class="form-input mb-2" id="v-persona-role-${i}" placeholder="Role / Job Title" value="${escHtml(p.role)}">
+            <textarea class="form-input mb-2" id="v-persona-needs-${i}" rows="2" placeholder="Core needs & goals...">${escHtml(p.needs)}</textarea>
+            <textarea class="form-input" id="v-persona-pain-${i}" rows="2" placeholder="Pain points they have today...">${escHtml(p.painPoints)}</textarea>
+          </div>`).join('')}
+        <button onclick="addPersona()" class="btn btn-secondary btn-sm">+ Add Persona</button>
+      </div>
+    </div>
+
+    <div class="card p-5 mb-6">
+      <div class="section-title flex items-center justify-between">
+        <span>🏛️ Strategic Themes</span>
+        <button onclick="addStrategicTheme()" class="btn btn-secondary btn-sm">+ Add Theme</button>
+      </div>
+      <p class="text-xs text-gray-400 mb-4">Strategic themes are the 3-5 pillars that guide your product decisions (e.g., "Core UX", "Data & Analytics", "Integrations").</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        ${(a.strategicThemes || []).map((t, i) => `
+          <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl border border-indigo-100 p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-indigo-500">THEME ${i+1}</span>
+              <button onclick="removeStrategicTheme(${i})" class="text-gray-300 hover:text-red-400 text-xs">✕</button>
+            </div>
+            <input type="text" class="form-input mb-2" id="v-theme-title-${i}" placeholder="Theme title" value="${escHtml(t.title)}">
+            <textarea class="form-input" id="v-theme-desc-${i}" rows="3" placeholder="Describe this strategic pillar...">${escHtml(t.description)}</textarea>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <div class="section-title flex items-center justify-between">
+        <span>📊 OKRs (Objectives & Key Results)</span>
+        <button onclick="addOKR()" class="btn btn-secondary btn-sm">+ Add OKR</button>
+      </div>
+      ${(a.okrs || []).map((okr, i) => `
+        <div class="okr-row">
+          <div class="flex items-start gap-3 mb-3">
+            <div class="flex-1">
+              <label class="form-label">Objective</label>
+              <input type="text" id="v-okr-obj-${i}" class="form-input" placeholder="We will achieve..." value="${escHtml(okr.objective)}">
+            </div>
+            <button onclick="removeOKR(${i})" class="btn btn-danger btn-sm mt-5">✕</button>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            ${(okr.keyResults || []).map((kr, j) => `
+              <div>
+                <label class="form-label">Key Result ${j+1}</label>
+                <input type="text" id="v-okr-kr-${i}-${j}" class="form-input mb-2" placeholder="Measurable outcome..." value="${escHtml(kr)}">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-gray-400">Progress:</span>
+                  <input type="range" id="v-okr-prog-${i}-${j}" min="0" max="100" value="${(okr.progress||[])[j]||0}" oninput="document.getElementById('v-okr-prog-val-${i}-${j}').textContent=this.value+'%'" class="flex-1">
+                  <span id="v-okr-prog-val-${i}-${j}" class="text-xs font-semibold text-indigo-600 w-8">${(okr.progress||[])[j]||0}%</span>
+                </div>
+                <div class="progress-bar mt-1"><div class="progress-fill" style="width:${(okr.progress||[])[j]||0}%"></div></div>
+              </div>`).join('')}
+          </div>
+        </div>`).join('')}
+    </div>
+  `;
+}
+
+function saveVision() {
+  const a = state.app;
+  a.name = document.getElementById('v-name').value.trim();
+  a.tagline = document.getElementById('v-tagline').value.trim();
+  a.vision = document.getElementById('v-vision').value.trim();
+  a.mission = document.getElementById('v-mission').value.trim();
+  (a.personas || []).forEach((p, i) => {
+    p.name = document.getElementById(`v-persona-name-${i}`)?.value.trim() || '';
+    p.role = document.getElementById(`v-persona-role-${i}`)?.value.trim() || '';
+    p.needs = document.getElementById(`v-persona-needs-${i}`)?.value.trim() || '';
+    p.painPoints = document.getElementById(`v-persona-pain-${i}`)?.value.trim() || '';
+  });
+  (a.strategicThemes || []).forEach((t, i) => {
+    t.title = document.getElementById(`v-theme-title-${i}`)?.value.trim() || '';
+    t.description = document.getElementById(`v-theme-desc-${i}`)?.value.trim() || '';
+  });
+  (a.okrs || []).forEach((okr, i) => {
+    okr.objective = document.getElementById(`v-okr-obj-${i}`)?.value.trim() || '';
+    (okr.keyResults || []).forEach((_, j) => {
+      okr.keyResults[j] = document.getElementById(`v-okr-kr-${i}-${j}`)?.value.trim() || '';
+      if (!okr.progress) okr.progress = [0,0,0];
+      okr.progress[j] = parseInt(document.getElementById(`v-okr-prog-${i}-${j}`)?.value || 0);
+    });
+  });
+  document.getElementById('header-app-name').textContent = a.name;
+  document.getElementById('header-app-tagline').textContent = a.tagline;
+  saveState();
+  showToast('Vision saved ✓');
+}
+
+function addPersona() {
+  saveVision();
+  state.app.personas.push({ name: '', role: '', needs: '', painPoints: '' });
+  saveState();
+  renderVision();
+}
+
+function addStrategicTheme() {
+  saveVision();
+  state.app.strategicThemes.push({ title: '', description: '' });
+  saveState();
+  renderVision();
+}
+
+function removeStrategicTheme(i) {
+  saveVision();
+  state.app.strategicThemes.splice(i, 1);
+  saveState();
+  renderVision();
+}
+
+function addOKR() {
+  saveVision();
+  state.app.okrs.push({ objective: '', keyResults: ['', '', ''], progress: [0, 0, 0] });
+  saveState();
+  renderVision();
+}
+
+function removeOKR(i) {
+  saveVision();
+  state.app.okrs.splice(i, 1);
+  saveState();
+  renderVision();
+}
+
+// ===== BACKLOG TAB =====
+let backlogFilter = { type: 'all', priority: 'all', area: 'all', status: 'all', search: '' };
+
+function setFilter(priority) {
+  backlogFilter.priority = priority;
+  renderBacklog();
+}
+
+function renderBacklog() {
+  let items = [...state.items];
+  if (backlogFilter.type !== 'all') items = items.filter(i => i.type === backlogFilter.type);
+  if (backlogFilter.priority !== 'all') items = items.filter(i => i.priority === backlogFilter.priority);
+  if (backlogFilter.area !== 'all') items = items.filter(i => i.area === backlogFilter.area);
+  if (backlogFilter.status !== 'all') items = items.filter(i => i.status === backlogFilter.status);
+  if (backlogFilter.search) {
+    const s = backlogFilter.search.toLowerCase();
+    items = items.filter(i => i.title.toLowerCase().includes(s) || (i.description||'').toLowerCase().includes(s) || i.itemId.toLowerCase().includes(s));
+  }
+  items.sort((a,b) => {
+    const po = {P0:0,P1:1,P2:2,P3:3};
+    return (po[a.priority]||99) - (po[b.priority]||99) || new Date(b.createdAt) - new Date(a.createdAt);
+  });
+
+  const areas = [...new Set(state.items.map(i => i.area))].filter(Boolean);
+
+  document.getElementById('backlog-content').innerHTML = `
+    <div class="mb-5 flex flex-wrap items-center gap-3">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900">Backlog</h2>
+        <p class="text-sm text-gray-500 mt-0.5">${items.length} of ${state.items.length} items</p>
+      </div>
+      <div class="ml-auto flex flex-wrap gap-2">
+        <button onclick="openAddItemModal('bug')" class="btn btn-secondary">🐛 Log Bug</button>
+        <button onclick="openAddItemModal('enhancement')" class="btn btn-primary">✨ Add Enhancement</button>
+      </div>
+    </div>
+
+    <div class="card p-3 mb-4 flex flex-wrap gap-3 items-center">
+      <input type="text" class="form-input" style="max-width:220px" placeholder="🔍 Search..." oninput="backlogFilter.search=this.value; renderBacklog()" value="${escHtml(backlogFilter.search)}">
+      <select class="form-input" style="max-width:130px" onchange="backlogFilter.type=this.value; renderBacklog()">
+        <option value="all" ${backlogFilter.type==='all'?'selected':''}>All Types</option>
+        <option value="bug" ${backlogFilter.type==='bug'?'selected':''}>🐛 Bugs</option>
+        <option value="enhancement" ${backlogFilter.type==='enhancement'?'selected':''}>✨ Enhancements</option>
+      </select>
+      <select class="form-input" style="max-width:150px" onchange="backlogFilter.priority=this.value; renderBacklog()">
+        <option value="all" ${backlogFilter.priority==='all'?'selected':''}>All Priorities</option>
+        <option value="P0" ${backlogFilter.priority==='P0'?'selected':''}>🔴 P0 Critical</option>
+        <option value="P1" ${backlogFilter.priority==='P1'?'selected':''}>🟠 P1 High</option>
+        <option value="P2" ${backlogFilter.priority==='P2'?'selected':''}>🟡 P2 Medium</option>
+        <option value="P3" ${backlogFilter.priority==='P3'?'selected':''}>🟢 P3 Low</option>
+      </select>
+      <select class="form-input" style="max-width:140px" onchange="backlogFilter.area=this.value; renderBacklog()">
+        <option value="all">All Areas</option>
+        ${areas.map(a => `<option value="${escHtml(a)}" ${backlogFilter.area===a?'selected':''}>${escHtml(a)}</option>`).join('')}
+      </select>
+      <select class="form-input" style="max-width:150px" onchange="backlogFilter.status=this.value; renderBacklog()">
+        <option value="all" ${backlogFilter.status==='all'?'selected':''}>All Statuses</option>
+        <option value="backlog" ${backlogFilter.status==='backlog'?'selected':''}>Backlog</option>
+        <option value="staged" ${backlogFilter.status==='staged'?'selected':''}>Staged</option>
+        <option value="in-progress" ${backlogFilter.status==='in-progress'?'selected':''}>In Progress</option>
+        <option value="done" ${backlogFilter.status==='done'?'selected':''}>Done</option>
+      </select>
+      ${backlogFilter.type!=='all'||backlogFilter.priority!=='all'||backlogFilter.area!=='all'||backlogFilter.status!=='all'||backlogFilter.search ? `<button onclick="backlogFilter={type:'all',priority:'all',area:'all',status:'all',search:''}; renderBacklog()" class="btn btn-secondary btn-sm">✕ Clear</button>` : ''}
+    </div>
+
+    ${items.length === 0 ? `<div class="card"><div class="empty-state">
+      <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      <p class="font-medium text-gray-500">No items match your filters</p>
+      <p class="text-sm mt-1">Try adjusting filters or <a href="#" onclick="openAddItemModal('bug')" class="text-indigo-600">log your first bug</a></p>
+    </div></div>` : `
+    <div class="card overflow-hidden">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-gray-50 border-b border-gray-200 text-left">
+            <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">ID</th>
+            <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Type</th>
+            <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Title</th>
+            <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Priority</th>
+            <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Area</th>
+            <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Effort</th>
+            <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
+            <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Release</th>
+            <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items.map((item, idx) => {
+            const rel = item.releaseId ? state.releases.find(r => r.id === item.releaseId) : null;
+            return `<tr class="border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${idx%2===0?'':'bg-gray-50/30'}" onclick="viewItem('${item.id}')">
+              <td class="px-4 py-3 font-mono text-xs text-gray-400">${item.itemId}</td>
+              <td class="px-4 py-3"><span class="badge badge-${item.type}">${item.type === 'bug' ? '🐛' : '✨'}</span></td>
+              <td class="px-4 py-3 font-medium text-gray-800 max-w-xs truncate">${escHtml(item.title)}</td>
+              <td class="px-4 py-3"><span class="badge badge-${item.priority.toLowerCase()}">${item.priority}</span></td>
+              <td class="px-4 py-3 text-gray-500 text-xs">${escHtml(item.area||'')}</td>
+              <td class="px-4 py-3 text-gray-500 text-xs">${item.effort}</td>
+              <td class="px-4 py-3 text-gray-500 text-xs capitalize">${item.status}</td>
+              <td class="px-4 py-3 text-xs">${rel ? `<span class="text-indigo-600 font-medium">${escHtml(rel.version)}</span>` : '<span class="text-gray-300">—</span>'}</td>
+              <td class="px-4 py-3" onclick="event.stopPropagation()">
+                <div class="flex gap-1">
+                  <button onclick="editItem('${item.id}')" class="btn btn-secondary btn-sm">Edit</button>
+                  <button onclick="stageItem('${item.id}')" class="btn btn-secondary btn-sm" title="${item.status==='staged'?'Move to backlog':'Stage for release'}">${item.status==='staged'?'Unstage':'Stage'}</button>
+                  <button onclick="deleteItem('${item.id}')" class="btn btn-danger btn-sm">✕</button>
+                </div>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`}
+  `;
+}
+
+function stageItem(id) {
+  const item = state.items.find(i => i.id === id);
+  if (!item) return;
+  if (item.status === 'staged') {
+    item.status = 'backlog';
+    item.releaseId = null;
+  } else if (item.status === 'backlog') {
+    item.status = 'staged';
+  }
+  item.updatedAt = new Date().toISOString();
+  saveState();
+  renderBacklog();
+}
+
+function deleteItem(id) {
+  if (!confirm('Delete this item?')) return;
+  state.items = state.items.filter(i => i.id !== id);
+  saveState();
+  renderTab(currentTab);
+}
+
+// ===== ITEM MODAL =====
+let editingItemId = null;
+
+function openAddItemModal(type) {
+  editingItemId = null;
+  showItemModal({ type: type || 'bug', title: '', description: '', priority: 'P2', area: 'UI', effort: 'M', acceptanceCriteria: '', reproSteps: '', tags: '', affectedFiles: '' });
+}
+
+function editItem(id) {
+  const item = state.items.find(i => i.id === id);
+  if (!item) return;
+  editingItemId = id;
+  showItemModal(item);
+}
+
+function viewItem(id) {
+  const item = state.items.find(i => i.id === id);
+  if (!item) return;
+  editingItemId = id;
+  showItemModal(item);
+}
+
+function showItemModal(item) {
+  const isNew = !editingItemId;
+  const rel = item.releaseId ? state.releases.find(r => r.id === item.releaseId) : null;
+  document.getElementById('modal-container').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal-box">
+        <div class="flex items-center justify-between mb-5">
+          <h3 class="text-lg font-bold text-gray-900">${isNew ? 'New ' + (item.type === 'bug' ? '🐛 Bug' : '✨ Enhancement') : 'Edit ' + item.itemId}</h3>
+          <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="form-label">Type</label>
+            <select id="mi-type" class="form-input" onchange="document.getElementById('mi-repro-section').style.display=this.value==='bug'?'block':'none'">
+              <option value="bug" ${item.type==='bug'?'selected':''}>🐛 Bug</option>
+              <option value="enhancement" ${item.type==='enhancement'?'selected':''}>✨ Enhancement</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Priority</label>
+            <select id="mi-priority" class="form-input">
+              <option value="P0" ${item.priority==='P0'?'selected':''}>🔴 P0 — Critical</option>
+              <option value="P1" ${item.priority==='P1'?'selected':''}>🟠 P1 — High</option>
+              <option value="P2" ${item.priority==='P2'?'selected':''}>🟡 P2 — Medium</option>
+              <option value="P3" ${item.priority==='P3'?'selected':''}>🟢 P3 — Low</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label">Title *</label>
+          <input type="text" id="mi-title" class="form-input" placeholder="Brief, descriptive title..." value="${escHtml(item.title)}">
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label">Description</label>
+          <textarea id="mi-description" class="form-input" rows="3" placeholder="What happens? What should happen? Any context...">${escHtml(item.description||'')}</textarea>
+        </div>
+
+        <div id="mi-repro-section" style="display:${item.type==='bug'?'block':'none'}">
+          <div class="mb-4">
+            <label class="form-label">Steps to Reproduce</label>
+            <textarea id="mi-repro" class="form-input" rows="3" placeholder="1. Open the app\n2. Navigate to...\n3. See error">${escHtml(item.reproSteps||'')}</textarea>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label">Acceptance Criteria</label>
+          <textarea id="mi-ac" class="form-input" rows="3" placeholder="Given/When/Then or bullet points of what 'done' looks like...">${escHtml(item.acceptanceCriteria||'')}</textarea>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 mb-4">
+          <div>
+            <label class="form-label">Area</label>
+            <select id="mi-area" class="form-input">
+              <option value="UI" ${item.area==='UI'?'selected':''}>UI / Frontend</option>
+              <option value="API" ${item.area==='API'?'selected':''}>API / Backend</option>
+              <option value="Database" ${item.area==='Database'?'selected':''}>Database</option>
+              <option value="Auth" ${item.area==='Auth'?'selected':''}>Auth / Security</option>
+              <option value="Performance" ${item.area==='Performance'?'selected':''}>Performance</option>
+              <option value="Notifications" ${item.area==='Notifications'?'selected':''}>Notifications</option>
+              <option value="Integrations" ${item.area==='Integrations'?'selected':''}>Integrations</option>
+              <option value="Other" ${item.area==='Other'?'selected':''}>Other</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Effort</label>
+            <select id="mi-effort" class="form-input">
+              <option value="S" ${item.effort==='S'?'selected':''}>S — Small</option>
+              <option value="M" ${item.effort==='M'?'selected':''}>M — Medium</option>
+              <option value="L" ${item.effort==='L'?'selected':''}>L — Large</option>
+              <option value="XL" ${item.effort==='XL'?'selected':''}>XL — Extra Large</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Status</label>
+            <select id="mi-status" class="form-input">
+              <option value="backlog" ${item.status==='backlog'?'selected':''}>Backlog</option>
+              <option value="staged" ${item.status==='staged'?'selected':''}>Staged</option>
+              <option value="in-progress" ${item.status==='in-progress'?'selected':''}>In Progress</option>
+              <option value="done" ${item.status==='done'?'selected':''}>Done</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label">Possibly Affected Files / Modules</label>
+          <input type="text" id="mi-files" class="form-input" placeholder="e.g. src/components/Table.jsx, api/routes/menu.js" value="${escHtml(item.affectedFiles||'')}">
+        </div>
+
+        <div class="mb-5">
+          <label class="form-label">Tags (comma-separated)</label>
+          <input type="text" id="mi-tags" class="form-input" placeholder="e.g. mobile, critical, v2" value="${escHtml(Array.isArray(item.tags) ? item.tags.join(', ') : (item.tags||''))}">
+        </div>
+
+        <div class="flex gap-2 justify-end border-t border-gray-100 pt-4">
+          ${!isNew ? `<button onclick="deleteItem('${editingItemId}'); closeModal()" class="btn btn-danger mr-auto">Delete</button>` : ''}
+          <button onclick="closeModal()" class="btn btn-secondary">Cancel</button>
+          <button onclick="saveItem()" class="btn btn-primary">${isNew ? 'Add Item' : 'Save Changes'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function saveItem() {
+  const title = document.getElementById('mi-title').value.trim();
+  if (!title) { alert('Please enter a title'); return; }
+  const itemData = {
+    type: document.getElementById('mi-type').value,
+    title,
+    description: document.getElementById('mi-description').value.trim(),
+    priority: document.getElementById('mi-priority').value,
+    area: document.getElementById('mi-area').value,
+    effort: document.getElementById('mi-effort').value,
+    status: document.getElementById('mi-status').value,
+    acceptanceCriteria: document.getElementById('mi-ac').value.trim(),
+    reproSteps: document.getElementById('mi-repro')?.value.trim() || '',
+    affectedFiles: document.getElementById('mi-files').value.trim(),
+    tags: document.getElementById('mi-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
+    updatedAt: new Date().toISOString()
+  };
+  if (editingItemId) {
+    const idx = state.items.findIndex(i => i.id === editingItemId);
+    if (idx >= 0) {
+      state.items[idx] = { ...state.items[idx], ...itemData };
+    }
+  } else {
+    const newItem = {
+      id: Date.now().toString(),
+      itemId: genItemId(),
+      ...itemData,
+      releaseId: null,
+      createdAt: new Date().toISOString()
+    };
+    state.items.push(newItem);
+  }
+  saveState();
+  closeModal();
+  renderTab(currentTab);
+}
+
+function closeModal() {
+  document.getElementById('modal-container').innerHTML = '';
+}
+
+// ===== RELEASES TAB =====
+let draggingItemId = null;
+
+function renderReleases() {
+  const staged = state.items.filter(i => i.status === 'staged' && !i.releaseId);
+
+  document.getElementById('releases-content').innerHTML = `
+    <div class="mb-5 flex items-center justify-between">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900">Release Planning</h2>
+        <p class="text-sm text-gray-500 mt-0.5">Drag staged items into releases. Drag between releases to reorganize.</p>
+      </div>
+      <button onclick="openAddReleaseModal()" class="btn btn-primary">+ New Release</button>
+    </div>
+
+    <div class="flex gap-5 overflow-x-auto pb-4" style="align-items: flex-start;">
+
+      <!-- STAGED ITEMS COLUMN -->
+      <div class="release-col flex-shrink-0" style="min-width:260px">
+        <div class="p-4 border-b border-gray-200">
+          <div class="font-semibold text-gray-700 text-sm">📦 Staged Items</div>
+          <div class="text-xs text-gray-400 mt-0.5">${staged.length} items ready</div>
+          <p class="text-xs text-gray-400 mt-1">Drag into a release column →</p>
+        </div>
+        <div class="p-3 drop-zone" id="staged-zone"
+          ondragover="event.preventDefault(); this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="dropToStaged(event)">
+          ${staged.length === 0 ? `<div class="text-center py-6 text-gray-400 text-xs">No staged items.<br>Go to Backlog and stage items first.</div>` :
+            staged.map(item => renderDraggableItemCard(item)).join('')}
+        </div>
+      </div>
+
+      <!-- RELEASE COLUMNS -->
+      ${state.releases.length === 0 ? `
+        <div class="flex-1 flex items-center justify-center">
+          <div class="text-center py-16">
+            <div class="text-5xl mb-3">🚀</div>
+            <div class="font-semibold text-gray-500">No releases yet</div>
+            <div class="text-sm text-gray-400 mt-1">Create your first release to start planning</div>
+            <button onclick="openAddReleaseModal()" class="btn btn-primary mt-4">Create Release</button>
+          </div>
+        </div>` :
+        state.releases.map(rel => {
+          const relItems = getItemsByRelease(rel.id);
+          const efforts = relItems.map(i => ({S:1,M:2,L:4,XL:8}[i.effort]||1)).reduce((a,b)=>a+b,0);
+          return `
+          <div class="release-col">
+            <div class="p-4 border-b border-gray-200">
+              <div class="flex items-start justify-between">
+                <div>
+                  <div class="font-bold text-gray-800">${escHtml(rel.version)}</div>
+                  <div class="text-sm text-gray-500">${escHtml(rel.name)}</div>
+                </div>
+                <span class="badge badge-${rel.status} ml-2">${rel.status}</span>
+              </div>
+              ${rel.targetDate ? `<div class="text-xs text-gray-400 mt-1">📅 ${rel.targetDate}</div>` : ''}
+              <div class="text-xs text-gray-400 mt-1">${relItems.length} items · ${efforts} effort pts</div>
+              <div class="flex gap-1 mt-3 flex-wrap">
+                <button onclick="editRelease('${rel.id}')" class="btn btn-secondary btn-sm">Edit</button>
+                <button onclick="generatePromptForRelease('${rel.id}')" class="btn btn-secondary btn-sm">🤖 Prompt</button>
+                <button onclick="markReleased('${rel.id}')" class="btn btn-secondary btn-sm" title="Mark as released">✓ Ship</button>
+                <button onclick="deleteRelease('${rel.id}')" class="btn btn-danger btn-sm">✕</button>
+              </div>
+            </div>
+            <div class="p-3 drop-zone" id="release-zone-${rel.id}"
+              ondragover="event.preventDefault(); this.classList.add('drag-over')"
+              ondragleave="this.classList.remove('drag-over')"
+              ondrop="dropToRelease(event, '${rel.id}')">
+              ${relItems.length === 0 ? `<div class="text-center py-6 text-gray-400 text-xs">Drop items here</div>` :
+                relItems.map(item => renderDraggableItemCard(item)).join('')}
+            </div>
+          </div>`;
+        }).join('')}
+    </div>
+  `;
+  addDragListeners();
+}
+
+function renderDraggableItemCard(item) {
+  return `<div class="item-card drag-item" draggable="true" id="drag-${item.id}" data-item-id="${item.id}">
+    <div class="flex items-center gap-1 mb-1 flex-wrap">
+      <span class="badge badge-${item.type}">${item.type==='bug'?'🐛':'✨'}</span>
+      <span class="badge badge-${item.priority.toLowerCase()}">${item.priority}</span>
+      <span class="text-xs text-gray-400 font-mono ml-auto">${item.itemId}</span>
+    </div>
+    <div class="font-medium text-gray-800 text-xs leading-snug mt-1">${escHtml(item.title)}</div>
+    <div class="text-xs text-gray-400 mt-1">${escHtml(item.area||'')} · ${item.effort}</div>
+  </div>`;
+}
+
+function addDragListeners() {
+  document.querySelectorAll('.drag-item').forEach(el => {
+    el.addEventListener('dragstart', e => {
+      draggingItemId = el.dataset.itemId;
+      setTimeout(() => el.classList.add('dragging'), 0);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    el.addEventListener('dragend', () => {
+      el.classList.remove('dragging');
+      document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over'));
+    });
+  });
+}
+
+function dropToRelease(e, releaseId) {
+  e.preventDefault();
+  document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over'));
+  if (!draggingItemId) return;
+  const item = state.items.find(i => i.id === draggingItemId);
+  if (!item) return;
+  item.releaseId = releaseId;
+  item.status = 'staged';
+  item.updatedAt = new Date().toISOString();
+  draggingItemId = null;
+  saveState();
+  renderReleases();
+}
+
+function dropToStaged(e) {
+  e.preventDefault();
+  document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over'));
+  if (!draggingItemId) return;
+  const item = state.items.find(i => i.id === draggingItemId);
+  if (!item) return;
+  item.releaseId = null;
+  item.status = 'staged';
+  item.updatedAt = new Date().toISOString();
+  draggingItemId = null;
+  saveState();
+  renderReleases();
+}
+
+function markReleased(releaseId) {
+  const rel = state.releases.find(r => r.id === releaseId);
+  if (!rel) return;
+  if (!confirm(`Mark release ${rel.version} as shipped?`)) return;
+  rel.status = 'released';
+  rel.releasedAt = new Date().toISOString();
+  state.items.filter(i => i.releaseId === releaseId).forEach(i => { i.status = 'done'; i.updatedAt = new Date().toISOString(); });
+  saveState();
+  renderReleases();
+  showToast(`🎉 ${rel.version} marked as released!`);
+}
+
+function deleteRelease(id) {
+  const rel = state.releases.find(r => r.id === id);
+  if (!confirm(`Delete release ${rel?.version}? Items will return to staged.`)) return;
+  state.items.filter(i => i.releaseId === id).forEach(i => { i.releaseId = null; });
+  state.releases = state.releases.filter(r => r.id !== id);
+  saveState();
+  renderReleases();
+}
+
+// ===== RELEASE MODAL =====
+let editingReleaseId = null;
+function openAddReleaseModal() { editingReleaseId = null; showReleaseModal({ version: '', name: '', targetDate: '', goals: '', status: 'planning' }); }
+function editRelease(id) { editingReleaseId = id; showReleaseModal(state.releases.find(r => r.id === id) || {}); }
+
+function showReleaseModal(rel) {
+  document.getElementById('modal-container').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal-box" style="max-width:480px">
+        <div class="flex items-center justify-between mb-5">
+          <h3 class="text-lg font-bold text-gray-900">${editingReleaseId ? 'Edit Release' : 'New Release'}</h3>
+          <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+        </div>
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="form-label">Version *</label>
+            <input type="text" id="ri-version" class="form-input" placeholder="e.g. 1.0.0" value="${escHtml(rel.version||'')}">
+          </div>
+          <div>
+            <label class="form-label">Status</label>
+            <select id="ri-status" class="form-input">
+              <option value="planning" ${rel.status==='planning'?'selected':''}>Planning</option>
+              <option value="active" ${rel.status==='active'?'selected':''}>Active</option>
+              <option value="released" ${rel.status==='released'?'selected':''}>Released</option>
+            </select>
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="form-label">Release Name</label>
+          <input type="text" id="ri-name" class="form-input" placeholder="e.g. MVP Launch, Beta v1" value="${escHtml(rel.name||'')}">
+        </div>
+        <div class="mb-4">
+          <label class="form-label">Target Date</label>
+          <input type="date" id="ri-date" class="form-input" value="${escHtml(rel.targetDate||'')}">
+        </div>
+        <div class="mb-5">
+          <label class="form-label">Release Goals / Notes</label>
+          <textarea id="ri-goals" class="form-input" rows="3" placeholder="What are the key goals of this release?">${escHtml(rel.goals||'')}</textarea>
+        </div>
+        <div class="flex gap-2 justify-end border-t border-gray-100 pt-4">
+          <button onclick="closeModal()" class="btn btn-secondary">Cancel</button>
+          <button onclick="saveRelease()" class="btn btn-primary">${editingReleaseId ? 'Save' : 'Create Release'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function saveRelease() {
+  const version = document.getElementById('ri-version').value.trim();
+  if (!version) { alert('Please enter a version'); return; }
+  const data = {
+    version,
+    name: document.getElementById('ri-name').value.trim(),
+    targetDate: document.getElementById('ri-date').value,
+    goals: document.getElementById('ri-goals').value.trim(),
+    status: document.getElementById('ri-status').value
+  };
+  if (editingReleaseId) {
+    const idx = state.releases.findIndex(r => r.id === editingReleaseId);
+    if (idx >= 0) state.releases[idx] = { ...state.releases[idx], ...data };
+  } else {
+    state.releases.push({ id: genReleaseId(), ...data, createdAt: new Date().toISOString() });
+  }
+  saveState();
+  closeModal();
+  renderReleases();
+}
+
+// ===== ROADMAP TAB =====
+function renderRoadmap() {
+  const quarters = ['Q2 2026', 'Q3 2026', 'Q4 2026', 'Q1 2027', 'Q2 2027+'];
+  const qMap = {
+    'Q2 2026': ['2026-04', '2026-05', '2026-06'],
+    'Q3 2026': ['2026-07', '2026-08', '2026-09'],
+    'Q4 2026': ['2026-10', '2026-11', '2026-12'],
+    'Q1 2027': ['2027-01', '2027-02', '2027-03'],
+    'Q2 2027+': []
+  };
+
+  function getReleaseQuarter(rel) {
+    if (!rel.targetDate) return 'Q2 2027+';
+    const ym = rel.targetDate.substring(0, 7);
+    for (const [q, months] of Object.entries(qMap)) {
+      if (months.includes(ym)) return q;
+    }
+    if (rel.targetDate < '2026-04-01') return 'Q2 2026';
+    return 'Q2 2027+';
+  }
+
+  document.getElementById('roadmap-content').innerHTML = `
+    <div class="mb-5 flex items-center justify-between">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900">Product Roadmap</h2>
+        <p class="text-sm text-gray-500 mt-0.5">Visual timeline of planned releases</p>
+      </div>
+      <button onclick="openAddReleaseModal()" class="btn btn-primary">+ New Release</button>
+    </div>
+
+    <div class="card overflow-hidden mb-6">
+      <table class="w-full">
+        <thead>
+          <tr class="bg-indigo-600">
+            ${quarters.map(q => `<th class="roadmap-cell border-right text-left px-4 py-3 text-white font-semibold text-sm" style="border-right:1px solid rgba(255,255,255,0.2)">${q}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            ${quarters.map(q => {
+              const qReleases = state.releases.filter(r => getReleaseQuarter(r) === q);
+              return `<td class="roadmap-cell align-top" style="min-width:160px">
+                <div class="p-2">
+                  ${qReleases.length === 0 ? '<div class="text-xs text-gray-300 text-center py-4">No releases</div>' :
+                    qReleases.map(rel => {
+                      const items = getItemsByRelease(rel.id);
+                      return `<div class="roadmap-item ${rel.status}" onclick="editRelease('${rel.id}')">
+                        <div class="font-semibold">${escHtml(rel.version)}</div>
+                        <div class="opacity-75">${escHtml(rel.name||'')}</div>
+                        <div class="opacity-60">${items.length} items</div>
+                      </div>`;
+                    }).join('')}
+                </div>
+              </td>`;
+            }).join('')}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card p-5">
+      <div class="section-title">Release Summary</div>
+      ${state.releases.length === 0 ? '<div class="empty-state"><p>No releases yet. Create releases to populate the roadmap.</p></div>' :
+        `<div class="overflow-x-auto"><table class="w-full text-sm">
+          <thead><tr class="bg-gray-50 border-b border-gray-200">
+            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Version</th>
+            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
+            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Quarter</th>
+            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Target Date</th>
+            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
+            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Items</th>
+            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Goals</th>
+          </tr></thead>
+          <tbody>
+            ${state.releases.map(rel => {
+              const items = getItemsByRelease(rel.id);
+              const bugs = items.filter(i=>i.type==='bug').length;
+              const enh = items.filter(i=>i.type==='enhancement').length;
+              return `<tr class="border-b border-gray-100 hover:bg-gray-50">
+                <td class="px-4 py-2 font-bold text-indigo-700">${escHtml(rel.version)}</td>
+                <td class="px-4 py-2 text-gray-700">${escHtml(rel.name||'')}</td>
+                <td class="px-4 py-2 text-gray-500">${getReleaseQuarter(rel)}</td>
+                <td class="px-4 py-2 text-gray-500">${rel.targetDate||'—'}</td>
+                <td class="px-4 py-2"><span class="badge badge-${rel.status}">${rel.status}</span></td>
+                <td class="px-4 py-2 text-gray-500">${items.length} (${bugs} bugs, ${enh} enhancements)</td>
+                <td class="px-4 py-2 text-gray-500 max-w-xs truncate">${escHtml(rel.goals||'')}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table></div>`}
+    </div>
+  `;
+}
+
+// ===== PROMPT BUILDER TAB =====
+let promptRelease = '';
+let promptTemplate = 'feature';
+let selectedPromptItems = [];
+
+function renderPromptBuilder() {
+  document.getElementById('prompt-content').innerHTML = `
+    <div class="mb-5">
+      <h2 class="text-xl font-bold text-gray-900">🤖 Prompt Builder</h2>
+      <p class="text-sm text-gray-500 mt-0.5">Generate prompts for Claude in VS Code to implement items</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <div class="card p-5 mb-4">
+          <div class="section-title">1. Select Source</div>
+          <div class="mb-4">
+            <label class="form-label">Release (optional)</label>
+            <select id="pb-release" class="form-input" onchange="promptRelease=this.value; updatePromptPreview()">
+              <option value="">— Select a release —</option>
+              ${state.releases.map(r => `<option value="${r.id}" ${promptRelease===r.id?'selected':''}>${escHtml(r.version)} — ${escHtml(r.name)}</option>`).join('')}
+            </select>
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label">Or select individual items</label>
+            <div style="max-height:220px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px; padding:8px;">
+              ${state.items.filter(i=>i.status!=='done').length === 0 ? '<div class="text-xs text-gray-400 p-2">No items available</div>' :
+                state.items.filter(i=>i.status!=='done').map(item => `
+                <label class="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                  <input type="checkbox" value="${item.id}" onchange="togglePromptItem('${item.id}')" ${selectedPromptItems.includes(item.id)?'checked':''}>
+                  <span class="badge badge-${item.type} flex-shrink-0">${item.type==='bug'?'🐛':'✨'}</span>
+                  <span class="badge badge-${item.priority.toLowerCase()} flex-shrink-0">${item.priority}</span>
+                  <span class="text-xs text-gray-700 flex-1 leading-snug">${escHtml(item.title)}</span>
+                  <span class="text-xs text-gray-400 font-mono">${item.itemId}</span>
+                </label>`).join('')}
+            </div>
+          </div>
+        </div>
+
+        <div class="card p-5 mb-4">
+          <div class="section-title">2. Template Type</div>
+          <div class="grid grid-cols-2 gap-2">
+            ${[['feature','✨ Feature Implementation','Build new functionality'],['bugfix','🐛 Bug Fix','Fix a defect'],['refactor','🔧 Refactor','Improve code structure'],['tests','🧪 Write Tests','Add test coverage'],['review','👀 Code Review','Review existing code']].map(([val,label,desc]) => `
+              <label class="flex items-start gap-2 p-3 border rounded-lg cursor-pointer hover:bg-indigo-50 ${promptTemplate===val?'border-indigo-400 bg-indigo-50':'border-gray-200'}">
+                <input type="radio" name="pb-template" value="${val}" onchange="promptTemplate=this.value; updatePromptPreview()" ${promptTemplate===val?'checked':''}>
+                <div><div class="font-medium text-sm">${label}</div><div class="text-xs text-gray-400">${desc}</div></div>
+              </label>`).join('')}
+          </div>
+        </div>
+
+        <div class="card p-5">
+          <div class="section-title">3. Additional Context</div>
+          <div class="mb-3">
+            <label class="form-label">Tech Stack</label>
+            <input type="text" id="pb-stack" class="form-input" placeholder="e.g. React, Node.js, PostgreSQL, Prisma" oninput="updatePromptPreview()">
+          </div>
+          <div>
+            <label class="form-label">Special Instructions</label>
+            <textarea id="pb-extra" class="form-input" rows="3" placeholder="Any extra context, constraints, or special requests..." oninput="updatePromptPreview()"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card p-5">
+          <div class="flex items-center justify-between mb-3">
+            <div class="section-title mb-0">Generated Prompt</div>
+            <div class="flex gap-2">
+              <button onclick="copyPrompt()" class="btn btn-primary btn-sm">📋 Copy Prompt</button>
+              <button onclick="updatePromptPreview()" class="btn btn-secondary btn-sm">↻ Refresh</button>
+            </div>
+          </div>
+          <div id="prompt-preview" class="prompt-output">Select items and a template to generate your prompt...</div>
+          <div class="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200" id="branch-section" style="display:none">
+            <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Suggested Branch Name</div>
+            <code id="branch-name" class="text-sm font-mono text-indigo-700 bg-white px-2 py-1 rounded border border-indigo-100"></code>
+          </div>
+          <div class="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200" id="commit-section" style="display:none">
+            <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Commit Message Template</div>
+            <code id="commit-msg" class="text-sm font-mono text-indigo-700 bg-white px-2 py-1 rounded border border-indigo-100"></code>
+          </div>
+        </div>
+
+        <div class="card p-5 mt-4">
+          <div class="section-title">Prompt Tips for Claude in VS Code</div>
+          <ul class="text-sm text-gray-600 space-y-2">
+            <li>💡 <strong>Always include the file path</strong> where changes should go</li>
+            <li>💡 <strong>Mention your testing approach</strong> so Claude includes tests</li>
+            <li>💡 <strong>Reference existing patterns</strong> by pointing to similar files</li>
+            <li>💡 <strong>Be specific about "done"</strong> — paste acceptance criteria verbatim</li>
+            <li>💡 <strong>One item per conversation</strong> works better than batching</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  `;
+  updatePromptPreview();
+}
+
+function togglePromptItem(id) {
+  if (selectedPromptItems.includes(id)) {
+    selectedPromptItems = selectedPromptItems.filter(i => i !== id);
+  } else {
+    selectedPromptItems.push(id);
+  }
+  updatePromptPreview();
+}
+
+function updatePromptPreview() {
+  let items = [];
+  const releaseEl = document.getElementById('pb-release');
+  if (releaseEl) promptRelease = releaseEl.value;
+
+  if (promptRelease) {
+    items = state.items.filter(i => i.releaseId === promptRelease);
+  } else if (selectedPromptItems.length > 0) {
+    items = state.items.filter(i => selectedPromptItems.includes(i.id));
+  }
+
+  const stackEl = document.getElementById('pb-stack');
+  const extraEl = document.getElementById('pb-extra');
+  const stack = stackEl ? stackEl.value.trim() : '';
+  const extra = extraEl ? extraEl.value.trim() : '';
+
+  const template = document.querySelector('input[name="pb-template"]:checked')?.value || promptTemplate;
+  promptTemplate = template;
+
+  if (items.length === 0) {
+    document.getElementById('prompt-preview').textContent = 'Select a release or individual items above to generate a prompt.';
+    document.getElementById('branch-section').style.display = 'none';
+    document.getElementById('commit-section').style.display = 'none';
+    return;
+  }
+
+  const rel = promptRelease ? state.releases.find(r => r.id === promptRelease) : null;
+  const appName = state.app.name || 'the app';
+
+  let prompt = '';
+  const templateLabels = { feature: 'Feature Implementation', bugfix: 'Bug Fix', refactor: 'Refactor', tests: 'Write Tests', review: 'Code Review' };
+  const action = templateLabels[template] || 'Implementation';
+
+  prompt += `# ${action}: ${items.length === 1 ? items[0].title : (rel ? rel.version + ' — ' + (rel.name||'') : items.length + ' Items')}\n\n`;
+  prompt += `## Context\n`;
+  prompt += `App: ${appName}\n`;
+  if (state.app.mission) prompt += `Mission: ${state.app.mission}\n`;
+  if (rel) prompt += `Release: ${rel.version}${rel.name ? ' — ' + rel.name : ''}\n`;
+  if (rel?.targetDate) prompt += `Target Date: ${rel.targetDate}\n`;
+  if (stack) prompt += `Tech Stack: ${stack}\n`;
+  prompt += `\n`;
+
+  if (template === 'bugfix') {
+    items.forEach((item, idx) => {
+      if (items.length > 1) prompt += `## Bug ${idx+1}: ${item.itemId} — ${item.title}\n`;
+      else prompt += `## Bug: ${item.itemId} — ${item.title}\n`;
+      prompt += `**Priority:** ${item.priority}\n**Area:** ${item.area || 'Not specified'}\n\n`;
+      if (item.description) prompt += `### Problem Description\n${item.description}\n\n`;
+      if (item.reproSteps) prompt += `### Steps to Reproduce\n${item.reproSteps}\n\n`;
+      if (item.acceptanceCriteria) prompt += `### Acceptance Criteria (Definition of Done)\n${item.acceptanceCriteria}\n\n`;
+      if (item.affectedFiles) prompt += `### Possibly Affected Files\n${item.affectedFiles}\n\n`;
+    });
+    prompt += `## Implementation Request\nPlease analyze the codebase and implement a fix for the above bug(s). For each fix:\n1. Identify the root cause in the code\n2. Implement the minimal, focused fix\n3. Check for edge cases and regressions\n4. Add or update relevant error handling\n5. Confirm the acceptance criteria are met\n`;
+  } else if (template === 'feature') {
+    items.forEach((item, idx) => {
+      if (items.length > 1) prompt += `## Feature ${idx+1}: ${item.itemId} — ${item.title}\n`;
+      else prompt += `## Feature: ${item.itemId} — ${item.title}\n`;
+      prompt += `**Priority:** ${item.priority} | **Effort:** ${item.effort} | **Area:** ${item.area || 'Not specified'}\n\n`;
+      if (item.description) prompt += `### Description\n${item.description}\n\n`;
+      if (item.acceptanceCriteria) prompt += `### Acceptance Criteria\n${item.acceptanceCriteria}\n\n`;
+      if (item.affectedFiles) prompt += `### Expected Files / Modules to Touch\n${item.affectedFiles}\n\n`;
+    });
+    prompt += `## Implementation Request\nPlease implement the above feature(s) following the existing code patterns in the project. For each feature:\n1. Review existing similar components/patterns before implementing\n2. Follow the project's code style and conventions\n3. Implement all acceptance criteria\n4. Consider error states, loading states, and edge cases\n5. Add appropriate comments for complex logic\n`;
+  } else if (template === 'refactor') {
+    items.forEach(item => {
+      prompt += `## Refactor: ${item.itemId} — ${item.title}\n`;
+      if (item.description) prompt += `${item.description}\n\n`;
+      if (item.affectedFiles) prompt += `**Target Files:** ${item.affectedFiles}\n\n`;
+    });
+    prompt += `## Refactoring Goals\n1. Improve code readability and maintainability\n2. Reduce duplication and complexity\n3. Ensure all existing tests still pass\n4. Document any architectural decisions made\n5. Do NOT change external behavior — refactor only\n`;
+  } else if (template === 'tests') {
+    items.forEach(item => {
+      prompt += `## Tests for: ${item.itemId} — ${item.title}\n`;
+      if (item.description) prompt += `**Context:** ${item.description}\n\n`;
+      if (item.acceptanceCriteria) prompt += `**Scenarios to Cover:**\n${item.acceptanceCriteria}\n\n`;
+      if (item.affectedFiles) prompt += `**Files to Test:** ${item.affectedFiles}\n\n`;
+    });
+    prompt += `## Test Requirements\n1. Write unit tests for core logic\n2. Write integration tests for user-facing flows\n3. Cover happy path, error states, and edge cases\n4. Follow existing test patterns and frameworks in the project\n5. Aim for meaningful coverage, not just line coverage\n`;
+  } else if (template === 'review') {
+    items.forEach(item => {
+      prompt += `## Review: ${item.itemId} — ${item.title}\n`;
+      if (item.affectedFiles) prompt += `**Files:** ${item.affectedFiles}\n\n`;
+    });
+    prompt += `## Review Checklist\nPlease review the above code for:\n1. Correctness and logic errors\n2. Security vulnerabilities\n3. Performance concerns\n4. Code style and consistency\n5. Missing error handling or edge cases\n6. Test coverage gaps\n\nProvide specific suggestions with file references where improvements are needed.\n`;
+  }
+
+  if (extra) prompt += `\n## Additional Instructions\n${extra}\n`;
+  prompt += `\n## Important\nAlways review the existing codebase structure before implementing. Follow the patterns, naming conventions, and architecture already established in the project. If you're unsure about any design decisions, ask before proceeding.\n`;
+
+  document.getElementById('prompt-preview').textContent = prompt;
+
+  // Branch name and commit message
+  if (items.length === 1) {
+    const item = items[0];
+    const prefixes = { bugfix: 'fix', feature: 'feat', refactor: 'refactor', tests: 'test', review: 'chore' };
+    const prefix = prefixes[template] || 'feat';
+    const branch = `${prefix}/${item.itemId.toLowerCase()}-${slugify(item.title)}`;
+    const commitMsg = `${prefix}: ${item.title.toLowerCase().substring(0,60)} (${item.itemId})`;
+    document.getElementById('branch-name').textContent = branch;
+    document.getElementById('commit-msg').textContent = commitMsg;
+    document.getElementById('branch-section').style.display = 'block';
+    document.getElementById('commit-section').style.display = 'block';
+  } else if (rel) {
+    const prefixes = { bugfix: 'fix', feature: 'feat', refactor: 'refactor', tests: 'test', review: 'chore' };
+    const prefix = prefixes[template] || 'feat';
+    document.getElementById('branch-name').textContent = `release/${rel.version.replace(/\./g,'-')}`;
+    document.getElementById('commit-msg').textContent = `${prefix}: implement ${rel.version} — ${rel.name || items.length + ' items'}`;
+    document.getElementById('branch-section').style.display = 'block';
+    document.getElementById('commit-section').style.display = 'block';
+  }
+}
+
+function copyPrompt() {
+  const text = document.getElementById('prompt-preview').textContent;
+  navigator.clipboard.writeText(text).then(() => showToast('Prompt copied to clipboard!')).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('Prompt copied!');
+  });
+}
+
+function generatePromptForRelease(releaseId) {
+  promptRelease = releaseId;
+  selectedPromptItems = [];
+  showTab('prompt');
+  setTimeout(() => {
+    const el = document.getElementById('pb-release');
+    if (el) { el.value = releaseId; updatePromptPreview(); }
+  }, 100);
+}
+
+// ===== CHANGELOG TAB =====
+function renderChangelog() {
+  const released = state.releases.filter(r => r.status === 'released').sort((a,b) => new Date(b.releasedAt||b.createdAt) - new Date(a.releasedAt||a.createdAt));
+  const planned = state.releases.filter(r => r.status !== 'released').sort((a,b) => new Date(a.targetDate) - new Date(b.targetDate));
+
+  function renderReleaseBlock(rel) {
+    const items = getItemsByRelease(rel.id);
+    const bugs = items.filter(i => i.type === 'bug');
+    const enhancements = items.filter(i => i.type === 'enhancement');
+    return `<div class="card p-5 mb-4">
+      <div class="flex items-center gap-3 mb-3">
+        <span class="text-xl font-bold text-gray-900">${escHtml(rel.version)}</span>
+        ${rel.name ? `<span class="text-gray-500 font-medium">${escHtml(rel.name)}</span>` : ''}
+        <span class="badge badge-${rel.status} ml-auto">${rel.status}</span>
+        ${rel.releasedAt ? `<span class="text-xs text-gray-400">${new Date(rel.releasedAt).toLocaleDateString()}</span>` : (rel.targetDate ? `<span class="text-xs text-gray-400">Target: ${rel.targetDate}</span>` : '')}
+      </div>
+      ${rel.goals ? `<p class="text-sm text-gray-600 mb-3 italic">${escHtml(rel.goals)}</p>` : ''}
+      ${enhancements.length > 0 ? `<div class="mb-3"><div class="text-xs font-semibold text-purple-600 uppercase tracking-wide mb-2">✨ New Features & Enhancements</div>${enhancements.map(i => `<div class="changelog-item" style="border-color:#7c3aed"><strong>${escHtml(i.itemId)}</strong> — ${escHtml(i.title)}</div>`).join('')}</div>` : ''}
+      ${bugs.length > 0 ? `<div><div class="text-xs font-semibold text-red-500 uppercase tracking-wide mb-2">🐛 Bug Fixes</div>${bugs.map(i => `<div class="changelog-item" style="border-color:#ef4444"><strong>${escHtml(i.itemId)}</strong> — ${escHtml(i.title)}</div>`).join('')}</div>` : ''}
+      ${items.length === 0 ? '<div class="text-xs text-gray-400">No items in this release</div>' : ''}
+    </div>`;
+  }
+
+  document.getElementById('changelog-content').innerHTML = `
+    <div class="mb-5 flex items-center justify-between">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900">Changelog</h2>
+        <p class="text-sm text-gray-500 mt-0.5">Auto-generated from your releases and items</p>
+      </div>
+      <button onclick="exportChangelog()" class="btn btn-secondary">📋 Copy as Markdown</button>
+    </div>
+
+    ${released.length > 0 ? `<div class="mb-2"><div class="section-title text-green-600">✅ Released</div>${released.map(renderReleaseBlock).join('')}</div>` : ''}
+    ${planned.length > 0 ? `<div><div class="section-title text-blue-600">🔜 Upcoming</div>${planned.map(renderReleaseBlock).join('')}</div>` : ''}
+    ${state.releases.length === 0 ? '<div class="card"><div class="empty-state"><p>No releases yet. Create releases and add items to generate a changelog.</p></div></div>' : ''}
+  `;
+}
+
+function exportChangelog() {
+  const released = state.releases.filter(r => r.status === 'released').sort((a,b) => new Date(b.releasedAt||b.createdAt) - new Date(a.releasedAt||a.createdAt));
+  const planned = state.releases.filter(r => r.status !== 'released');
+  let md = `# ${state.app.name} Changelog\n\n`;
+
+  [...released, ...planned].forEach(rel => {
+    const items = getItemsByRelease(rel.id);
+    md += `## [${rel.version}]${rel.name ? ' — ' + rel.name : ''} (${rel.status})`;
+    if (rel.releasedAt) md += ` — Released ${new Date(rel.releasedAt).toLocaleDateString()}`;
+    else if (rel.targetDate) md += ` — Target: ${rel.targetDate}`;
+    md += '\n\n';
+    if (rel.goals) md += `_${rel.goals}_\n\n`;
+    const enhancements = items.filter(i=>i.type==='enhancement');
+    const bugs = items.filter(i=>i.type==='bug');
+    if (enhancements.length > 0) { md += `### ✨ Enhancements\n`; enhancements.forEach(i => { md += `- **${i.itemId}** ${i.title}\n`; }); md += '\n'; }
+    if (bugs.length > 0) { md += `### 🐛 Bug Fixes\n`; bugs.forEach(i => { md += `- **${i.itemId}** ${i.title}\n`; }); md += '\n'; }
+  });
+
+  navigator.clipboard.writeText(md).then(() => showToast('Changelog copied as Markdown!')).catch(() => { showToast('Copy failed — try again'); });
+}
+
+// ===== EXPORT / IMPORT =====
+function exportData() {
+  const json = JSON.stringify(state, null, 2);
+  const blob = new Blob([json], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `${slugify(state.app.name)}-workspace-${new Date().toISOString().split('T')[0]}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  showToast('Workspace exported!');
+}
+
+function importData() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = '.json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const imported = JSON.parse(ev.target.result);
+        if (!confirm('Import will replace current workspace. Continue?')) return;
+        state = imported;
+        saveState();
+        location.reload();
+      } catch(err) { alert('Invalid file format'); }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#1e293b;color:white;padding:10px 18px;border-radius:10px;font-size:14px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:opacity 0.3s';
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2200);
+}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('header-app-name').textContent = state.app.name;
+  document.getElementById('header-app-tagline').textContent = state.app.tagline || 'Dev Workspace';
+  renderDashboard();
+});
+</script>
+</body>
+</html>
