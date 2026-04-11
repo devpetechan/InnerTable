@@ -279,6 +279,38 @@
     .comment-edit-form { margin-top: 4px; }
     .comment-deleted { font-size: .83rem; color: var(--tan); font-style: italic; display: block; line-height: 1.4; margin-top: 2px; }
 
+    /* ═══ COMMENT REACTIONS ═══ */
+    .comment-reactions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; align-items: center; }
+    .reaction-pill {
+      display: inline-flex; align-items: center; gap: 3px;
+      background: var(--cream); border: 1.5px solid var(--tan); border-radius: 20px;
+      padding: 2px 8px; font-size: .78rem; cursor: pointer; color: var(--muted);
+      transition: all .15s; line-height: 1.4; font-family: inherit;
+    }
+    .reaction-pill:hover { border-color: var(--rust); background: #fdf1ec; }
+    .reaction-pill.mine  { background: #fdf1ec; border-color: var(--rust); color: var(--rust); }
+    .reaction-pill .reaction-count { font-weight: 700; font-size: .72rem; }
+    .reaction-add-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: none; border: 1.5px solid var(--tan); border-radius: 20px;
+      padding: 2px 8px; font-size: .82rem; cursor: pointer; color: var(--muted);
+      transition: all .15s; line-height: 1.4; position: relative; font-family: inherit;
+      user-select: none; -webkit-user-select: none;
+    }
+    .reaction-add-btn:hover { border-color: var(--rust); background: #fdf1ec; }
+    .reaction-add-btn.mine  { background: #fdf1ec; border-color: var(--rust); color: var(--rust); }
+    .reaction-picker {
+      position: absolute; bottom: calc(100% + 6px); left: 0;
+      background: var(--white); border: 1.5px solid var(--tan); border-radius: 12px;
+      padding: 6px 8px; box-shadow: 0 4px 16px rgba(44,36,22,.15);
+      display: flex; gap: 4px; z-index: 500; white-space: nowrap;
+    }
+    .reaction-picker-btn {
+      background: none; border: none; font-size: 1.1rem; cursor: pointer; padding: 3px 4px;
+      border-radius: 6px; transition: background .12s; line-height: 1;
+    }
+    .reaction-picker-btn:hover { background: var(--tan); }
+
     /* ═══ EMPTY STATE ═══ */
     .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
     .empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; }
@@ -441,6 +473,14 @@
     .rec-btn.yes.active { background: #eef4e5; border-color: var(--olive); color: var(--olive); }
     .rec-btn.no.active  { background: #f5f0ec; border-color: #907060; color: #907060; }
 
+    /* Go Now inline badge — replaces ✅ everywhere */
+    .go-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: #4a7c4a; color: #fff; border-radius: 4px;
+      font-size: .72em; font-weight: 800; padding: 1px 4px; line-height: 1.35;
+      vertical-align: middle; margin-right: 2px; letter-spacing: 0;
+    }
+
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
     .star-picker { display: flex; gap: 8px; font-size: 1.5rem; cursor: pointer; }
@@ -589,13 +629,6 @@
         <h2>Welcome to my Inner Table.</h2>
         <p>The Inner Table is a curated list of food and drink spots that your trusted inner circle of friends like or want to try. Add to the Inner Table list — but don't add crap places! Your friends will hate you.</p>
         <div class="home-ctas">
-          <button class="home-cta-btn primary" onclick="openModal()">
-            <span class="home-cta-icon">➕</span>
-            <span class="home-cta-text">
-              <strong>Add a New Place</strong>
-              <span>Share a spot with the group</span>
-            </span>
-          </button>
           <button class="home-cta-btn" onclick="navigateToList('restaurant')">
             <span class="home-cta-icon">🍽</span>
             <span class="home-cta-text">
@@ -610,6 +643,13 @@
               <span>See bars and cocktail spots</span>
             </span>
           </button>
+          <button class="home-cta-btn primary" onclick="openModal()">
+            <span class="home-cta-icon">➕</span>
+            <span class="home-cta-text">
+              <strong>Add a New Place</strong>
+              <span>Share a spot with the group</span>
+            </span>
+          </button>
         </div>
       </div>
     </div>
@@ -621,7 +661,7 @@
       <div class="view-tabs">
         <button class="view-tab active" data-view="all"         onclick="setView('all',this)">🗂 All</button>
         <button class="view-tab"        data-view="try"         onclick="setView('try',this)">📌 Want to Try</button>
-        <button class="view-tab"        data-view="recommended" onclick="setView('recommended',this)">✅ Recommended</button>
+        <button class="view-tab"        data-view="recommended" onclick="setView('recommended',this)"><span class="go-icon">✓</span> Recommended</button>
       </div>
 
       <!-- List | Map toggle -->
@@ -637,7 +677,6 @@
         <span class="filter-label">By:</span>
         <div class="filter-chip active" data-filter="all" onclick="setFilter('all',this)">Everyone</div>
         <div class="filter-chip" data-filter="mine" onclick="setFilter('mine',this)">Just mine</div>
-        <div id="friend-filters"></div>
       </div>
 
       <!-- Type filter chips -->
@@ -648,13 +687,7 @@
         <div class="filter-chip"        data-type="bar"        onclick="setTypeFilter('bar',this)">🍸 Bars</div>
       </div>
 
-      <!-- Hide my skips filter -->
-      <div class="filter-bar" id="skip-filter-bar">
-        <span class="filter-label">Hide:</span>
-        <div class="filter-chip" id="hide-skips-chip" onclick="toggleHideMySkips(this)">My Skips</div>
-      </div>
-
-      <div class="section-title" id="count-title">
+<div class="section-title" id="count-title">
         Places <span class="count-badge" id="rec-count">0</span>
       </div>
 
@@ -672,7 +705,7 @@
     </div>
   </main>
 
-  <button class="fab" onclick="openModal()"><span>+</span> Add Place</button>
+  <button class="fab" id="add-place-fab" onclick="openModal()" style="display:none"><span>+</span> Add Place</button>
 </div>
 
 <!-- ═══════════════ MODAL ═══════════════ -->
@@ -683,37 +716,23 @@
       <button class="btn-close" onclick="closeModal()">✕</button>
     </div>
 
-    <!-- Step 1: choose type -->
-    <div id="type-step">
-      <div class="type-chooser">
-        <button type="button" class="type-card" id="tc-want-to-go" onclick="selectAddType('want-to-go')">
-          <span class="tc-icon">📌</span>
-          <div class="tc-text">
-            <span class="tc-label">Want to Go</span>
-            <span class="tc-desc">Save a spot you want to visit</span>
-          </div>
-        </button>
-        <button type="button" class="type-card" id="tc-been-recommend" onclick="selectAddType('been-recommend')">
-          <span class="tc-icon">✅</span>
-          <div class="tc-text">
-            <span class="tc-label">Been + Recommend</span>
-            <span class="tc-desc">You've been and would send a friend here</span>
-          </div>
-        </button>
-        <button type="button" class="type-card" id="tc-been-skip" onclick="selectAddType('been-skip')">
-          <span class="tc-icon">👎</span>
-          <div class="tc-text">
-            <span class="tc-label">Been + Skip</span>
-            <span class="tc-desc">You've been but wouldn't go back</span>
-          </div>
-        </button>
-      </div>
-    </div>
-
-    <!-- Step 2: form -->
+    <!-- Form (shown directly on open) -->
     <div id="form-step">
-      <div class="step-back" onclick="backToTypeStep()">← Back</div>
-      <div class="step-title" id="form-step-title"></div>
+      <div class="step-title" id="form-step-title" style="display:none"></div>
+
+      <!-- Name with Places autocomplete -->
+      <div class="form-group">
+        <label class="form-label">Name *</label>
+        <div class="autocomplete-wrap">
+          <input class="form-input" id="f-name" type="text" placeholder="Start typing a name…" maxlength="100" autocomplete="off" oninput="updateSubmitBtn()" />
+        </div>
+      </div>
+
+      <!-- Location (auto-filled by Places) -->
+      <div class="form-group">
+        <label class="form-label">Location / Neighborhood</label>
+        <input class="form-input" id="f-location" type="text" placeholder="e.g. Mission District, SF" maxlength="100" />
+      </div>
 
       <!-- Bar / Restaurant toggle -->
       <div class="form-group">
@@ -724,34 +743,40 @@
         </div>
       </div>
 
-      <!-- Name with Places autocomplete -->
+      <!-- Experience toggle: I've Been / Want to Try -->
       <div class="form-group">
-        <label class="form-label">Name *</label>
-        <div class="autocomplete-wrap">
-          <input class="form-input" id="f-name" type="text" placeholder="Start typing a name…" maxlength="100" autocomplete="off" />
-        </div>
-      </div>
-
-      <!-- Location (auto-filled by Places) -->
-      <div class="form-group">
-        <label class="form-label">Location / Neighborhood</label>
-        <input class="form-input" id="f-location" type="text" placeholder="e.g. Mission District, SF" maxlength="100" />
-      </div>
-
-      <!-- WANT-TO-TRY fields -->
-      <div id="try-fields">
-        <div class="form-group">
-          <label class="form-label">Note (optional)</label>
-          <textarea class="form-textarea" id="f-try-note" placeholder="Why it looks good, who told you about it…" maxlength="400"></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Link / Review URL (optional)</label>
-          <input class="form-input" id="f-url" type="url" placeholder="https://…" />
+        <label class="form-label">Your Experience</label>
+        <div class="rec-toggle">
+          <button class="rec-btn yes" id="exp-been" onclick="setBeenOrTry('been')">🍴 I've Been</button>
+          <button class="rec-btn no"  id="exp-try"  onclick="setBeenOrTry('try')">📌 Want to Try</button>
         </div>
       </div>
 
       <!-- BEEN-HERE fields -->
       <div id="been-fields" style="display:none">
+
+        <!-- Overall Rating + Go Now / Hard Pass on one row -->
+        <div class="form-group">
+          <div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:120px;">
+              <div class="form-label">Overall Rating</div>
+              <div class="star-picker" id="star-picker">
+                <span onclick="setStars(1)">☆</span><span onclick="setStars(2)">☆</span>
+                <span onclick="setStars(3)">☆</span><span onclick="setStars(4)">☆</span>
+                <span onclick="setStars(5)">☆</span>
+              </div>
+            </div>
+            <div>
+              <div class="form-label">Status *</div>
+              <div class="rec-toggle" style="margin-bottom:0;">
+                <button class="rec-btn yes" id="btn-go-now"    onclick="setGoNowOrHardPass('been-recommend')"><span class="go-icon">✓</span> Go Now!</button>
+                <button class="rec-btn no"  id="btn-hard-pass" onclick="setGoNowOrHardPass('been-skip')">🚫 Hard Pass</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cuisine + Price -->
         <div class="form-row" id="been-details-row">
           <div class="form-group">
             <label class="form-label">Cuisine</label>
@@ -778,16 +803,7 @@
           </div>
         </div>
 
-        <div id="rating-group" class="form-group">
-          <label class="form-label">Overall Rating</label>
-          <div class="star-picker" id="star-picker">
-            <span onclick="setStars(1)">☆</span><span onclick="setStars(2)">☆</span>
-            <span onclick="setStars(3)">☆</span><span onclick="setStars(4)">☆</span>
-            <span onclick="setStars(5)">☆</span>
-          </div>
-        </div>
-
-        <!-- Factor Ratings -->
+        <!-- Detailed Ratings -->
         <div class="factor-ratings-section" id="factor-ratings-group">
           <div class="factor-ratings-title">Detailed Ratings (optional)</div>
           <div class="factor-ratings-grid">
@@ -841,46 +857,59 @@
         </div>
       </div>
 
-      <button class="btn-submit" id="submit-btn" onclick="submitRec()">Save</button>
+      <!-- WANT-TO-TRY fields -->
+      <div id="try-fields" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Note (optional)</label>
+          <textarea class="form-textarea" id="f-try-note" placeholder="Why it looks good, who told you about it…" maxlength="400"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Link / Review URL (optional)</label>
+          <input class="form-input" id="f-url" type="url" placeholder="https://…" />
+        </div>
+      </div>
+
+      <button class="btn-submit" id="submit-btn" onclick="submitRec()" disabled>Save</button>
     </div>
 
     <!-- Attach step: add your status to an existing entry -->
     <div id="attach-step" style="display:none">
       <div class="step-title">Add Your Status</div>
       <p style="font-size:.85rem;color:var(--muted);margin-bottom:16px;" id="attach-place-name"></p>
-      <div class="form-label" style="margin-bottom:10px;">Your relationship with this place</div>
-      <div class="type-chooser" style="margin-bottom:16px;">
-        <button type="button" class="type-card" id="atc-want-to-go" onclick="setAttachStatus('want-to-go',this)">
-          <span class="tc-icon">📌</span>
-          <div class="tc-text">
-            <span class="tc-label">Want to Go</span>
-            <span class="tc-desc">You want to visit</span>
-          </div>
-        </button>
-        <button type="button" class="type-card" id="atc-been-recommend" onclick="setAttachStatus('been-recommend',this)">
-          <span class="tc-icon">✅</span>
-          <div class="tc-text">
-            <span class="tc-label">Been + Recommend</span>
-            <span class="tc-desc">You'd send a friend</span>
-          </div>
-        </button>
-        <button type="button" class="type-card" id="atc-been-skip" onclick="setAttachStatus('been-skip',this)">
-          <span class="tc-icon">👎</span>
-          <div class="tc-text">
-            <span class="tc-label">Been + Skip</span>
-            <span class="tc-desc">Wouldn't go back</span>
-          </div>
-        </button>
+
+      <!-- I've Been / Want to Try toggle -->
+      <div class="form-group">
+        <label class="form-label">Your Experience</label>
+        <div class="rec-toggle">
+          <button class="rec-btn yes" id="atc-been" onclick="setAttachExperience('been')">🍴 I've Been</button>
+          <button class="rec-btn no"  id="atc-try"  onclick="setAttachExperience('try')">📌 Want to Try</button>
+        </div>
       </div>
+
+      <!-- Rating section (shown when I've Been is selected) -->
       <div id="attach-rating-section" style="display:none">
+
+        <!-- Overall Rating + Go Now / Hard Pass on one row -->
         <div class="form-group">
-          <label class="form-label">Overall Rating</label>
-          <div class="star-picker" id="attach-star-picker">
-            <span onclick="setAttachStars(1)">☆</span><span onclick="setAttachStars(2)">☆</span>
-            <span onclick="setAttachStars(3)">☆</span><span onclick="setAttachStars(4)">☆</span>
-            <span onclick="setAttachStars(5)">☆</span>
+          <div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:120px;">
+              <div class="form-label">Overall Rating (optional)</div>
+              <div class="star-picker" id="attach-star-picker">
+                <span onclick="setAttachStars(1)">☆</span><span onclick="setAttachStars(2)">☆</span>
+                <span onclick="setAttachStars(3)">☆</span><span onclick="setAttachStars(4)">☆</span>
+                <span onclick="setAttachStars(5)">☆</span>
+              </div>
+            </div>
+            <div>
+              <div class="form-label">Status *</div>
+              <div class="rec-toggle" style="margin-bottom:0;">
+                <button class="rec-btn yes" id="abtn-go-now"    onclick="setAttachGoNowOrHardPass('been-recommend')"><span class="go-icon">✓</span> Go Now!</button>
+                <button class="rec-btn no"  id="abtn-hard-pass" onclick="setAttachGoNowOrHardPass('been-skip')">🚫 Hard Pass</button>
+              </div>
+            </div>
           </div>
         </div>
+
         <div class="factor-ratings-section">
           <div class="factor-ratings-title">Detailed Ratings (optional)</div>
           <div class="factor-ratings-grid">
@@ -911,6 +940,7 @@
           </div>
         </div>
       </div>
+
       <button class="btn-submit" id="attach-submit-btn" onclick="submitAttach()" disabled style="margin-top:8px;">Save My Status</button>
     </div>
   </div>
@@ -974,7 +1004,7 @@ const db = firebase.database();
 // Load Google Maps + Places API
 if (GOOGLE_MAPS_API_KEY !== "YOUR_GOOGLE_MAPS_API_KEY") {
   const s = document.createElement('script');
-  s.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places,marker&v=weekly&loading=async&callback=initGoogleAPIs`;
+  s.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places,marker&v=weekly&loading=async&callback=initGoogleAPIs&region=CA`;
   s.async = true; s.defer = true;
   document.head.appendChild(s);
 } else {
@@ -999,7 +1029,7 @@ let factorRatings      = { quality: 0, service: 0, value: 0, ambiance: 0 };
 let selectedPlaceLat   = null;
 let selectedPlaceLng   = null;
 let selectedPlaceId    = null;   // Google Place ID for duplicate detection
-let hideMySkips        = false;
+let beenStatusChosen   = false;  // true once user explicitly clicks Go Now or Hard Pass in been-fields
 let pendingDupId       = null;   // Firebase key of detected duplicate entry
 let pendingDupIsOwn    = false;  // true if current user is the author of the duplicate
 let attachingToId      = null;   // Firebase key of entry being attached to
@@ -1074,6 +1104,7 @@ function switchUser() {
 function goHome() {
   document.getElementById('home-section').style.display = 'block';
   document.getElementById('list-map-section').style.display = 'none';
+  document.getElementById('add-place-fab').style.display = 'none';
 }
 
 function navigateToList(typeFilter) {
@@ -1096,6 +1127,7 @@ function navigateToList(typeFilter) {
   // Show list section
   document.getElementById('home-section').style.display = 'none';
   document.getElementById('list-map-section').style.display = 'block';
+  document.getElementById('add-place-fab').style.display = '';
 
   // Ensure list mode is active
   if (currentDisplayMode !== 'list') {
@@ -1199,14 +1231,6 @@ function renderCards() {
     return true;
   });
 
-  // Hide my skips filter
-  if (hideMySkips) {
-    entries = entries.filter(([,r]) => {
-      const myStatus = r.userStatuses && r.userStatuses[currentUser];
-      return !(myStatus && myStatus.status === 'been-skip');
-    });
-  }
-
   // Type filter
   if (currentTypeFilter !== 'all') {
     entries = entries.filter(([,r]) => r.placeType === currentTypeFilter);
@@ -1246,10 +1270,9 @@ function cardHTML(id, r) {
     ? `<span class="tag type-bar">🍸 Bar</span>`
     : `<span class="tag type-restaurant">🍽 Restaurant</span>`;
 
+  // Hard Pass is shown via consolidated social signals; only Want to Try needs a tag here
   const statusTag = r.status === 'try'
     ? `<span class="tag status-try">📌 Want to Try</span>`
-    : r.status === 'not-recommended'
-    ? `<span class="tag status-no">👎 Skip it</span>`
     : '';
 
   const meta = `
@@ -1258,7 +1281,7 @@ function cardHTML(id, r) {
       ${statusTag}
       ${r.cuisine  ? `<span class="tag cuisine">${esc(r.cuisine)}</span>`  : ''}
       ${r.price    ? `<span class="tag price">${esc(r.price)}</span>`      : ''}
-      ${r.location ? `<span class="tag">📍 ${esc(r.location)}</span>`     : ''}
+      ${r.location ? `<a class="tag" href="${buildMapsUrl(r)}" target="_blank" rel="noopener" style="text-decoration:none;">📍 ${esc(r.location)}</a>` : ''}
     </div>`;
 
   const notes = (r.status === 'try')
@@ -1285,7 +1308,7 @@ function cardHTML(id, r) {
   if (r.status === 'try' && r.triedBy) {
     const triedNames = Object.keys(r.triedBy).filter(n => n !== r.author);
     if (triedNames.length) {
-      triedNote = `<div class="card-tried-note">✅ Tried by: ${triedNames.map(esc).join(', ')}</div>`;
+      triedNote = `<div class="card-tried-note"><span class="go-icon">✓</span> Tried by: ${triedNames.map(esc).join(', ')}</div>`;
     }
   }
 
@@ -1300,33 +1323,38 @@ function cardHTML(id, r) {
     actions = `<div class="card-actions">${btns}</div>`;
   }
 
-  // Non-author actions + inline rating form
+  // Non-author actions + inline "I've Been Here" form
   let nonAuthorSection = '';
   if (!isMine) {
-    const hasTried  = r.triedBy  && r.triedBy[currentUser];
-    const hasRated  = r.userRatings && r.userRatings[currentUser];
-    let actionBtns = '';
+    const myUserStatus = r.userStatuses && r.userStatuses[currentUser];
+    const myStatusVal  = myUserStatus ? myUserStatus.status : null;
+    const myRating     = r.userRatings && r.userRatings[currentUser];
 
-    if (r.status === 'try' && !hasTried) {
-      actionBtns += `<button class="card-btn primary-action" onclick="markAsTried('${id}')">🍴 I've Been Here</button>`;
+    // Button label reflects the user's current visit status.
+    // go-icon is intentionally omitted here — the consolidated social signals section
+    // is the single source of the green checkmark / hard pass indicator.
+    let beenBtnLabel;
+    if (myStatusVal === 'been-recommend') {
+      const myStars = myRating && (myRating.overall||0) > 0 ? ' ' + '★'.repeat(myRating.overall) : '';
+      beenBtnLabel = `✓ Go Now${myStars}`;
+    } else if (myStatusVal === 'been-skip') {
+      beenBtnLabel = 'Hard Pass';
+    } else {
+      beenBtnLabel = '🍴 I\'ve Been Here';
     }
-    if (r.status === 'recommended' || hasTried) {
-      if (!hasRated) {
-        actionBtns += `<button class="card-btn" onclick="toggleRatingForm('${id}')">✍️ Rate This</button>`;
-      } else {
-        const myR    = r.userRatings[currentUser];
-        const myStars = (myR.overall > 0) ? '★'.repeat(myR.overall)+'☆'.repeat(5-myR.overall) : '';
-        actionBtns += `<button class="card-btn" onclick="toggleRatingForm('${id}')" title="Edit your rating">${myStars ? myStars+' ' : ''}My Rating</button>`;
-      }
-    }
-    if (actionBtns) {
-      nonAuthorSection += `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">${actionBtns}</div>`;
-    }
+    nonAuthorSection += `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
+      <button class="card-btn" onclick="toggleRatingForm('${id}')">${beenBtnLabel}</button>
+    </div>`;
 
-    // Inline rating form
+    // Inline form: status toggle + optional star ratings
     nonAuthorSection += `
     <div class="inline-rating-form" id="rf-${id}" style="display:none">
-      <div class="form-label" style="margin-bottom:8px;">Your Overall Rating</div>
+      <div class="form-label" style="margin-bottom:8px;">How was it?</div>
+      <div class="rec-toggle" id="visit-status-${id}" style="margin-bottom:14px;">
+        <button class="rec-btn yes" id="vs-gn-${id}" onclick="setVisitStatus('${id}','been-recommend')"><span class="go-icon">✓</span> Go Now</button>
+        <button class="rec-btn no"  id="vs-hp-${id}" onclick="setVisitStatus('${id}','been-skip')">🚫 Hard Pass</button>
+      </div>
+      <div class="form-label" style="margin-bottom:8px;">Overall Rating (optional)</div>
       <div class="star-picker" id="ur-stars-${id}">
         <span onclick="setUserRatingStar('${id}',1)">☆</span><span onclick="setUserRatingStar('${id}',2)">☆</span>
         <span onclick="setUserRatingStar('${id}',3)">☆</span><span onclick="setUserRatingStar('${id}',4)">☆</span>
@@ -1345,7 +1373,7 @@ function cardHTML(id, r) {
         </div>`).join('')}
       </div>
       <div style="display:flex;gap:8px;margin-top:14px;">
-        <button class="card-btn primary-action" onclick="submitUserRating('${id}')">Save Rating</button>
+        <button class="card-btn primary-action" onclick="submitUserRating('${id}')">Save</button>
         <button class="card-btn" onclick="toggleRatingForm('${id}')">Cancel</button>
       </div>
     </div>`;
@@ -1377,6 +1405,25 @@ function cardHTML(id, r) {
       <button class="comment-action-btn" onclick="startEditComment('${id}','${ck}')">Edit</button>
       <button class="comment-action-btn danger" onclick="deleteComment('${id}','${ck}')">Delete</button>
     </div>` : '';
+    // Reaction pills
+    const reactions = c.reactions || {};
+    const reactionPills = Object.entries(reactions).map(([emoji, users]) => {
+      const decodedEmoji = decodeURIComponent(emoji);
+      const voters = Object.keys(users).filter(u => users[u]);
+      if (!voters.length) return '';
+      const isMine = voters.includes(currentUser);
+      return `<button class="reaction-pill${isMine ? ' mine' : ''}" onclick="toggleReaction('${id}','${ck}','${decodedEmoji}')" title="${voters.map(v=>esc(v)).join(', ')}">${decodedEmoji} <span class="reaction-count">${voters.length}</span></button>`;
+    }).join('');
+    const thumbsUpVoters = reactions['👍'] ? Object.keys(reactions['👍']).filter(u => reactions['👍'][u]) : [];
+    const iThumbedUp = thumbsUpVoters.includes(currentUser);
+    const reactionsHtml = `<div class="comment-reactions">${reactionPills}<button class="reaction-add-btn${iThumbedUp ? ' mine' : ''}"
+      onmousedown="reactionBtnDown(this,'${id}','${ck}')"
+      onmouseup="reactionBtnUp(this,'${id}','${ck}')"
+      onmouseleave="reactionBtnCancel(this)"
+      ontouchstart="reactionBtnDown(this,'${id}','${ck}')"
+      ontouchend="reactionBtnUp(this,'${id}','${ck}')"
+      ontouchcancel="reactionBtnCancel(this)"
+      title="Like · Hold for more reactions">👍</button></div>`;
     return `<div class="comment-item">
       <div class="avatar-sm ${cc}">${ci}</div>
       <div class="comment-body">
@@ -1392,6 +1439,7 @@ function cardHTML(id, r) {
             <button class="comment-cancel" onclick="cancelEditComment('${id}','${ck}')">Cancel</button>
           </div>
         </div>
+        ${reactionsHtml}
       </div>
     </div>`;
   }).join('')}</div>` : '';
@@ -1442,10 +1490,7 @@ function cardHTML(id, r) {
 }
 
 function updateFriendFilters() {
-  const authors = [...new Set(Object.values(allRecs).map(r=>r.author))].filter(a=>a!==currentUser);
-  document.getElementById('friend-filters').innerHTML = authors.map(a =>
-    `<div class="filter-chip" onclick="setFilter('${esc(a)}',this)">${esc(a)}</div>`
-  ).join('');
+  // IT-002: Only "Everyone" and "Just Mine" filters are shown; no per-user chips.
 }
 
 // ══════════════════════════════════════════════════
@@ -1609,13 +1654,24 @@ function renderMapMarkers() {
 function openModal(prefillId) {
   editingId = prefillId || null;
   document.getElementById('modal-overlay').classList.add('open');
-  document.getElementById('type-step').style.display   = '';
-  document.getElementById('form-step').style.display   = 'none';
+  document.getElementById('form-step').style.display   = 'block';
   document.getElementById('attach-step').style.display = 'none';
   document.getElementById('modal-title').textContent = editingId ? 'Mark as Tried' : 'Add a Place';
 
+  // Reset experience toggle for fresh add
+  document.getElementById('exp-been').classList.remove('active');
+  document.getElementById('exp-try').classList.remove('active');
+  document.getElementById('been-fields').style.display = 'none';
+  document.getElementById('try-fields').style.display  = 'none';
+  document.getElementById('btn-go-now').classList.remove('active');
+  document.getElementById('btn-hard-pass').classList.remove('active');
+  addType = null;
+  beenStatusChosen = false;
+  updateSubmitBtn();
+
   if (editingId) {
-    selectAddType('been', true);
+    // For upgrade-to-tried: auto-select "I've Been" and show been-fields
+    setBeenOrTry('been');
     const r = allRecs[editingId];
     if (r) {
       document.getElementById('f-name').value     = r.name     || '';
@@ -1628,7 +1684,6 @@ function openModal(prefillId) {
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
   document.getElementById('attach-step').style.display = 'none';
-  document.getElementById('type-step').style.display   = '';
   clearForm();
   editingId     = null;
   attachingToId = null;
@@ -1645,24 +1700,32 @@ function editEntry(id) {
   editingId = id;
   document.getElementById('modal-overlay').classList.add('open');
   document.getElementById('modal-title').textContent = 'Edit Place';
-  document.getElementById('type-step').style.display = 'none';
   document.getElementById('form-step').style.display = 'block';
+  document.getElementById('attach-step').style.display = 'none';
 
   if (r.status === 'try') {
     addType = 'try';
-    document.getElementById('form-step-title').textContent = '📌 Save a Place to Try';
+    beenStatusChosen = false;
+    document.getElementById('form-step-title').textContent = '📌 Edit Place to Try';
+    document.getElementById('form-step-title').style.display = 'block';
     document.getElementById('try-fields').style.display  = 'block';
     document.getElementById('been-fields').style.display = 'none';
+    document.getElementById('exp-been').classList.remove('active');
+    document.getElementById('exp-try').classList.add('active');
     document.getElementById('f-try-note').value = r.tryNote || '';
     document.getElementById('f-url').value       = r.url     || '';
   } else {
-    addType = 'been';
-    document.getElementById('form-step-title').textContent = "🍴 Review a Place You've Visited";
+    const isSkip = r.status === 'not-recommended';
+    addType = isSkip ? 'been-skip' : 'been-recommend';
+    beenStatusChosen = true;
+    document.getElementById('form-step-title').textContent = "🍴 Edit Place You've Visited";
+    document.getElementById('form-step-title').style.display = 'block';
     document.getElementById('try-fields').style.display  = 'none';
     document.getElementById('been-fields').style.display = 'block';
-    // Always show cuisine/price/notes in edit mode
-    document.getElementById('been-details-row').style.display = '';
-    document.getElementById('been-notes-group').style.display = '';
+    document.getElementById('exp-been').classList.add('active');
+    document.getElementById('exp-try').classList.remove('active');
+    document.getElementById('btn-go-now').classList.toggle('active', !isSkip);
+    document.getElementById('btn-hard-pass').classList.toggle('active', isSkip);
     document.getElementById('f-cuisine').value = r.cuisine || '';
     document.getElementById('f-price').value   = r.price   || '';
     // Use author's own rating if in userRatings, else fall back to top-level rating
@@ -1680,7 +1743,7 @@ function editEntry(id) {
   document.getElementById('f-name').value     = r.name     || '';
   document.getElementById('f-location').value = r.location || '';
   setPlaceType(r.placeType || 'restaurant');
-  document.querySelector('.step-back').style.display = 'none';
+  updateSubmitBtn();
   document.querySelector('.modal').scrollTop = 0;
 }
 
@@ -1740,42 +1803,156 @@ function deleteComment(recId, commentKey) {
   });
 }
 
-function selectAddType(type, skipBack) {
+// ── Emoji Reactions ──────────────────────────────
+const REACTION_EMOJIS = ['👍','❤️','💀','😂','😮','😢','👏','💩'];
+
+function toggleReaction(recId, commentKey, emoji) {
+  const path = `recommendations/${recId}/comments/${commentKey}/reactions/${encodeURIComponent(emoji)}/${currentUser}`;
+  const rec  = allRecs[recId];
+  const existing = rec && rec.comments && rec.comments[commentKey]
+    && rec.comments[commentKey].reactions
+    && rec.comments[commentKey].reactions[emoji]
+    && rec.comments[commentKey].reactions[emoji][currentUser];
+  db.ref(path).set(existing ? null : true).catch(err => {
+    console.error(err);
+    showToast('❌ Could not save reaction.');
+  });
+}
+
+// Long-press threshold in ms — matches LinkedIn's feel
+const REACTION_HOLD_MS = 450;
+
+function reactionBtnDown(btn, recId, commentKey) {
+  btn._recId      = recId;
+  btn._commentKey = commentKey;
+  btn._longFired  = false;
+  btn._holdTimer  = setTimeout(() => {
+    btn._longFired = true;
+    showReactionPicker(btn, recId, commentKey);
+  }, REACTION_HOLD_MS);
+}
+
+function reactionBtnUp(btn, recId, commentKey) {
+  clearTimeout(btn._holdTimer);
+  if (!btn._longFired) {
+    // Short tap/click → toggle 👍
+    toggleReaction(recId, commentKey, '👍');
+  }
+  btn._longFired = false;
+}
+
+function reactionBtnCancel(btn) {
+  clearTimeout(btn._holdTimer);
+  btn._longFired = false;
+}
+
+function showReactionPicker(btn, recId, commentKey) {
+  // Close any open pickers first
+  document.querySelectorAll('.reaction-picker').forEach(p => p.remove());
+  const picker = document.createElement('div');
+  picker.className = 'reaction-picker';
+  REACTION_EMOJIS.forEach(emoji => {
+    const b = document.createElement('button');
+    b.className = 'reaction-picker-btn';
+    b.textContent = emoji;
+    b.title = emoji;
+    b.onmousedown = (e) => e.stopPropagation(); // prevent triggering parent btn handlers
+    b.onclick = (e) => {
+      e.stopPropagation();
+      toggleReaction(recId, commentKey, emoji);
+      picker.remove();
+    };
+    picker.appendChild(b);
+  });
+  btn.appendChild(picker);
+  // Close on outside click/touch
+  const close = (e) => {
+    if (!btn.contains(e.target)) { picker.remove(); document.removeEventListener('mousedown', close); document.removeEventListener('touchstart', close); }
+  };
+  setTimeout(() => {
+    document.addEventListener('mousedown', close);
+    document.addEventListener('touchstart', close);
+  }, 0);
+}
+
+function selectAddType(type) {
   addType = type;
-  document.getElementById('type-step').style.display  = 'none';
-  document.getElementById('form-step').style.display  = 'block';
 
   const isTry  = (type === 'try'  || type === 'want-to-go');
   const isBeen = (type === 'been' || type === 'been-recommend' || type === 'been-skip');
 
-  const titleMap = {
-    'want-to-go':     '📌 Save a Place to Try',
-    'been-recommend': '✅ Review a Place You Recommend',
-    'been-skip':      '👎 Add a Place You\'d Skip',
-    'try':            '📌 Save a Place to Try',
-    'been':           "🍴 Review a Place You've Visited",
-  };
-  document.getElementById('form-step-title').textContent = titleMap[type] || '📌 Save a Place';
-
   document.getElementById('try-fields').style.display  = isTry  ? 'block' : 'none';
   document.getElementById('been-fields').style.display = isBeen ? 'block' : 'none';
 
-  // For new been entries (not editing), hide cuisine/price/notes — ratings only
-  if (isBeen && !editingId) {
-    document.getElementById('been-details-row').style.display = 'none';
-    document.getElementById('been-notes-group').style.display = 'none';
-  } else if (isBeen) {
-    document.getElementById('been-details-row').style.display = '';
-    document.getElementById('been-notes-group').style.display = '';
-  }
-
-  document.querySelector('.step-back').style.display = skipBack ? 'none' : 'flex';
   document.querySelector('.modal').scrollTop = 0;
 }
 
-function backToTypeStep() {
-  document.getElementById('type-step').style.display  = '';
-  document.getElementById('form-step').style.display  = 'none';
+// ── Experience toggle (I've Been / Want to Try) ──
+function setBeenOrTry(type) {
+  const isBeen = type === 'been';
+  document.getElementById('exp-been').classList.toggle('active', isBeen);
+  document.getElementById('exp-try').classList.toggle('active', !isBeen);
+
+  if (isBeen) {
+    // Show been-fields but don't enable Save yet — need Go Now or Hard Pass
+    selectAddType('been-recommend'); // sets addType + shows been-fields
+    // beenStatusChosen stays false until Go Now/Hard Pass is explicitly clicked
+    beenStatusChosen = false;
+  } else {
+    selectAddType('want-to-go');
+    beenStatusChosen = false;
+  }
+  updateSubmitBtn();
+}
+
+// ── Go Now / Hard Pass toggle (inside been-fields) ──
+function setGoNowOrHardPass(status) {
+  addType = status;
+  beenStatusChosen = true;
+  document.getElementById('btn-go-now').classList.toggle('active',    status === 'been-recommend');
+  document.getElementById('btn-hard-pass').classList.toggle('active', status === 'been-skip');
+  updateSubmitBtn();
+}
+
+// ── Submit button enable/disable logic ──
+function updateSubmitBtn() {
+  const nameEl = document.getElementById('f-name');
+  const btn    = document.getElementById('submit-btn');
+  if (!btn) return;
+  const hasName = nameEl && nameEl.value.trim().length > 0;
+  const isTry   = addType === 'want-to-go' || addType === 'try';
+  const isBeen  = addType === 'been-recommend' || addType === 'been-skip' || addType === 'been';
+  if (!addType)       { btn.disabled = true;  return; }
+  if (isTry)          { btn.disabled = !hasName; return; }
+  if (isBeen)         { btn.disabled = !(hasName && beenStatusChosen); return; }
+  btn.disabled = true;
+}
+
+// ── Attach experience toggle ──
+function setAttachExperience(type) {
+  const isBeen = type === 'been';
+  document.getElementById('atc-been').classList.toggle('active', isBeen);
+  document.getElementById('atc-try').classList.toggle('active', !isBeen);
+  if (isBeen) {
+    document.getElementById('attach-rating-section').style.display = 'block';
+    // Need explicit Go Now / Hard Pass before save is enabled
+    attachStatus = null;
+    document.getElementById('abtn-go-now').classList.remove('active');
+    document.getElementById('abtn-hard-pass').classList.remove('active');
+    document.getElementById('attach-submit-btn').disabled = true;
+  } else {
+    attachStatus = 'want-to-go';
+    document.getElementById('attach-rating-section').style.display = 'none';
+    document.getElementById('attach-submit-btn').disabled = false;
+  }
+}
+
+// ── Attach Go Now / Hard Pass toggle ──
+function setAttachGoNowOrHardPass(status) {
+  attachStatus = status;
+  document.getElementById('abtn-go-now').classList.toggle('active',    status === 'been-recommend');
+  document.getElementById('abtn-hard-pass').classList.toggle('active', status === 'been-skip');
+  document.getElementById('attach-submit-btn').disabled = false;
 }
 
 // ══════════════════════════════════════════════════
@@ -1814,8 +1991,17 @@ function clearForm() {
   document.getElementById('f-price').value   = '';
   setStars(0);
   setPlaceType('restaurant');
-  addType  = null;
-  editingId = null;
+  addType          = null;
+  editingId        = null;
+  beenStatusChosen = false;
+  // Reset experience toggle
+  document.getElementById('exp-been').classList.remove('active');
+  document.getElementById('exp-try').classList.remove('active');
+  document.getElementById('been-fields').style.display = 'none';
+  document.getElementById('try-fields').style.display  = 'none';
+  // Reset Go Now / Hard Pass buttons
+  document.getElementById('btn-go-now').classList.remove('active');
+  document.getElementById('btn-hard-pass').classList.remove('active');
   // Reset factor ratings
   factorRatings = { quality: 0, service: 0, value: 0, ambiance: 0 };
   ['quality','service','value','ambiance'].forEach(f => {
@@ -1825,6 +2011,7 @@ function clearForm() {
   selectedPlaceLat = null;
   selectedPlaceLng = null;
   selectedPlaceId  = null;
+  updateSubmitBtn();
 }
 
 // ══════════════════════════════════════════════════
@@ -1873,12 +2060,9 @@ function submitRec() {
     rec.url     = document.getElementById('f-url').value.trim();
   } else {
     rec.status  = topStatus;
-    // cuisine/price/notes only in edit mode (hidden for new been adds)
-    if (editingId) {
-      rec.cuisine = document.getElementById('f-cuisine').value;
-      rec.price   = document.getElementById('f-price').value;
-      rec.notes   = document.getElementById('f-notes').value.trim();
-    }
+    rec.cuisine = document.getElementById('f-cuisine').value;
+    rec.price   = document.getElementById('f-price').value;
+    rec.notes   = document.getElementById('f-notes').value.trim();
     rec.rating  = selectedStars;
 
     const anyRated = Object.values(factorRatings).some(v => v > 0);
@@ -1924,7 +2108,7 @@ function submitRec() {
       db.ref(`recommendations/${savedId}/userRatings/${currentUser}`).set(authorRating);
     }
 
-    const toastMsg = isTryType ? '📌 Saved to your list!' : addType === 'been-skip' ? '👎 Skip noted!' : '🎉 Review saved!';
+    const toastMsg = isTryType ? '📌 Saved to your list!' : addType === 'been-skip' ? '🚫 Hard Pass noted!' : '🎉 Review saved!';
     showToast(toastMsg);
     closeModal();
     btn.disabled = false; btn.textContent = 'Save';
@@ -2074,19 +2258,29 @@ function markAsTried(id) {
 }
 
 function toggleRatingForm(id) {
-  // Pre-fill with existing user rating if available
+  // Pre-fill with existing user rating + status if available
   if (!pendingUserRatings[id]) {
     const r = allRecs[id];
-    const existing = r && r.userRatings && r.userRatings[currentUser];
+    const existing       = r && r.userRatings   && r.userRatings[currentUser];
+    const existingStatus = r && r.userStatuses  && r.userStatuses[currentUser];
     pendingUserRatings[id] = existing
       ? { overall: existing.overall||0, quality: existing.quality||0, service: existing.service||0, value: existing.value||0, ambiance: existing.ambiance||0 }
       : { overall: 0, quality: 0, service: 0, value: 0, ambiance: 0 };
+    if (existingStatus) pendingUserRatings[id].visitStatus = existingStatus.status;
   }
   const form = document.getElementById('rf-' + id);
   if (!form) return;
   const opening = form.style.display === 'none';
   form.style.display = opening ? 'block' : 'none';
-  if (opening) renderUserRatingStars(id);
+  if (opening) {
+    renderUserRatingStars(id);
+    // Sync status toggle buttons
+    const vs = pendingUserRatings[id].visitStatus;
+    const gnBtn = document.getElementById('vs-gn-' + id);
+    const hpBtn = document.getElementById('vs-hp-' + id);
+    if (gnBtn) gnBtn.classList.toggle('active', vs === 'been-recommend');
+    if (hpBtn) hpBtn.classList.toggle('active', vs === 'been-skip');
+  }
 }
 
 function renderUserRatingStars(id) {
@@ -2098,6 +2292,15 @@ function renderUserRatingStars(id) {
     const el = document.getElementById(`ur-${f}-${id}`);
     if (el) el.querySelectorAll('span').forEach((s,i) => { s.textContent = i < (state[f]||0) ? '★' : '☆'; });
   });
+}
+
+function setVisitStatus(id, status) {
+  if (!pendingUserRatings[id]) pendingUserRatings[id] = { overall:0, quality:0, service:0, value:0, ambiance:0 };
+  pendingUserRatings[id].visitStatus = status;
+  const gnBtn = document.getElementById('vs-gn-' + id);
+  const hpBtn = document.getElementById('vs-hp-' + id);
+  if (gnBtn) gnBtn.classList.toggle('active', status === 'been-recommend');
+  if (hpBtn) hpBtn.classList.toggle('active', status === 'been-skip');
 }
 
 function setUserRatingStar(id, n) {
@@ -2116,14 +2319,26 @@ function setUserFactorStar(id, factor, n) {
 
 function submitUserRating(id) {
   const state = pendingUserRatings[id] || { overall:0, quality:0, service:0, value:0, ambiance:0 };
-  db.ref(`recommendations/${id}/userRatings/${currentUser}`).set(state)
+  const updates = {};
+  updates[`recommendations/${id}/userRatings/${currentUser}`] = {
+    overall: state.overall||0, quality: state.quality||0, service: state.service||0,
+    value: state.value||0, ambiance: state.ambiance||0
+  };
+  if (state.visitStatus) {
+    updates[`recommendations/${id}/userStatuses/${currentUser}`] = { status: state.visitStatus };
+    updates[`recommendations/${id}/triedBy/${currentUser}`] = true;
+  }
+  db.ref().update(updates)
     .then(() => {
-      showToast('⭐ Rating saved!');
+      const toast = state.visitStatus === 'been-recommend' ? 'Go Now saved!'
+                  : state.visitStatus === 'been-skip'      ? '🚫 Hard Pass saved!'
+                  : '⭐ Rating saved!';
+      showToast(toast);
       delete pendingUserRatings[id];
       const form = document.getElementById('rf-' + id);
       if (form) form.style.display = 'none';
     })
-    .catch(err => { console.error(err); showToast('❌ Could not save rating.'); });
+    .catch(err => { console.error(err); showToast('❌ Could not save.'); });
 }
 
 // ══════════════════════════════════════════════════
@@ -2142,7 +2357,7 @@ function openPlaceDetail(id) {
   const date = r.ts ? new Date(r.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
 
   const typeLabel = r.placeType === 'bar' ? '🍸 Bar' : '🍽 Restaurant';
-  const statusLabel = r.status === 'try' ? '📌 Want to Try' : r.status === 'not-recommended' ? '👎 Skip it' : '✅ Recommended';
+  const statusLabel = r.status === 'try' ? '📌 Want to Try' : r.status === 'not-recommended' ? '🚫 Hard Pass' : '<span class="go-icon">✓</span> Recommended';
 
   // Factor ratings display
   let factorsHtml = '';
@@ -2176,32 +2391,38 @@ function openPlaceDetail(id) {
   let triedHtml = '';
   if (r.status === 'try' && r.triedBy) {
     const names = Object.keys(r.triedBy).filter(n => n !== r.author);
-    if (names.length) triedHtml = `<div class="card-tried-note" style="margin-top:8px;">✅ Tried by: ${names.map(esc).join(', ')}</div>`;
+    if (names.length) triedHtml = `<div class="card-tried-note" style="margin-top:8px;"><span class="go-icon">✓</span> Tried by: ${names.map(esc).join(', ')}</div>`;
   }
 
-  // Non-author action buttons + inline form
+  // Non-author action buttons + inline "I've Been Here" form
   let nonAuthorHtml = '';
   if (!isMine) {
-    const hasTried = r.triedBy && r.triedBy[currentUser];
-    const hasRated = r.userRatings && r.userRatings[currentUser];
-    let actionBtns = '';
-    if (r.status === 'try' && !hasTried) {
-      actionBtns += `<button class="card-btn primary-action" onclick="markAsTriedFromDetail('${id}')">🍴 I've Been Here</button>`;
+    const myUserStatus = r.userStatuses && r.userStatuses[currentUser];
+    const myStatusVal  = myUserStatus ? myUserStatus.status : null;
+    const myRating     = r.userRatings && r.userRatings[currentUser];
+
+    // go-icon omitted — the consolidated social signals button is the single checkmark indicator
+    let beenBtnLabel;
+    if (myStatusVal === 'been-recommend') {
+      const myStars = myRating && (myRating.overall||0) > 0 ? ' ' + '★'.repeat(myRating.overall) : '';
+      beenBtnLabel = `✓ Go Now${myStars}`;
+    } else if (myStatusVal === 'been-skip') {
+      beenBtnLabel = 'Hard Pass';
+    } else {
+      beenBtnLabel = '🍴 I\'ve Been Here';
     }
-    if (r.status === 'recommended' || hasTried) {
-      if (!hasRated) {
-        actionBtns += `<button class="card-btn" onclick="toggleDetailRatingForm('${id}')">✍️ Rate This</button>`;
-      } else {
-        const myR = r.userRatings[currentUser];
-        const myStars = (myR.overall||0) > 0 ? '★'.repeat(myR.overall)+'☆'.repeat(5-myR.overall) : '';
-        actionBtns += `<button class="card-btn" onclick="toggleDetailRatingForm('${id}')">${myStars ? myStars+' ' : ''}My Rating</button>`;
-      }
-    }
-    if (actionBtns) nonAuthorHtml += `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;">${actionBtns}</div>`;
+    nonAuthorHtml += `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;">
+      <button class="card-btn" onclick="toggleDetailRatingForm('${id}')">${beenBtnLabel}</button>
+    </div>`;
 
     nonAuthorHtml += `
     <div class="inline-rating-form" id="drf-${id}" style="display:none;margin-top:10px;">
-      <div class="form-label" style="margin-bottom:8px;">Your Overall Rating</div>
+      <div class="form-label" style="margin-bottom:8px;">How was it?</div>
+      <div class="rec-toggle" id="dvisit-status-${id}" style="margin-bottom:14px;">
+        <button class="rec-btn yes" id="dvs-gn-${id}" onclick="setDetailVisitStatus('${id}','been-recommend')"><span class="go-icon">✓</span> Go Now</button>
+        <button class="rec-btn no"  id="dvs-hp-${id}" onclick="setDetailVisitStatus('${id}','been-skip')">🚫 Hard Pass</button>
+      </div>
+      <div class="form-label" style="margin-bottom:8px;">Overall Rating (optional)</div>
       <div class="star-picker" id="dur-stars-${id}">
         <span onclick="setDetailUserRatingStar('${id}',1)">☆</span><span onclick="setDetailUserRatingStar('${id}',2)">☆</span>
         <span onclick="setDetailUserRatingStar('${id}',3)">☆</span><span onclick="setDetailUserRatingStar('${id}',4)">☆</span>
@@ -2220,7 +2441,7 @@ function openPlaceDetail(id) {
         </div>`).join('')}
       </div>
       <div style="display:flex;gap:8px;margin-top:14px;">
-        <button class="card-btn primary-action" onclick="submitDetailUserRating('${id}')">Save Rating</button>
+        <button class="card-btn primary-action" onclick="submitDetailUserRating('${id}')">Save</button>
         <button class="card-btn" onclick="toggleDetailRatingForm('${id}')">Cancel</button>
       </div>
     </div>`;
@@ -2251,7 +2472,7 @@ function openPlaceDetail(id) {
       ${r.status === 'try' ? `<span class="tag status-try">📌 Want to Try</span>` : ''}
       ${r.cuisine  ? `<span class="tag cuisine">${esc(r.cuisine)}</span>`  : ''}
       ${r.price    ? `<span class="tag price">${esc(r.price)}</span>`      : ''}
-      ${r.location ? `<span class="tag">📍 ${esc(r.location)}</span>`     : ''}
+      ${r.location ? `<a class="tag" href="${buildMapsUrl(r)}" target="_blank" rel="noopener" style="text-decoration:none;">📍 ${esc(r.location)}</a>` : ''}
     </div>
     ${avg > 0 ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span class="stars">${avgStars}</span><span style="font-size:.82rem;font-weight:700;">${avg.toFixed(1)}</span><span style="font-size:.75rem;color:var(--muted);">(${count} rating${count!==1?'s':''})</span></div>` : ''}
     ${factorsHtml}
@@ -2291,10 +2512,12 @@ function markAsTriedFromDetail(id) {
 function toggleDetailRatingForm(id) {
   if (!pendingUserRatings[id]) {
     const r = allRecs[id];
-    const existing = r && r.userRatings && r.userRatings[currentUser];
+    const existing       = r && r.userRatings  && r.userRatings[currentUser];
+    const existingStatus = r && r.userStatuses && r.userStatuses[currentUser];
     pendingUserRatings[id] = existing
       ? { overall: existing.overall||0, quality: existing.quality||0, service: existing.service||0, value: existing.value||0, ambiance: existing.ambiance||0 }
       : { overall: 0, quality: 0, service: 0, value: 0, ambiance: 0 };
+    if (existingStatus) pendingUserRatings[id].visitStatus = existingStatus.status;
   }
   const form = document.getElementById('drf-' + id);
   if (!form) return;
@@ -2308,7 +2531,22 @@ function toggleDetailRatingForm(id) {
       const el = document.getElementById(`dur-${f}-${id}`);
       if (el) el.querySelectorAll('span').forEach((s,i) => { s.textContent = i < (state[f]||0) ? '★' : '☆'; });
     });
+    // Sync status toggle buttons
+    const vs = state.visitStatus;
+    const gnBtn = document.getElementById('dvs-gn-' + id);
+    const hpBtn = document.getElementById('dvs-hp-' + id);
+    if (gnBtn) gnBtn.classList.toggle('active', vs === 'been-recommend');
+    if (hpBtn) hpBtn.classList.toggle('active', vs === 'been-skip');
   }
+}
+
+function setDetailVisitStatus(id, status) {
+  if (!pendingUserRatings[id]) pendingUserRatings[id] = { overall:0, quality:0, service:0, value:0, ambiance:0 };
+  pendingUserRatings[id].visitStatus = status;
+  const gnBtn = document.getElementById('dvs-gn-' + id);
+  const hpBtn = document.getElementById('dvs-hp-' + id);
+  if (gnBtn) gnBtn.classList.toggle('active', status === 'been-recommend');
+  if (hpBtn) hpBtn.classList.toggle('active', status === 'been-skip');
 }
 
 function setDetailUserRatingStar(id, n) {
@@ -2327,13 +2565,25 @@ function setDetailUserFactorStar(id, factor, n) {
 
 function submitDetailUserRating(id) {
   const state = pendingUserRatings[id] || { overall:0, quality:0, service:0, value:0, ambiance:0 };
-  db.ref(`recommendations/${id}/userRatings/${currentUser}`).set(state)
+  const updates = {};
+  updates[`recommendations/${id}/userRatings/${currentUser}`] = {
+    overall: state.overall||0, quality: state.quality||0, service: state.service||0,
+    value: state.value||0, ambiance: state.ambiance||0
+  };
+  if (state.visitStatus) {
+    updates[`recommendations/${id}/userStatuses/${currentUser}`] = { status: state.visitStatus };
+    updates[`recommendations/${id}/triedBy/${currentUser}`] = true;
+  }
+  db.ref().update(updates)
     .then(() => {
-      showToast('⭐ Rating saved!');
+      const toast = state.visitStatus === 'been-recommend' ? 'Go Now saved!'
+                  : state.visitStatus === 'been-skip'      ? '🚫 Hard Pass saved!'
+                  : '⭐ Rating saved!';
+      showToast(toast);
       delete pendingUserRatings[id];
       openPlaceDetail(id); // refresh panel
     })
-    .catch(err => { console.error(err); showToast('❌ Could not save rating.'); });
+    .catch(err => { console.error(err); showToast('❌ Could not save.'); });
 }
 
 // ══════════════════════════════════════════════════
@@ -2341,6 +2591,15 @@ function submitDetailUserRating(id) {
 // ══════════════════════════════════════════════════
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Build a Google Maps URL for a place entry (uses coords if available, falls back to text search)
+function buildMapsUrl(r) {
+  if (r.lat && r.lng) {
+    return `https://maps.google.com/maps?q=${r.lat},${r.lng}`;
+  }
+  const query = [r.name, r.location].filter(Boolean).join(', ');
+  return `https://maps.google.com/maps?q=${encodeURIComponent(query)}`;
 }
 function showToast(msg) {
   const t = document.getElementById('toast');
@@ -2354,30 +2613,30 @@ function shake(el) {
   setTimeout(() => el.style.borderColor = '', 1200);
 }
 
-// ══════════════════════════════════════════════════
-//  HIDE MY SKIPS FILTER
-// ══════════════════════════════════════════════════
-function toggleHideMySkips(el) {
-  hideMySkips = !hideMySkips;
-  el.classList.toggle('active', hideMySkips);
-  renderCards();
-}
 
 // ══════════════════════════════════════════════════
 //  SOCIAL SIGNALS
 // ══════════════════════════════════════════════════
 function buildSocialSignals(id, r) {
-  if (!r.userStatuses) return '';
-  const statuses = Object.entries(r.userStatuses);
-  const recommends = statuses.filter(([,s]) => s.status === 'been-recommend');
-  const skips      = statuses.filter(([,s]) => s.status === 'been-skip');
+  const statuses = r.userStatuses ? Object.entries(r.userStatuses) : [];
+  let recommends = statuses.filter(([,s]) => s && s.status === 'been-recommend');
+  let skips      = statuses.filter(([,s]) => s && s.status === 'been-skip');
+
+  // Fallback for legacy entries where the author's status wasn't written to userStatuses:
+  // infer from the top-level r.status field so the count is always accurate.
+  const authorInStatuses = statuses.some(([n]) => n === r.author);
+  if (!authorInStatuses) {
+    if (r.status === 'recommended')     recommends = [[r.author, {}], ...recommends];
+    else if (r.status === 'not-recommended') skips = [[r.author, {}], ...skips];
+  }
+
   if (!recommends.length && !skips.length) return '';
 
   const recBtn  = recommends.length
-    ? `<button class="signal-btn" onclick="openStatusDetail('${id}','been-recommend')" title="See who recommends">✅ <span class="signal-count">${recommends.length}</span></button>`
+    ? `<button class="signal-btn" onclick="openStatusDetail('${id}','been-recommend')" title="See who recommends"><span class="go-icon">✓</span> <span class="signal-count">${recommends.length}</span></button>`
     : '';
   const skipBtn = skips.length
-    ? `<button class="signal-btn" onclick="openStatusDetail('${id}','been-skip')" title="See who'd skip">👎 <span class="signal-count">${skips.length}</span></button>`
+    ? `<button class="signal-btn" onclick="openStatusDetail('${id}','been-skip')" title="See who'd hard pass">🚫 <span class="signal-count">${skips.length}</span></button>`
     : '';
 
   return `<div class="social-signals">${recBtn}${skipBtn}</div>`;
@@ -2388,8 +2647,15 @@ function openStatusDetail(id, filterStatus) {
   if (!r) return;
 
   const statuses = r.userStatuses ? Object.entries(r.userStatuses) : [];
-  const recommends = statuses.filter(([,s]) => s.status === 'been-recommend').map(([n]) => n);
-  const skips      = statuses.filter(([,s]) => s.status === 'been-skip').map(([n]) => n);
+  let recommends = statuses.filter(([,s]) => s && s.status === 'been-recommend').map(([n]) => n);
+  let skips      = statuses.filter(([,s]) => s && s.status === 'been-skip').map(([n]) => n);
+
+  // Legacy fallback: include author if not already in userStatuses
+  const authorInStatuses = statuses.some(([n]) => n === r.author);
+  if (!authorInStatuses) {
+    if (r.status === 'recommended')      recommends = [r.author, ...recommends];
+    else if (r.status === 'not-recommended') skips  = [r.author, ...skips];
+  }
 
   const nameList = (names, emoji, label) => {
     if (!names.length) return '';
@@ -2402,8 +2668,8 @@ function openStatusDetail(id, filterStatus) {
 
   document.getElementById('detail-panel-title').textContent = r.name;
   document.getElementById('detail-panel-content').innerHTML =
-    nameList(recommends, '✅', 'Recommends') +
-    nameList(skips,      '👎', 'Skips') +
+    nameList(recommends, '<span class="go-icon">✓</span>', 'Recommends') +
+    nameList(skips,      '🚫', 'Hard Passes') +
     `<div class="card-footer" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--tan);">
       <span style="font-size:.8rem;color:var(--muted);">Tap a name to see their other picks — coming soon</span>
     </div>`;
@@ -2492,7 +2758,10 @@ function confirmAttach() {
   attachFactorRatings = { quality: 0, service: 0, value: 0, ambiance: 0 };
   document.getElementById('attach-submit-btn').disabled = true;
   document.getElementById('attach-rating-section').style.display = 'none';
-  document.querySelectorAll('.modal #attach-step .type-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('atc-been').classList.remove('active');
+  document.getElementById('atc-try').classList.remove('active');
+  document.getElementById('abtn-go-now').classList.remove('active');
+  document.getElementById('abtn-hard-pass').classList.remove('active');
   resetAttachStars();
   document.querySelector('.modal').scrollTop = 0;
 }
@@ -2500,10 +2769,8 @@ function confirmAttach() {
 // ══════════════════════════════════════════════════
 //  ATTACH FORM CONTROLS
 // ══════════════════════════════════════════════════
-function setAttachStatus(status, el) {
+function setAttachStatus(status) {
   attachStatus = status;
-  document.querySelectorAll('#attach-step .type-card').forEach(c => c.classList.remove('selected'));
-  if (el) el.classList.add('selected');
   const isBeen = (status === 'been-recommend' || status === 'been-skip');
   document.getElementById('attach-rating-section').style.display = isBeen ? 'block' : 'none';
   document.getElementById('attach-submit-btn').disabled = false;
@@ -2545,7 +2812,7 @@ function submitAttach() {
 
   db.ref().update(updates)
     .then(() => {
-      const toastMsg = attachStatus === 'been-recommend' ? '✅ Status saved!' : attachStatus === 'been-skip' ? '👎 Skip noted!' : '📌 Want-to-go saved!';
+      const toastMsg = attachStatus === 'been-recommend' ? 'Go Now saved!' : attachStatus === 'been-skip' ? '🚫 Hard Pass noted!' : '📌 Want-to-go saved!';
       showToast(toastMsg);
       closeModal();
       btn.disabled = false; btn.textContent = 'Save My Status';

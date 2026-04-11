@@ -45,6 +45,31 @@
     .item-card { background: white; border-radius: 10px; border: 1px solid #e2e8f0; padding: 12px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
     .item-card:hover { border-color: #a5b4fc; box-shadow: 0 2px 8px rgba(99,102,241,0.1); }
     .release-col { background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; min-width: 260px; max-width: 300px; flex-shrink: 0; }
+    .releases-board { display: flex; overflow: hidden; border: 1px solid #e2e8f0; border-radius: 12px; background: white; }
+    .staged-panel { flex-shrink: 0; width: 272px; border-right: 1px solid #e2e8f0; background: #f8fafc; display: flex; flex-direction: column; }
+    .staged-panel-body { overflow-y: auto; flex: 1; padding: 12px; }
+    .releases-scroll { overflow-x: auto; flex: 1; display: flex; gap: 0; align-items: flex-start; }
+    .release-scroll-col { flex-shrink: 0; width: 280px; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; background: #f8fafc; }
+    .release-scroll-col:last-child { border-right: none; }
+    .release-col-header { padding: 14px 16px; border-bottom: 1px solid #e2e8f0; background: white; }
+    .release-col-body { padding: 10px; overflow-y: auto; }
+    .filter-pill { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; user-select: none; }
+    .filter-pill.active-planning { background: #e0e7ff; color: #3730a3; border-color: #6366f1; }
+    .filter-pill.inactive-planning { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
+    .filter-pill.active-active { background: #d1fae5; color: #064e3b; border-color: #16a34a; }
+    .filter-pill.inactive-active { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
+    .filter-pill.active-released { background: #f3e8ff; color: #581c87; border-color: #7c3aed; }
+    .filter-pill.inactive-released { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
+    .notes-toggle-btn { width: 100%; text-align: left; padding: 7px 12px; font-size: 12px; font-weight: 600; color: #5b21b6; background: #f5f3ff; border: none; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: background 0.15s; }
+    .notes-toggle-btn:hover { background: #ede9fe; }
+    .notes-body { background: #faf9ff; border-bottom: 1px solid #e2e8f0; padding: 12px; font-size: 12px; }
+    .notes-section-heading { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; margin-bottom: 6px; margin-top: 8px; }
+    .notes-section-heading:first-child { margin-top: 0; }
+    .notes-item { display: flex; gap-6px; gap: 6px; margin-bottom: 6px; line-height: 1.5; color: #374151; }
+    .notes-item-id { font-family: monospace; font-size: 10px; color: #a78bfa; flex-shrink: 0; padding-top: 1px; }
+    .notes-actions { display: flex; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e2e8f0; }
+    .notes-copy-btn { font-size: 11px; color: #6366f1; background: none; border: 1px solid #c7d2fe; border-radius: 6px; padding: 3px 8px; cursor: pointer; }
+    .notes-copy-btn:hover { background: #e0e7ff; }
     .stat-card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 20px; }
     .prompt-output { background: #1e293b; color: #e2e8f0; padding: 16px; border-radius: 10px; font-size: 13px; font-family: 'Courier New', monospace; white-space: pre-wrap; word-break: break-word; line-height: 1.6; max-height: 450px; overflow-y: auto; }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -822,80 +847,432 @@ function closeModal() {
   document.getElementById('modal-container').innerHTML = '';
 }
 
+// ===== RELEASE NOTES GENERATOR =====
+
+function cleanSentence(str) {
+  if (!str) return '';
+  const s = str.trim().replace(/\n+/g, ' ').replace(/\s+/g, ' ');
+  return s.endsWith('.') || s.endsWith('!') || s.endsWith('?') ? s : s + '.';
+}
+
+function firstSentence(str) {
+  if (!str) return '';
+  const s = str.trim().replace(/\n+/g, ' ').replace(/\s+/g, ' ');
+  const m = s.match(/^[^.!?]+[.!?]/);
+  return m ? m[0].trim() : (s.length > 120 ? s.substring(0, 120).trim() + '…' : cleanSentence(s));
+}
+
+function startsWithVerb(str) {
+  const verbs = ['add', 'allow', 'build', 'create', 'display', 'enable', 'export', 'fix', 'give', 'implement',
+                 'improve', 'include', 'integrate', 'introduce', 'let', 'make', 'move', 'provide', 'remove',
+                 'replace', 'show', 'support', 'update', 'use'];
+  const first = str.trim().split(' ')[0].toLowerCase();
+  return verbs.includes(first);
+}
+
+function buildItemNote(item, idx) {
+  const title = item.title.trim();
+  const t = title.charAt(0).toLowerCase() + title.slice(1);
+  const isBug = item.type === 'bug';
+
+  if (isBug) {
+    const bugTemplates = [
+      () => `We squashed the "${title}" bug — it won't bother you anymore.`,
+      () => `That thing where ${t}? Yeah, fixed.`,
+      () => `RIP to the ${title} bug. It will not be missed.`,
+      () => `Fixed: ${title}. You're welcome. 🐛`,
+      () => `We hunted down the ${title} bug and sent it packing.`,
+      () => `The "${title}" issue has been dealt with. Quietly. Professionally.`,
+      () => `Patched up a bug with ${t}. All good now.`,
+      () => `No more ${t}. Bug squashed, high-fives all around.`,
+    ];
+    return bugTemplates[idx % bugTemplates.length]();
+  }
+
+  // Enhancement
+  const enhTemplates = [
+    () => `${title} is live — go check it out!`,
+    () => `You can now ${t}. Life just got a little easier.`,
+    () => `We added ${t} because you deserve nice things.`,
+    () => `New feature alert: ${title}. 🎉`,
+    () => `${title} has entered the chat.`,
+    () => `Surprise! ${title} is here and ready to go.`,
+    () => `We shipped ${t}. It's giving exactly what it should.`,
+    () => `${title} — asked, delivered.`,
+    () => `Fresh off the line: ${title}.`,
+    () => `Just dropped: ${t}. Enjoy!`,
+  ];
+  return enhTemplates[idx % enhTemplates.length]();
+}
+
+function generateReleaseNotes(releaseId) {
+  const rel   = state.releases.find(r => r.id === releaseId);
+  if (!rel) return;
+  const items = getItemsByRelease(releaseId);
+  if (!items.length) { rel.releaseNotes = null; return; }
+
+  const enhancements = items.filter(i => i.type === 'enhancement');
+  const bugs         = items.filter(i => i.type === 'bug');
+
+  let sections = [];
+
+  if (enhancements.length) {
+    sections.push({ heading: "✨ What's New", items: enhancements });
+  }
+  if (bugs.length) {
+    sections.push({ heading: "🐛 Bug Fixes", items: bugs });
+  }
+
+  // Build structured notes stored on the release
+  rel.releaseNotes = {
+    generatedAt: new Date().toISOString(),
+    sections: sections.map(sec => ({
+      heading: sec.heading,
+      notes: sec.items.map((item, idx) => ({
+        itemId: item.itemId,
+        title:  item.title,
+        note:   buildItemNote(item, idx)
+      }))
+    }))
+  };
+}
+
+function toggleReleaseNotes(releaseId) {
+  const btn  = document.getElementById(`notes-btn-${releaseId}`);
+  const body = document.getElementById(`notes-body-${releaseId}`);
+  if (!body) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  if (btn) btn.textContent = isOpen ? '📋 Release Notes ▾' : '📋 Release Notes ▴';
+}
+
+function openReleaseNotesModal(releaseId) {
+  const rel   = state.releases.find(r => r.id === releaseId);
+  if (!rel) return;
+  const items = getItemsByRelease(releaseId);
+  const enhancements = items.filter(i => i.type === 'enhancement');
+  const bugs         = items.filter(i => i.type === 'bug');
+
+  // Pull existing saved notes into a lookup so we can pre-fill textareas
+  const savedText = {};
+  if (rel.releaseNotes) {
+    rel.releaseNotes.sections.forEach(sec =>
+      sec.notes.forEach(n => { savedText[n.itemId] = n.note; })
+    );
+  }
+
+  const releaseDate = rel.releaseNotes?.releaseDate
+    || rel.releasedAt?.split('T')[0]
+    || rel.targetDate
+    || '';
+
+  function itemRow(item) {
+    const prefill = escHtml(savedText[item.itemId] || '');
+    return `
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+          <span class="badge badge-${item.type}">${item.type === 'bug' ? '🐛' : '✨'}</span>
+          <span style="font-family:monospace;font-size:10px;color:#a78bfa;">${escHtml(item.itemId)}</span>
+          <span style="font-size:13px;font-weight:600;color:#374151;">${escHtml(item.title)}</span>
+          <span style="font-size:10px;color:#94a3b8;margin-left:auto;">${item.effort}</span>
+        </div>
+        <textarea id="rn-${item.id}" class="form-input" rows="2"
+          placeholder="Write a short, casual note for your users…"
+          style="font-size:13px;">${prefill}</textarea>
+      </div>`;
+  }
+
+  const sectionsHtml = [
+    enhancements.length ? `
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#7c3aed;margin:16px 0 8px;">✨ What's New</div>
+      ${enhancements.map(itemRow).join('')}` : '',
+    bugs.length ? `
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#dc2626;margin:16px 0 8px;">🐛 Bug Fixes</div>
+      ${bugs.map(itemRow).join('')}` : '',
+  ].join('');
+
+  document.getElementById('modal-container').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal-box" style="max-width:600px;">
+        <div class="flex items-center justify-between mb-5">
+          <div>
+            <h3 class="text-lg font-bold text-gray-900">📝 Release Notes</h3>
+            <div class="text-sm text-gray-400 mt-0.5">${escHtml(rel.version)}${rel.name ? ' — ' + escHtml(rel.name) : ''}</div>
+          </div>
+          <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-2">
+          <div>
+            <label class="form-label">Version</label>
+            <input type="text" class="form-input" value="${escHtml(rel.version)}" readonly
+              style="background:#f8fafc;color:#6b7280;cursor:default;">
+          </div>
+          <div>
+            <label class="form-label">Release Date</label>
+            <input type="date" id="rn-date" class="form-input" value="${releaseDate}">
+          </div>
+        </div>
+
+        ${items.length === 0
+          ? `<div style="text-align:center;padding:32px;color:#94a3b8;">No items in this release yet.</div>`
+          : sectionsHtml}
+
+        <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid #e2e8f0;padding-top:16px;margin-top:8px;gap:8px;flex-wrap:wrap;">
+          <button onclick="fillAIReleaseNotes('${releaseId}')"
+            class="btn btn-secondary"
+            style="background:#f5f3ff;color:#5b21b6;border-color:#c4b5fd;">
+            🤖 AI Release Notes
+          </button>
+          <div style="display:flex;gap:8px;">
+            <button onclick="closeModal()" class="btn btn-secondary">Cancel</button>
+            <button onclick="saveReleaseNotesFromModal('${releaseId}')" class="btn btn-primary">Save Notes</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function fillAIReleaseNotes(releaseId) {
+  const items = getItemsByRelease(releaseId);
+  const enhancements = items.filter(i => i.type === 'enhancement');
+  const bugs         = items.filter(i => i.type === 'bug');
+  const ordered = [...enhancements, ...bugs];
+
+  ordered.forEach((item, idx) => {
+    const ta = document.getElementById('rn-' + item.id);
+    if (ta) ta.value = buildItemNote(item, idx);
+  });
+}
+
+function saveReleaseNotesFromModal(releaseId) {
+  const rel   = state.releases.find(r => r.id === releaseId);
+  if (!rel) return;
+  const items = getItemsByRelease(releaseId);
+  const enhancements = items.filter(i => i.type === 'enhancement');
+  const bugs         = items.filter(i => i.type === 'bug');
+
+  const releaseDate = document.getElementById('rn-date')?.value || '';
+
+  function buildSection(heading, sectionItems) {
+    if (!sectionItems.length) return null;
+    return {
+      heading,
+      notes: sectionItems.map(item => ({
+        itemId: item.itemId,
+        title:  item.title,
+        note:   (document.getElementById('rn-' + item.id)?.value || '').trim()
+      })).filter(n => n.note) // only keep items that have a note written
+    };
+  }
+
+  const sections = [
+    buildSection("✨ What's New", enhancements),
+    buildSection("🐛 Bug Fixes",  bugs),
+  ].filter(Boolean).filter(s => s.notes.length > 0);
+
+  rel.releaseNotes = {
+    generatedAt: new Date().toISOString(),
+    releaseDate,
+    sections
+  };
+
+  saveState();
+  closeModal();
+  renderReleases();
+  showToast('Release notes saved ✓');
+}
+
+function buildNotesPlainText(releaseId) {
+  const rel   = state.releases.find(r => r.id === releaseId);
+  const notes = rel?.releaseNotes;
+  if (!notes) return '';
+  const header = `${rel.version}${rel.name ? ' — ' + rel.name : ''}\n${rel.releasedAt ? 'Released ' + new Date(rel.releasedAt).toLocaleDateString() : ''}\n\n`;
+  const body = notes.sections.map(sec =>
+    `${sec.heading}\n` + sec.notes.map(n => `• ${n.note}`).join('\n')
+  ).join('\n\n');
+  return header + body;
+}
+
+function buildNotesMarkdown(releaseId) {
+  const rel   = state.releases.find(r => r.id === releaseId);
+  const notes = rel?.releaseNotes;
+  if (!notes) return '';
+  let md = `## ${rel.version}${rel.name ? ' — ' + rel.name : ''}\n`;
+  if (rel.releasedAt) md += `_Released ${new Date(rel.releasedAt).toLocaleDateString()}_\n`;
+  md += '\n';
+  notes.sections.forEach(sec => {
+    md += `### ${sec.heading}\n`;
+    sec.notes.forEach(n => { md += `- **${n.itemId}** ${n.note}\n`; });
+    md += '\n';
+  });
+  return md.trim();
+}
+
+function copyReleaseNotes(releaseId) {
+  const text = buildNotesPlainText(releaseId);
+  navigator.clipboard.writeText(text).then(() => showToast('Release notes copied!')).catch(() => showToast('Copy failed'));
+}
+
+function copyReleaseNotesMarkdown(releaseId) {
+  const text = buildNotesMarkdown(releaseId);
+  navigator.clipboard.writeText(text).then(() => showToast('Markdown copied!')).catch(() => showToast('Copy failed'));
+}
+
 // ===== RELEASES TAB =====
 let draggingItemId = null;
+let releaseStatusFilter = []; // empty = show all; otherwise array of statuses to show
+
+function toggleReleaseFilter(status) {
+  if (releaseStatusFilter.includes(status)) {
+    releaseStatusFilter = releaseStatusFilter.filter(s => s !== status);
+  } else {
+    releaseStatusFilter.push(status);
+  }
+  renderReleases();
+}
 
 function renderReleases() {
   const staged = state.items.filter(i => i.status === 'staged' && !i.releaseId);
+  const allStatuses = ['planning', 'active', 'released'];
+
+  // Apply filter — empty array means show all
+  const visibleReleases = releaseStatusFilter.length === 0
+    ? state.releases
+    : state.releases.filter(r => releaseStatusFilter.includes(r.status));
+
+  const filterBar = `
+    <div class="flex items-center gap-2 flex-wrap">
+      <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide mr-1">Show:</span>
+      ${allStatuses.map(s => {
+        const isActive = releaseStatusFilter.includes(s);
+        const icons = { planning: '🔵', active: '🟢', released: '🟣' };
+        const labels = { planning: 'Planning', active: 'Active', released: 'Released' };
+        const cls = isActive ? `active-${s}` : `inactive-${s}`;
+        return `<span class="filter-pill ${cls}" onclick="toggleReleaseFilter('${s}')">${icons[s]} ${labels[s]}</span>`;
+      }).join('')}
+      ${releaseStatusFilter.length > 0
+        ? `<span class="text-xs text-gray-400 cursor-pointer hover:text-gray-600 ml-1" onclick="releaseStatusFilter=[]; renderReleases()">✕ Clear filter</span>`
+        : `<span class="text-xs text-gray-400 italic ml-1">Showing all</span>`}
+    </div>
+  `;
 
   document.getElementById('releases-content').innerHTML = `
-    <div class="mb-5 flex items-center justify-between">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <div>
         <h2 class="text-xl font-bold text-gray-900">Release Planning</h2>
-        <p class="text-sm text-gray-500 mt-0.5">Drag staged items into releases. Drag between releases to reorganize.</p>
+        <p class="text-sm text-gray-500 mt-0.5">Drag staged items into releases. Staged column stays pinned — scroll right to see more releases.</p>
       </div>
       <button onclick="openAddReleaseModal()" class="btn btn-primary">+ New Release</button>
     </div>
 
-    <div class="flex gap-5 overflow-x-auto pb-4" style="align-items: flex-start;">
+    <!-- FILTER BAR -->
+    <div class="card p-3 mb-4">${filterBar}</div>
 
-      <!-- STAGED ITEMS COLUMN -->
-      <div class="release-col flex-shrink-0" style="min-width:260px">
-        <div class="p-4 border-b border-gray-200">
+    <!-- BOARD: pinned staged column + scrollable releases -->
+    <div class="releases-board" style="height: calc(100vh - 280px); min-height: 400px;">
+
+      <!-- STAGED COLUMN — always visible -->
+      <div class="staged-panel">
+        <div class="release-col-header">
           <div class="font-semibold text-gray-700 text-sm">📦 Staged Items</div>
-          <div class="text-xs text-gray-400 mt-0.5">${staged.length} items ready</div>
-          <p class="text-xs text-gray-400 mt-1">Drag into a release column →</p>
+          <div class="text-xs text-gray-400 mt-0.5">${staged.length} item${staged.length !== 1 ? 's' : ''} ready</div>
+          <div class="text-xs text-gray-400 mt-1">Drag into a release →</div>
         </div>
-        <div class="p-3 drop-zone" id="staged-zone"
+        <div class="staged-panel-body drop-zone" id="staged-zone"
           ondragover="event.preventDefault(); this.classList.add('drag-over')"
           ondragleave="this.classList.remove('drag-over')"
           ondrop="dropToStaged(event)">
-          ${staged.length === 0 ? `<div class="text-center py-6 text-gray-400 text-xs">No staged items.<br>Go to Backlog and stage items first.</div>` :
-            staged.map(item => renderDraggableItemCard(item)).join('')}
+          ${staged.length === 0
+            ? `<div class="text-center py-8 text-gray-400 text-xs leading-relaxed">No staged items.<br><br>Go to <strong>Backlog</strong> and click<br>"Stage" on items to queue them.</div>`
+            : staged.map(item => renderDraggableItemCard(item)).join('')}
         </div>
       </div>
 
-      <!-- RELEASE COLUMNS -->
-      ${state.releases.length === 0 ? `
-        <div class="flex-1 flex items-center justify-center">
-          <div class="text-center py-16">
-            <div class="text-5xl mb-3">🚀</div>
-            <div class="font-semibold text-gray-500">No releases yet</div>
-            <div class="text-sm text-gray-400 mt-1">Create your first release to start planning</div>
-            <button onclick="openAddReleaseModal()" class="btn btn-primary mt-4">Create Release</button>
-          </div>
-        </div>` :
-        state.releases.map(rel => {
-          const relItems = getItemsByRelease(rel.id);
-          const efforts = relItems.map(i => ({S:1,M:2,L:4,XL:8}[i.effort]||1)).reduce((a,b)=>a+b,0);
-          return `
-          <div class="release-col">
-            <div class="p-4 border-b border-gray-200">
-              <div class="flex items-start justify-between">
-                <div>
-                  <div class="font-bold text-gray-800">${escHtml(rel.version)}</div>
-                  <div class="text-sm text-gray-500">${escHtml(rel.name)}</div>
+      <!-- RELEASES — horizontally scrollable -->
+      <div class="releases-scroll">
+        ${visibleReleases.length === 0 ? `
+          <div class="flex-1 flex items-center justify-center p-12">
+            <div class="text-center">
+              <div class="text-5xl mb-3">${state.releases.length === 0 ? '🚀' : '🔍'}</div>
+              <div class="font-semibold text-gray-500">${state.releases.length === 0 ? 'No releases yet' : 'No releases match the filter'}</div>
+              <div class="text-sm text-gray-400 mt-1">${state.releases.length === 0 ? 'Create your first release to start planning' : 'Try adjusting or clearing the filter above'}</div>
+              ${state.releases.length === 0 ? `<button onclick="openAddReleaseModal()" class="btn btn-primary mt-4">Create Release</button>` : ''}
+            </div>
+          </div>`
+          : visibleReleases.map(rel => {
+              const relItems = getItemsByRelease(rel.id);
+              const efforts = relItems.map(i => ({S:1,M:2,L:4,XL:8}[i.effort]||1)).reduce((a,b)=>a+b,0);
+              const isShipped = rel.status === 'released';
+              const notes = rel.releaseNotes;
+
+              // Build the release notes HTML if this release has been shipped
+              const notesHtml = (() => {
+                if (!isShipped) return '';
+                if (!notes) {
+                  return `
+                    <div style="border-bottom:1px solid #e2e8f0; padding:8px 12px; background:#faf9ff;">
+                      <button class="notes-copy-btn" style="font-size:12px;padding:5px 10px;" onclick="openReleaseNotesModal('${rel.id}')">📝 Create release notes</button>
+                    </div>`;
+                }
+
+                const bodyHtml = notes.sections.map(sec => `
+                  <div class="notes-section-heading">${escHtml(sec.heading)}</div>
+                  ${sec.notes.map(n => `
+                    <div class="notes-item">
+                      <span class="notes-item-id">${escHtml(n.itemId)}</span>
+                      <span>${escHtml(n.note)}</span>
+                    </div>`).join('')}
+                `).join('');
+
+                return `
+                  <button class="notes-toggle-btn" id="notes-btn-${rel.id}" onclick="toggleReleaseNotes('${rel.id}')">
+                    <span>📋 Release Notes</span><span>▾</span>
+                  </button>
+                  <div class="notes-body" id="notes-body-${rel.id}" style="display:none;">
+                    ${bodyHtml}
+                    <div class="notes-actions">
+                      <button class="notes-copy-btn" onclick="copyReleaseNotes('${rel.id}')">📋 Copy as text</button>
+                      <button class="notes-copy-btn" onclick="copyReleaseNotesMarkdown('${rel.id}')">⬇ Copy Markdown</button>
+                      <button class="notes-copy-btn" onclick="openReleaseNotesModal('${rel.id}')">✏️ Edit notes</button>
+                    </div>
+                  </div>`;
+              })();
+
+              return `
+              <div class="release-scroll-col">
+                <div class="release-col-header">
+                  <div class="flex items-start justify-between mb-1">
+                    <div>
+                      <div class="font-bold text-gray-800 text-sm">${escHtml(rel.version)}</div>
+                      <div class="text-xs text-gray-500">${escHtml(rel.name)}</div>
+                    </div>
+                    <span class="badge badge-${rel.status} ml-2 flex-shrink-0">${rel.status}</span>
+                  </div>
+                  ${rel.targetDate ? `<div class="text-xs text-gray-400 mt-1">📅 ${rel.targetDate}</div>` : ''}
+                  ${rel.releasedAt ? `<div class="text-xs text-green-600 font-medium mt-1">✓ Shipped ${new Date(rel.releasedAt).toLocaleDateString()}</div>` : ''}
+                  <div class="text-xs text-gray-400 mt-1">${relItems.length} items · ${efforts} pts</div>
+                  <div class="flex gap-1 mt-2 flex-wrap">
+                    <button onclick="editRelease('${rel.id}')" class="btn btn-secondary btn-sm">Edit</button>
+                    <button onclick="generatePromptForRelease('${rel.id}')" class="btn btn-secondary btn-sm">🤖</button>
+                    ${!isShipped ? `<button onclick="markReleased('${rel.id}')" class="btn btn-secondary btn-sm" title="Mark as released">✓ Ship</button>` : ''}
+                    <button onclick="deleteRelease('${rel.id}')" class="btn btn-danger btn-sm">✕</button>
+                  </div>
                 </div>
-                <span class="badge badge-${rel.status} ml-2">${rel.status}</span>
-              </div>
-              ${rel.targetDate ? `<div class="text-xs text-gray-400 mt-1">📅 ${rel.targetDate}</div>` : ''}
-              <div class="text-xs text-gray-400 mt-1">${relItems.length} items · ${efforts} effort pts</div>
-              <div class="flex gap-1 mt-3 flex-wrap">
-                <button onclick="editRelease('${rel.id}')" class="btn btn-secondary btn-sm">Edit</button>
-                <button onclick="generatePromptForRelease('${rel.id}')" class="btn btn-secondary btn-sm">🤖 Prompt</button>
-                <button onclick="markReleased('${rel.id}')" class="btn btn-secondary btn-sm" title="Mark as released">✓ Ship</button>
-                <button onclick="deleteRelease('${rel.id}')" class="btn btn-danger btn-sm">✕</button>
-              </div>
-            </div>
-            <div class="p-3 drop-zone" id="release-zone-${rel.id}"
-              ondragover="event.preventDefault(); this.classList.add('drag-over')"
-              ondragleave="this.classList.remove('drag-over')"
-              ondrop="dropToRelease(event, '${rel.id}')">
-              ${relItems.length === 0 ? `<div class="text-center py-6 text-gray-400 text-xs">Drop items here</div>` :
-                relItems.map(item => renderDraggableItemCard(item)).join('')}
-            </div>
-          </div>`;
-        }).join('')}
+                ${notesHtml}
+                <div class="release-col-body drop-zone" id="release-zone-${rel.id}"
+                  style="min-height:80px; flex:1; overflow-y:auto;"
+                  ondragover="event.preventDefault(); this.classList.add('drag-over')"
+                  ondragleave="this.classList.remove('drag-over')"
+                  ondrop="dropToRelease(event, '${rel.id}')">
+                  ${relItems.length === 0
+                    ? `<div class="text-center py-6 text-gray-300 text-xs">Drop items here</div>`
+                    : relItems.map(item => renderDraggableItemCard(item)).join('')}
+                </div>
+              </div>`;
+            }).join('')}
+      </div>
+
     </div>
   `;
   addDragListeners();
@@ -964,7 +1341,7 @@ function markReleased(releaseId) {
   state.items.filter(i => i.releaseId === releaseId).forEach(i => { i.status = 'done'; i.updatedAt = new Date().toISOString(); });
   saveState();
   renderReleases();
-  showToast(`🎉 ${rel.version} marked as released!`);
+  showToast(`🎉 ${rel.version} shipped! Click "Create release notes" to write them up.`);
 }
 
 function deleteRelease(id) {
@@ -1157,24 +1534,18 @@ function renderPromptBuilder() {
           <div class="section-title">1. Select Source</div>
           <div class="mb-4">
             <label class="form-label">Release (optional)</label>
-            <select id="pb-release" class="form-input" onchange="promptRelease=this.value; updatePromptPreview()">
+            <select id="pb-release" class="form-input" onchange="onReleaseChange(this.value)">
               <option value="">— Select a release —</option>
               ${state.releases.map(r => `<option value="${r.id}" ${promptRelease===r.id?'selected':''}>${escHtml(r.version)} — ${escHtml(r.name)}</option>`).join('')}
             </select>
           </div>
 
           <div class="mb-2">
-            <label class="form-label">Or select individual items</label>
-            <div style="max-height:220px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px; padding:8px;">
-              ${state.items.filter(i=>i.status!=='done').length === 0 ? '<div class="text-xs text-gray-400 p-2">No items available</div>' :
-                state.items.filter(i=>i.status!=='done').map(item => `
-                <label class="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                  <input type="checkbox" value="${item.id}" onchange="togglePromptItem('${item.id}')" ${selectedPromptItems.includes(item.id)?'checked':''}>
-                  <span class="badge badge-${item.type} flex-shrink-0">${item.type==='bug'?'🐛':'✨'}</span>
-                  <span class="badge badge-${item.priority.toLowerCase()} flex-shrink-0">${item.priority}</span>
-                  <span class="text-xs text-gray-700 flex-1 leading-snug">${escHtml(item.title)}</span>
-                  <span class="text-xs text-gray-400 font-mono">${item.itemId}</span>
-                </label>`).join('')}
+            <div class="flex items-center justify-between mb-1">
+              <label class="form-label mb-0" id="pb-items-label">${promptRelease ? 'Items in release — uncheck to exclude' : 'Or select individual items'}</label>
+              <span id="pb-items-count" class="text-xs text-gray-400"></span>
+            </div>
+            <div id="pb-item-list" style="max-height:220px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px; padding:8px;">
             </div>
           </div>
         </div>
@@ -1236,7 +1607,60 @@ function renderPromptBuilder() {
       </div>
     </div>
   `;
+  renderPromptItemList();
   updatePromptPreview();
+}
+
+function onReleaseChange(releaseId) {
+  promptRelease = releaseId;
+  if (releaseId) {
+    // Auto-check every item in the selected release
+    selectedPromptItems = state.items
+      .filter(i => i.releaseId === releaseId)
+      .map(i => i.id);
+  } else {
+    selectedPromptItems = [];
+  }
+  // Update label
+  const labelEl = document.getElementById('pb-items-label');
+  if (labelEl) labelEl.textContent = releaseId ? 'Items in release — uncheck to exclude' : 'Or select individual items';
+  renderPromptItemList();
+  updatePromptPreview();
+}
+
+function renderPromptItemList() {
+  const listEl = document.getElementById('pb-item-list');
+  if (!listEl) return;
+
+  // When a release is chosen, show only that release's items; otherwise show all non-done
+  const displayItems = promptRelease
+    ? state.items.filter(i => i.releaseId === promptRelease)
+    : state.items.filter(i => i.status !== 'done');
+
+  // Update selection count badge
+  const countEl = document.getElementById('pb-items-count');
+  if (countEl && promptRelease) {
+    const checked = displayItems.filter(i => selectedPromptItems.includes(i.id)).length;
+    countEl.textContent = `${checked} of ${displayItems.length} selected`;
+    countEl.style.color = checked === 0 ? '#ef4444' : '#6366f1';
+  } else if (countEl) {
+    countEl.textContent = selectedPromptItems.length > 0 ? `${selectedPromptItems.length} selected` : '';
+    countEl.style.color = '#6366f1';
+  }
+
+  if (displayItems.length === 0) {
+    listEl.innerHTML = `<div class="text-xs text-gray-400 p-2">${promptRelease ? 'No items in this release yet.' : 'No items available.'}</div>`;
+    return;
+  }
+
+  listEl.innerHTML = displayItems.map(item => `
+    <label class="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer" style="user-select:none;">
+      <input type="checkbox" value="${item.id}" onchange="togglePromptItem('${item.id}')" ${selectedPromptItems.includes(item.id) ? 'checked' : ''}>
+      <span class="badge badge-${item.type} flex-shrink-0">${item.type === 'bug' ? '🐛' : '✨'}</span>
+      <span class="badge badge-${item.priority.toLowerCase()} flex-shrink-0">${item.priority}</span>
+      <span class="text-xs text-gray-700 flex-1 leading-snug">${escHtml(item.title)}</span>
+      <span class="text-xs text-gray-400 font-mono flex-shrink-0">${item.itemId}</span>
+    </label>`).join('');
 }
 
 function togglePromptItem(id) {
@@ -1245,19 +1669,23 @@ function togglePromptItem(id) {
   } else {
     selectedPromptItems.push(id);
   }
+  // Refresh just the count badge — no full re-render needed
+  const countEl = document.getElementById('pb-items-count');
+  if (countEl && promptRelease) {
+    const releaseItems = state.items.filter(i => i.releaseId === promptRelease);
+    const checked = releaseItems.filter(i => selectedPromptItems.includes(i.id)).length;
+    countEl.textContent = `${checked} of ${releaseItems.length} selected`;
+    countEl.style.color = checked === 0 ? '#ef4444' : '#6366f1';
+  } else if (countEl) {
+    countEl.textContent = selectedPromptItems.length > 0 ? `${selectedPromptItems.length} selected` : '';
+  }
   updatePromptPreview();
 }
 
 function updatePromptPreview() {
-  let items = [];
-  const releaseEl = document.getElementById('pb-release');
-  if (releaseEl) promptRelease = releaseEl.value;
-
-  if (promptRelease) {
-    items = state.items.filter(i => i.releaseId === promptRelease);
-  } else if (selectedPromptItems.length > 0) {
-    items = state.items.filter(i => selectedPromptItems.includes(i.id));
-  }
+  // selectedPromptItems is always the source of truth.
+  // onReleaseChange() populates it when a release is chosen; checkboxes keep it in sync.
+  const items = state.items.filter(i => selectedPromptItems.includes(i.id));
 
   const stackEl = document.getElementById('pb-stack');
   const extraEl = document.getElementById('pb-extra');
@@ -1371,11 +1799,18 @@ function copyPrompt() {
 
 function generatePromptForRelease(releaseId) {
   promptRelease = releaseId;
-  selectedPromptItems = [];
+  // Pre-select all items in this release so checkboxes arrive checked
+  selectedPromptItems = state.items
+    .filter(i => i.releaseId === releaseId)
+    .map(i => i.id);
   showTab('prompt');
   setTimeout(() => {
     const el = document.getElementById('pb-release');
-    if (el) { el.value = releaseId; updatePromptPreview(); }
+    if (el) {
+      el.value = releaseId;
+      renderPromptItemList();
+      updatePromptPreview();
+    }
   }, 100);
 }
 

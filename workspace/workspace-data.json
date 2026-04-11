@@ -66,6 +66,204 @@
       "updatedAt": "2026-04-10T15:58:49.692Z",
       "releaseId": "REL-1",
       "createdAt": "2026-04-10T15:40:21.555Z"
+    },
+    {
+      "id": "1775839274317",
+      "itemId": "IT-002",
+      "type": "enhancement",
+      "title": "Remove the filter by user",
+      "description": "Expected Behaviour: The by: filters should only allow filtering for Everyone or Just Mine.\n\nCurrent Behaviour: There are additional unnecessary filters by users that are not needed",
+      "priority": "P1",
+      "area": "UI",
+      "effort": "S",
+      "status": "done",
+      "acceptanceCriteria": "- There are only 2 options for By: filters.  Everyone, Just Mine.",
+      "reproSteps": "",
+      "affectedFiles": "",
+      "tags": [],
+      "updatedAt": "2026-04-11T08:17:13.904Z",
+      "releaseId": "REL-3",
+      "createdAt": "2026-04-10T16:41:14.318Z"
+    },
+    {
+      "id": "1775839511382",
+      "itemId": "IT-003",
+      "type": "bug",
+      "title": "Remove duplicate \"Add Place\" options on Landing Page",
+      "description": "Expected Behaviour: the landing page should not have the Add Place button on the bottom right.  The order of the buttons should be \"View Restaurants\", \"View Bars\", \"Add a New Place\"\n\nCurrent Behaviour: There are two buttons that do the same thing (Add a New Place).  The bottom right one on the landing page should be removed.",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "S",
+      "status": "done",
+      "acceptanceCriteria": "Landing page does not have the bottom right button.",
+      "reproSteps": "1. Open the page or refresh the page to get to the landing page (type in user if needed)\n2. View the landing page and see the redundancy of the add button.",
+      "affectedFiles": "",
+      "tags": [],
+      "updatedAt": "2026-04-11T08:17:13.904Z",
+      "releaseId": "REL-3",
+      "createdAt": "2026-04-10T16:45:11.382Z"
+    },
+    {
+      "id": "1775839718563",
+      "itemId": "IT-004",
+      "type": "bug",
+      "title": "Replace Gulf of America with Gulf of Mexico",
+      "description": "The current Google Maps view uses Gulf of America.  Use the version that shows Gulf of Mexico.",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "M",
+      "status": "done",
+      "acceptanceCriteria": "The Gulf of Mexico is shown instead of Gulf of America",
+      "reproSteps": "1. Open the app\n2. Select View Restaurants\n3. Open the map view\n4. Zoom into just south of Louisiana.\n\nNote the gulf is marked \"Gulf of Mexico\".  This should be fixable by setting the google maps API to use region GB or UK.",
+      "affectedFiles": "",
+      "tags": [],
+      "updatedAt": "2026-04-11T08:17:13.904Z",
+      "releaseId": "REL-3",
+      "createdAt": "2026-04-10T16:48:38.563Z"
+    },
+    {
+      "id": "1775839807563",
+      "itemId": "IT-005",
+      "type": "enhancement",
+      "title": "Allow Reactions on comments",
+      "description": "Allow users to make emoji reactions on comments",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "M",
+      "status": "done",
+      "acceptanceCriteria": "Users can view comments and click to leave an emoji reaction similar to LinkedIn",
+      "reproSteps": "",
+      "affectedFiles": "",
+      "tags": [],
+      "updatedAt": "2026-04-11T08:17:13.904Z",
+      "releaseId": "REL-3",
+      "createdAt": "2026-04-10T16:50:07.563Z"
+    },
+    {
+      "id": "1775840028478",
+      "itemId": "IT-006",
+      "type": "enhancement",
+      "title": "Support link to Maps",
+      "description": "Add a hyperlink to the address to allow users to click and have the option to open a map app.  This should give the option on iOS phones to select the map app of the user's choice",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "M",
+      "status": "done",
+      "acceptanceCriteria": "Link is available on the location of the entry in both list view and map view.",
+      "reproSteps": "",
+      "affectedFiles": "",
+      "tags": [],
+      "updatedAt": "2026-04-11T08:17:13.904Z",
+      "releaseId": "REL-3",
+      "createdAt": "2026-04-10T16:53:48.478Z"
+    },
+    {
+      "id": "1775843167482",
+      "itemId": "IT-007",
+      "type": "enhancement",
+      "title": "Trust-weighting",
+      "description": "User connections should be weighted so that their recommendations have more certainty of good matches.  This should be done at different levels (e.g. Tony is more trusted for casual food but less for desserts.  Robert is more trusted for beer but less trusted for cocktails.  etc.)",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "XL",
+      "status": "backlog",
+      "acceptanceCriteria": "More ideation needed",
+      "reproSteps": "",
+      "affectedFiles": "",
+      "tags": [],
+      "updatedAt": "2026-04-10T17:46:07.482Z",
+      "releaseId": null,
+      "createdAt": "2026-04-10T17:46:07.482Z"
+    },
+    {
+      "id": "1775847345028",
+      "itemId": "IT-008",
+      "type": "enhancement",
+      "title": "Per-User Status System",
+      "description": "Implement independent per-user statuses for restaurant entries so each user can have their own relationship with a place without affecting other users' views.\n\n**Changes:**\n- Add three entry states: Want to Go, Been + Recommend, Been + Skip (replaces the current two-option flow)\n- Store Google Place ID at save time to enable duplicate detection\n- When adding a place that already exists, prompt the user to attach their status to the existing entry instead of creating a duplicate\n- Add `userStatuses` field per entry (per-user, like existing `userRatings`) to track each user's status independently\n- Show recommend and skip counts on each card (e.g. ✅ 2  👎 1), tappable to see names in a detail view\n- Add \"Hide my skips\" filter to exclude places the current user has personally marked as skip\n- Lightweight attach flow for non-authors: just status selection + star ratings, no need to re-enter place details\n\n**Out of scope for this release:** notifications, trust-weighted filtering, visit history",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "L",
+      "status": "done",
+      "acceptanceCriteria": "",
+      "reproSteps": "",
+      "affectedFiles": "",
+      "tags": [],
+      "updatedAt": "2026-04-10T19:11:08.680Z",
+      "releaseId": "REL-2",
+      "createdAt": "2026-04-10T18:55:45.028Z"
+    },
+    {
+      "id": "1775894946869",
+      "itemId": "IT-009",
+      "type": "enhancement",
+      "title": "My Skips bugs",
+      "description": "Users need the ability to mark entries as \"Go now!\" or \"Skip it!\" to support the ability to filter out the places that a user has marked as a skip or recommend.\n\nWe'll redesign the whole workflow.",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "L",
+      "status": "done",
+      "acceptanceCriteria": "# Prompt: Redesign the \"Add a Place\" Workflow in index.html\n\n## Context\nThis is a single-file web app (`index.html`) with inline CSS and JavaScript. It uses Firebase Realtime Database and the Google Maps Places API. I want to redesign the \"Add a Place\" modal flow. Please read the full file carefully before making changes.\n\n---\n\n## Current Behavior (what to replace)\n\nWhen the user clicks \"Add a Place\" (the FAB button or the home CTA), `openModal()` is called. It opens a modal that shows **Step 1: a type chooser** with three cards:\n- \"Want to Go\" → calls `selectAddType('want-to-go')`\n- \"Go Now\" → calls `selectAddType('been-recommend')`\n- \"Been + Hard Pass\" → calls `selectAddType('been-skip')`\n\nAfter selecting one, the modal transitions to **Step 2: the form** (`#form-step`), with a \"← Back\" link to return to Step 1.\n\n---\n\n## New Behavior (what to build)\n\n### Remove the two-step flow entirely.\nClicking \"Add a Place\" should go **directly** to a single-screen form — no pop-up type chooser. The `#type-step` div and all its type-card buttons can be removed. The `backToTypeStep()` function and the \"← Back\" step link in the form are no longer needed.\n\n### New form layout (top to bottom):\n\n1. **Name** field (keep the existing Google Places autocomplete — `#f-name` with `#places-dropdown`)\n2. **Location / Neighborhood** field (`#f-location`, auto-filled by Places)\n3. **Type** toggle: Restaurant / Bar (keep the existing `#tog-restaurant` / `#tog-bar` toggle group)\n4. **Experience toggle**: A two-button toggle for **\"I've Been\"** vs **\"Want to Try\"**\n   - This replaces the old type-card step as the primary branching mechanism\n   - Style it like the existing `.rec-toggle` / `.rec-btn` pattern\n   - Default to no selection (neither active) when the modal first opens\n   - The rest of the form below this toggle dynamically shows/hides based on selection\n\n5. **If \"I've Been\" is selected**, show (in this order):\n   - A **single row** containing:\n     - **Overall Rating** star picker (left side, existing `#star-picker` logic)\n     - **Go Now! / Hard Pass** two-button toggle (right side, on the **same row**, side by side with the stars)\n     - Style the Go Now button active state in olive/green (matching `.rec-btn.yes.active`) and Hard Pass in the existing muted/grey style (`.rec-btn.no.active`)\n   - **Cuisine** dropdown (`#f-cuisine`) and **Price Range** dropdown (`#f-price`) — keep both, in the existing side-by-side `form-row` layout\n   - **Detailed Ratings** section (Quality, Service, Value, Ambiance — keep as-is, labeled \"Optional\")\n   - **Notes** / \"Your take\" textarea (`#f-notes`)\n   - **Save** button\n\n6. **If \"Want to Try\" is selected**, show:\n   - **Note** textarea (`#f-try-note`, optional)\n   - **Link / Review URL** field (`#f-url`, optional)\n   - **Save** button\n\n7. The **Save** button should remain disabled until:\n   - For \"I've Been\": Name is filled in AND either Go Now or Hard Pass is selected\n   - For \"Want to Try\": Name is filled in (notes/URL are optional)\n   - If neither \"I've Been\" nor \"Want to Try\" is chosen yet, Save is disabled\n\n---\n\n## Logic / JS Changes\n\n- `openModal()`: Skip showing `#type-step`. Show `#form-step` directly. Reset the new experience toggle (clear both \"I've Been\" / \"Want to Try\" active states). Hide both `#been-fields` and `#try-fields` until the user picks one.\n- `selectAddType()`: Keep this function but call it from the new experience toggle buttons instead of the old type-cards. The \"I've Been\" button should call `selectAddType('been-recommend')` initially (setting `addType = 'been-recommend'`). When the user later picks Go Now or Hard Pass in the rating row, update `addType` accordingly (`'been-recommend'` or `'been-skip'`). The \"Want to Try\" button calls `selectAddType('want-to-go')`.\n- The Go Now / Hard Pass toggle within the \"I've Been\" section should update the `addType` state variable:\n  - Go Now selected → `addType = 'been-recommend'`\n  - Hard Pass selected → `addType = 'been-skip'`\n- The existing `submitRec()` function logic should continue to work — it already reads `addType` to determine the status saved to Firebase.\n- Remove `backToTypeStep()` function (no longer needed).\n\n---\n\n## Attach Step Redesign\n\nThe `#attach-step` (where a non-author user adds their own status to an existing entry) should also be redesigned to match the new pattern:\n\n- Remove the three type-cards (Want to Go / Go Now / Been + Hard Pass) from `#attach-step`\n- Replace with the same **\"I've Been\" / \"Want to Try\"** toggle\n- If \"I've Been\": show the rating section (`#attach-rating-section`) with the Go Now / Hard Pass toggle inline on the same row as the overall stars (same layout as the main form)\n- If \"Want to Try\": hide the rating section, just show Save\n- The existing `setAttachStatus()` function should be called from the new toggle buttons and the Go Now / Hard Pass toggle within it\n\n---\n\n## Icon Changes (Apply Everywhere in the App)\n\nReplace the current \"Go Now\" and \"Hard Pass\" emoji/icons throughout the **entire app** — including cards, filter tabs, buttons, status tags, and any other UI location where these statuses appear.\n\n### Hard Pass icon\nReplace all `👎` instances used in the \"Hard Pass\" / \"not-recommended\" context with the **🚫** emoji (circle with a diagonal line / no-entry symbol).\n\n### Go Now icon\nThe current `✅` checkmark is used for \"Go Now\" / \"recommended.\" Replace it with a **green box with a white checkmark**, rendered as a small inline CSS element (not an emoji). Implement it as a `<span>` styled with a green background (`#4a7c4a` or similar), white color, rounded corners, and a bold checkmark character (✓) inside — sized to feel like an inline badge/icon. Use a consistent CSS class (e.g., `.go-icon`) so it can be reused wherever the icon appears throughout the app.\n\nMake sure to update:\n- `cardHTML()` function — the `statusTag` for `not-recommended` and `recommended`\n- The `beenBtnLabel` logic in the non-author inline rating section\n- The type-card icons in `#attach-step` (after redesigning to toggles, the Go Now / Hard Pass toggle button labels)\n- Any filter tab labels or other status text that reference these icons\n- The vote buttons (`👎` used for \"Disagree\" vote) — **do NOT change those**, as they are not status icons but voting buttons\n\n---\n\n## Style Notes\n\n- Keep all existing CSS variables (`--rust`, `--olive`, `--slate`, etc.)\n- The new \"I've Been / Want to Try\" toggle should use the existing `.rec-toggle` / `.rec-btn` CSS pattern\n- The Go Now / Hard Pass row should use a flex layout: stars on the left (`flex: 1`), toggle group on the right — both vertically centered\n- No new external dependencies — keep it as a single self-contained file\n\n---\n\n## What NOT to change\n\n- Firebase config and data structure\n- Google Maps / Places API autocomplete logic\n- The duplicate detection / `#dup-overlay` flow\n- The `editEntry()` flow (editing an existing entry)\n- The `upgradeToTried()` flow\n- Comment system, vote system, reactions\n- The `#place-detail-overlay` panel\n- The welcome screen and auth logic\n- The list/map view, filter chips, and card rendering (except icon updates above)",
+      "reproSteps": "1. Open app\n2. Click add a place",
+      "affectedFiles": "",
+      "tags": [],
+      "updatedAt": "2026-04-11T09:13:32.936Z",
+      "releaseId": "REL-4",
+      "createdAt": "2026-04-11T08:09:06.870Z"
+    },
+    {
+      "id": "1775896170076",
+      "itemId": "IT-010",
+      "type": "enhancement",
+      "title": "Add sorting",
+      "description": "When viewing the list, users should be able to sort by rating.",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "M",
+      "status": "backlog",
+      "acceptanceCriteria": "In the main screen, there is a \"sort by\" option.  The option would then let you sort by overall rating (in descending order) or by date (newest entries first)",
+      "reproSteps": "",
+      "affectedFiles": "",
+      "tags": [],
+      "updatedAt": "2026-04-11T08:29:30.076Z",
+      "releaseId": null,
+      "createdAt": "2026-04-11T08:29:30.077Z"
+    },
+    {
+      "id": "1775896259700",
+      "itemId": "IT-011",
+      "type": "enhancement",
+      "title": "Remove \"Hide my Hard Passes\" filter option",
+      "description": "The \"Hide My Hard Passes\" filter is not super useful.  We're removing it.",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "S",
+      "status": "done",
+      "acceptanceCriteria": "The \"Hide My Hard Passes\" filtering option is no longer available.",
+      "reproSteps": "",
+      "affectedFiles": "",
+      "tags": [],
+      "updatedAt": "2026-04-11T09:13:32.936Z",
+      "releaseId": "REL-4",
+      "createdAt": "2026-04-11T08:30:59.700Z"
+    },
+    {
+      "id": "1775897561469",
+      "itemId": "IT-012",
+      "type": "bug",
+      "title": "Recommended check boxes are not being consolidated.",
+      "description": "Expected Behaviour:  When multiple users mark a restaurant as recommended (Go Now), on the entry card, you should see the green check box with the number of recommendations next to it increment with the count of recommendations.\n\nActual behaviour: The recommendations are each being listed individually",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "M",
+      "status": "done",
+      "acceptanceCriteria": "For any entries with multiple recommendations, there should just be one green check box and a count equivalent to the number of recommendations.\n\nCheck also for Hard Pass counts.  These should also just have one Hard Pass icon and the count of Hard Pass votes.",
+      "reproSteps": "1. Open the app\n2. Go to view restaurants\n3. Look at the Beigel Bake entry.  Here there are 2 recommendations but instead of showing the green check box with a count of 2 next to it, it shows 2 separate green check boxes, one with the number 1 next to it, one with \"go now\" and five green stars.  It should just be the green check box and the number 2 for the count of 2 recommendations.",
+      "affectedFiles": "",
+      "tags": [],
+      "updatedAt": "2026-04-11T09:13:32.936Z",
+      "releaseId": "REL-4",
+      "createdAt": "2026-04-11T08:52:41.470Z"
     }
   ],
   "releases": [
@@ -77,9 +275,100 @@
       "goals": "Add early feedback bug fixes and enhancements.",
       "status": "released",
       "createdAt": "2026-04-10T15:44:56.704Z",
-      "releasedAt": "2026-04-10T15:58:49.692Z"
+      "releasedAt": "2026-04-10T15:58:49.692Z",
+      "releaseNotes": {
+        "generatedAt": "2026-04-11T08:41:40.061Z",
+        "sections": [
+          {
+            "heading": "✨ What's New",
+            "notes": [
+              {
+                "itemId": "IT-001",
+                "title": "Edit/update comments",
+                "note": "Edit/update comments is live — go check it out!"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "REL-2",
+      "version": "0.0.4",
+      "name": "Pre-Alpha 0.0.4",
+      "targetDate": "",
+      "goals": "",
+      "status": "released",
+      "createdAt": "2026-04-10T18:56:40.077Z",
+      "releasedAt": "2026-04-10T18:56:50.465Z",
+      "releaseNotes": {
+        "generatedAt": "2026-04-11T08:42:10.978Z",
+        "sections": [
+          {
+            "heading": "✨ What's New",
+            "notes": [
+              {
+                "itemId": "IT-008",
+                "title": "Per-User Status System",
+                "note": "Per-User Status System is live — go check it out!"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "REL-3",
+      "version": "0.0.5",
+      "name": "Early pre-alpha version",
+      "targetDate": "",
+      "goals": "Clean up of workflows",
+      "status": "released",
+      "createdAt": "2026-04-10T19:11:01.964Z",
+      "releasedAt": "2026-04-11T08:17:13.904Z"
+    },
+    {
+      "id": "REL-4",
+      "version": "0.0.6",
+      "name": "Skip It workflow redesign",
+      "targetDate": "",
+      "goals": "Have a more functional recommendation workflow.",
+      "status": "released",
+      "createdAt": "2026-04-11T08:10:46.126Z",
+      "releasedAt": "2026-04-11T09:13:32.936Z",
+      "releaseNotes": {
+        "generatedAt": "2026-04-11T09:15:36.373Z",
+        "releaseDate": "2026-04-11",
+        "sections": [
+          {
+            "heading": "✨ What's New",
+            "notes": [
+              {
+                "itemId": "IT-009",
+                "title": "My Skips bugs",
+                "note": "Changed the name of \"Skip It\" to \"Hard Pass\" and cleaned up some of the workflow."
+              },
+              {
+                "itemId": "IT-011",
+                "title": "Remove \"Hide my Hard Passes\" filter option",
+                "note": "Removed the pretty useless \"Hide my Hard Passes\" filter option. Life just got a little easier."
+              }
+            ]
+          },
+          {
+            "heading": "🐛 Bug Fixes",
+            "notes": [
+              {
+                "itemId": "IT-012",
+                "title": "Recommended check boxes are not being consolidated.",
+                "note": "RIP to the Recommended check boxes are not being consolidated bug. It will not be missed."
+              }
+            ]
+          }
+        ]
+      }
     }
   ],
-  "nextItemId": 2,
-  "nextReleaseId": 2
+  "nextItemId": 13,
+  "nextReleaseId": 5
 }
