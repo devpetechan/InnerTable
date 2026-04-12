@@ -354,6 +354,24 @@
       "updatedAt": "2026-04-12T19:02:06.375Z",
       "releaseId": null,
       "createdAt": "2026-04-12T19:02:06.375Z"
+    },
+    {
+      "id": "1776021359477",
+      "itemId": "IT-018",
+      "type": "bug",
+      "title": "Undo Go Now / Hard Pass",
+      "description": "Users should be able to undo the Go Now or Hard Pass vote by clicking again to toggle a selection off.",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "M",
+      "status": "backlog",
+      "acceptanceCriteria": "User should be able to click Go Now (or Hard Pass) to mark the setting on.  If they user clicks a setting that on again, it should toggle off.\n\nBehaviours:\n- If No selection is made, a click on Go Now should turn it on\n- If Go Now is on, a click on Go Now should turn it off.\n- If Go Now is on, a click on Hard Pass should turn off Go Now and Turn On hard pass (selection can only be one or the other)\n- If Hard Pass is on, a click on Hard Pass should turn it off.\n- If Hard Pass is on, a click on Go Now should turn Hard Pass off and should turn Go Now on\n- If no selection is made, a click on Hard Pass should turn Hard Pass on.",
+      "reproSteps": "1. Open an entry card.  \n2. Click on Go Now to mark as Go Now\n3. Click again to turn off.  This doesn't currently work.",
+      "affectedFiles": "",
+      "tags": [],
+      "updatedAt": "2026-04-12T19:15:59.477Z",
+      "releaseId": null,
+      "createdAt": "2026-04-12T19:15:59.478Z"
     }
   ],
   "releases": [
@@ -478,6 +496,6 @@
       "createdAt": "2026-04-12T18:41:56.137Z"
     }
   ],
-  "nextItemId": 18,
+  "nextItemId": 19,
   "nextReleaseId": 7
 }
