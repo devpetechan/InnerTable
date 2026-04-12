@@ -424,10 +424,18 @@ function setBeenOrTry(type) {
 
 // ── Go Now / Hard Pass toggle (inside been-fields) ──
 function setGoNowOrHardPass(status) {
-  addType = status;
-  beenStatusChosen = true;
-  document.getElementById('btn-go-now').classList.toggle('active',    status === 'been-recommend');
-  document.getElementById('btn-hard-pass').classList.toggle('active', status === 'been-skip');
+  // Toggle off: clicking the already-active button clears the selection
+  if (addType === status) {
+    addType = 'been-recommend'; // reset to neutral been state
+    beenStatusChosen = false;
+    document.getElementById('btn-go-now').classList.remove('active');
+    document.getElementById('btn-hard-pass').classList.remove('active');
+  } else {
+    addType = status;
+    beenStatusChosen = true;
+    document.getElementById('btn-go-now').classList.toggle('active',    status === 'been-recommend');
+    document.getElementById('btn-hard-pass').classList.toggle('active', status === 'been-skip');
+  }
   updateSubmitBtn();
 }
 

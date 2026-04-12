@@ -202,11 +202,18 @@ function renderUserRatingStars(id) {
 
 function setVisitStatus(id, status) {
   if (!pendingUserRatings[id]) pendingUserRatings[id] = { overall:0, quality:0, service:0, value:0, ambiance:0 };
-  pendingUserRatings[id].visitStatus = status;
   const gnBtn = document.getElementById('vs-gn-' + id);
   const hpBtn = document.getElementById('vs-hp-' + id);
-  if (gnBtn) gnBtn.classList.toggle('active', status === 'been-recommend');
-  if (hpBtn) hpBtn.classList.toggle('active', status === 'been-skip');
+  // Toggle off: clicking the already-active button clears the selection
+  if (pendingUserRatings[id].visitStatus === status) {
+    pendingUserRatings[id].visitStatus = null;
+    if (gnBtn) gnBtn.classList.remove('active');
+    if (hpBtn) hpBtn.classList.remove('active');
+  } else {
+    pendingUserRatings[id].visitStatus = status;
+    if (gnBtn) gnBtn.classList.toggle('active', status === 'been-recommend');
+    if (hpBtn) hpBtn.classList.toggle('active', status === 'been-skip');
+  }
 }
 
 function setUserRatingStar(id, n) {
@@ -239,6 +246,10 @@ function submitUserRating(id) {
   };
   if (state.visitStatus) {
     updates[`recommendations/${id}/userStatuses/${currentUser}`] = { status: state.visitStatus, ts: Date.now() };
+    updates[`recommendations/${id}/triedBy/${currentUser}`] = true;
+  } else if (state.visitStatus === null) {
+    // User explicitly toggled off — delete their status entry
+    updates[`recommendations/${id}/userStatuses/${currentUser}`] = null;
     updates[`recommendations/${id}/triedBy/${currentUser}`] = true;
   } else {
     // No explicit Go Now/Hard Pass — just record that they've been here

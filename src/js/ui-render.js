@@ -56,6 +56,18 @@ function cardHTML(id, r) {
   const avgStars   = avg > 0 ? '★'.repeat(Math.round(avg)) + '☆'.repeat(5 - Math.round(avg)) : '';
   const avgFactors = computeAvgFactors(r);
 
+  // Creation byline: author + full date/time with timezone (IT-020)
+  let byline = '';
+  if (r.ts) {
+    const formattedTs = new Date(r.ts).toLocaleString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric',
+      hour: 'numeric', minute: '2-digit', timeZoneName: 'short'
+    });
+    byline = `<div class="card-byline">Added by <strong>${esc(r.author)}</strong> · ${formattedTs}</div>`;
+  } else if (r.author) {
+    byline = `<div class="card-byline">Added by <strong>${esc(r.author)}</strong></div>`;
+  }
+
   const typeTag = r.placeType === 'bar'
     ? `<span class="tag type-bar">🍸 Bar</span>`
     : `<span class="tag type-restaurant">🍽 Restaurant</span>`;
@@ -253,6 +265,7 @@ function cardHTML(id, r) {
         <div class="card-name">${esc(r.name)}</div>
         ${avg > 0 ? `<div class="stars"${ratingTip}>${avgStars}</div>` : ''}
       </div>
+      ${byline}
       ${meta}
       ${notes}
       ${urlEl}
@@ -481,11 +494,18 @@ function toggleDetailRatingForm(id) {
 
 function setDetailVisitStatus(id, status) {
   if (!pendingUserRatings[id]) pendingUserRatings[id] = { overall:0, quality:0, service:0, value:0, ambiance:0 };
-  pendingUserRatings[id].visitStatus = status;
   const gnBtn = document.getElementById('dvs-gn-' + id);
   const hpBtn = document.getElementById('dvs-hp-' + id);
-  if (gnBtn) gnBtn.classList.toggle('active', status === 'been-recommend');
-  if (hpBtn) hpBtn.classList.toggle('active', status === 'been-skip');
+  // Toggle off: clicking the already-active button clears the selection
+  if (pendingUserRatings[id].visitStatus === status) {
+    pendingUserRatings[id].visitStatus = null;
+    if (gnBtn) gnBtn.classList.remove('active');
+    if (hpBtn) hpBtn.classList.remove('active');
+  } else {
+    pendingUserRatings[id].visitStatus = status;
+    if (gnBtn) gnBtn.classList.toggle('active', status === 'been-recommend');
+    if (hpBtn) hpBtn.classList.toggle('active', status === 'been-skip');
+  }
 }
 
 function setDetailUserRatingStar(id, n) {
@@ -512,6 +532,9 @@ function submitDetailUserRating(id) {
   if (state.visitStatus) {
     updates[`recommendations/${id}/userStatuses/${currentUser}`] = { status: state.visitStatus };
     updates[`recommendations/${id}/triedBy/${currentUser}`] = true;
+  } else if (state.visitStatus === null) {
+    // User explicitly toggled off — delete their status entry
+    updates[`recommendations/${id}/userStatuses/${currentUser}`] = null;
   }
   db.ref().update(updates)
     .then(() => {

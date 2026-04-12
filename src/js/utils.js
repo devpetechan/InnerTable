@@ -32,10 +32,11 @@ function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// Build a Google Maps URL for a place entry (uses coords if available, falls back to text search)
+// Build a Google Maps URL for a place entry.
+// Prefers Place ID (opens actual business listing), falls back to name+location text search.
 function buildMapsUrl(r) {
-  if (r.lat && r.lng) {
-    return `https://maps.google.com/maps?q=${r.lat},${r.lng}`;
+  if (r.placeId) {
+    return `https://www.google.com/maps/place/?q=place_id:${r.placeId}`;
   }
   const query = [r.name, r.location].filter(Boolean).join(', ');
   return `https://maps.google.com/maps?q=${encodeURIComponent(query)}`;
