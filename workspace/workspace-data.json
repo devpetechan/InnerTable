@@ -300,6 +300,24 @@
       "updatedAt": "2026-04-12T16:20:07.173Z",
       "releaseId": null,
       "createdAt": "2026-04-12T16:20:01.039Z"
+    },
+    {
+      "id": "1776011172868",
+      "itemId": "IT-015",
+      "type": "enhancement",
+      "title": "Add \"View All\" to Landing Page",
+      "description": "Add an option to View All listings on the landing page.",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "S",
+      "status": "backlog",
+      "acceptanceCriteria": "User gets to landing page, clicks \"View All\" and gets to the listing page with all listings showing.",
+      "reproSteps": "",
+      "affectedFiles": "",
+      "tags": [],
+      "updatedAt": "2026-04-12T16:26:12.868Z",
+      "releaseId": null,
+      "createdAt": "2026-04-12T16:26:12.868Z"
     }
   ],
   "releases": [
@@ -405,6 +423,6 @@
       }
     }
   ],
-  "nextItemId": 15,
+  "nextItemId": 16,
   "nextReleaseId": 5
 }
