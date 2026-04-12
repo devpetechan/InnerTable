@@ -421,8 +421,17 @@
           }
         ]
       }
+    },
+    {
+      "id": "REL-5",
+      "version": "0.0.7",
+      "name": "More bug squashing and small enhancements",
+      "targetDate": "",
+      "goals": "",
+      "status": "active",
+      "createdAt": "2026-04-12T16:27:06.511Z"
     }
   ],
   "nextItemId": 16,
-  "nextReleaseId": 5
+  "nextReleaseId": 6
 }
