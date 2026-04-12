@@ -513,8 +513,17 @@
       "status": "released",
       "createdAt": "2026-04-12T18:41:56.137Z",
       "releasedAt": "2026-04-12T20:40:10.083Z"
+    },
+    {
+      "id": "REL-7",
+      "version": "0.1.1",
+      "name": "Color and bugs",
+      "targetDate": "",
+      "goals": "Updating the colours.  Fixing some bugs.  Making people happy.",
+      "status": "planning",
+      "createdAt": "2026-04-12T20:55:04.347Z"
     }
   ],
   "nextItemId": 20,
-  "nextReleaseId": 7
+  "nextReleaseId": 8
 }
