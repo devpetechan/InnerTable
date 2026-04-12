@@ -282,6 +282,24 @@
       "updatedAt": "2026-04-12T16:13:36.405Z",
       "releaseId": null,
       "createdAt": "2026-04-12T16:12:11.881Z"
+    },
+    {
+      "id": "1776010801039",
+      "itemId": "IT-014",
+      "type": "bug",
+      "title": "I've Been Here: Marking \"Go Now\" or \"Hard Pass\" should be optional",
+      "description": "Expected Behaviour: When marking someone else's entry card as \"I've been here\", marking \"Go Now\" or \"Hard Pass\" is optional.  The only mandatory field to mark is the Overall Rating.\n\nCurrent Behaviour: Users are not allowed to save unless they have marked either \"Go Now\" or \"Hard Pass\".",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "M",
+      "status": "backlog",
+      "acceptanceCriteria": "Users can mark a restaurant that they've been to and provide an Overall Star Rating but not have to mark \"go here\" or \"hard pass\".  Those are solely for explicit recommendations one way or another but not mandatory to provide a rating.",
+      "reproSteps": "1. Open the app\n2. Log in\n3. Click on \"I've Been Here\" for an entry card authored by someone else.\n4. Provide an Overall Rating.  Save is not available until marking \"Go Now\" or \"Hard Pass\".  This is not the desired behaviour.",
+      "affectedFiles": "",
+      "tags": [],
+      "updatedAt": "2026-04-12T16:20:01.039Z",
+      "releaseId": null,
+      "createdAt": "2026-04-12T16:20:01.039Z"
     }
   ],
   "releases": [
@@ -387,6 +405,6 @@
       }
     }
   ],
-  "nextItemId": 14,
+  "nextItemId": 15,
   "nextReleaseId": 5
 }
