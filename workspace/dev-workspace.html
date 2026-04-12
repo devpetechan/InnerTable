@@ -107,7 +107,8 @@
       <div class="flex items-center gap-2">
         <button onclick="exportData()" class="btn btn-secondary btn-sm">⬆ Export</button>
         <button onclick="importData()" class="btn btn-secondary btn-sm">⬇ Import</button>
-        <span class="text-xs text-gray-400 ml-2" id="save-indicator">✓ Saved</span>
+        <button onclick="openGhConfigModal()" class="btn btn-secondary btn-sm" id="gh-config-btn" title="Configure GitHub sync">⚙ GitHub</button>
+        <span class="text-xs text-gray-400 ml-2" id="save-indicator">⟳ Loading…</span>
       </div>
     </div>
     <!-- TABS -->
@@ -193,22 +194,214 @@ const DEFAULT_STATE = {
   nextReleaseId: 1
 };
 
-let state = loadState();
+let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
 
-function loadState() {
+// ===== GITHUB SYNC =====
+// Token is stored only in localStorage — never committed to the repo
+const GH_OWNER = 'devpetechan';
+const GH_REPO  = 'InnerTable';
+const GH_BRANCH = 'main';
+const GH_PATH  = 'workspace/workspace-data.json';
+
+let ghToken    = localStorage.getItem('gh_pat') || '';
+let ghFileSha  = null;   // SHA of current file; required for PUT updates
+let ghSaveTimer = null;  // debounce handle
+
+function ghEnabled() { return !!ghToken; }
+
+function setIndicator(text, color) {
+  const el = document.getElementById('save-indicator');
+  if (el) { el.textContent = text; el.style.color = color || ''; }
+}
+
+async function loadState() {
+  // Pull from localStorage as a fast local cache / offline fallback
+  let localState = null;
   try {
     const saved = localStorage.getItem('innertable_workspace');
-    if (saved) return JSON.parse(saved);
+    if (saved) localState = JSON.parse(saved);
   } catch(e) {}
-  return JSON.parse(JSON.stringify(DEFAULT_STATE));
+
+  if (!ghEnabled()) {
+    setIndicator('✓ Saved', '#22c55e');
+    return localState || JSON.parse(JSON.stringify(DEFAULT_STATE));
+  }
+
+  // Fetch from GitHub
+  try {
+    setIndicator('⟳ Syncing…', '#6366f1');
+    const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}?ref=${GH_BRANCH}&t=${Date.now()}`;
+    const res = await fetch(url, {
+      headers: {
+        'Authorization': `token ${ghToken}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      ghFileSha = data.sha;
+      const content = JSON.parse(atob(data.content.replace(/\n/g, '')));
+      localStorage.setItem('innertable_workspace', JSON.stringify(content));
+      setIndicator('✓ Synced', '#22c55e');
+      setTimeout(() => setIndicator('✓ Synced', ''), 2000);
+      return content;
+    } else if (res.status === 404) {
+      // Data file doesn't exist yet — will be created on first save
+      setIndicator('✓ Ready', '#22c55e');
+      return localState || JSON.parse(JSON.stringify(DEFAULT_STATE));
+    } else {
+      throw new Error(`HTTP ${res.status}`);
+    }
+  } catch(e) {
+    console.warn('GitHub load failed:', e);
+    setIndicator('⚠ Offline', '#f59e0b');
+    return localState || JSON.parse(JSON.stringify(DEFAULT_STATE));
+  }
 }
 
 function saveState() {
+  // Write to localStorage immediately so nothing is lost
+  try { localStorage.setItem('innertable_workspace', JSON.stringify(state)); } catch(e) {}
+
+  if (!ghEnabled()) {
+    setIndicator('✓ Saved', '#22c55e');
+    setTimeout(() => setIndicator('✓ Saved', ''), 1500);
+    return;
+  }
+
+  // Debounce: wait 1.5 s after the last change before pushing to GitHub
+  clearTimeout(ghSaveTimer);
+  setIndicator('…unsaved', '#94a3b8');
+  ghSaveTimer = setTimeout(() => pushToGitHub(), 1500);
+}
+
+async function pushToGitHub() {
   try {
-    localStorage.setItem('innertable_workspace', JSON.stringify(state));
-    const el = document.getElementById('save-indicator');
-    if (el) { el.textContent = '✓ Saved'; el.style.color = '#22c55e'; setTimeout(() => { el.textContent = '✓ Saved'; el.style.color = ''; }, 1500); }
+    setIndicator('⟳ Saving…', '#6366f1');
+    const jsonStr = JSON.stringify(state, null, 2);
+    // encodeURIComponent→unescape trick ensures non-ASCII chars encode cleanly to base64
+    const content = btoa(unescape(encodeURIComponent(jsonStr)));
+    const body = {
+      message: `workspace: auto-save ${new Date().toISOString().slice(0,16).replace('T',' ')}`,
+      content,
+      branch: GH_BRANCH
+    };
+    if (ghFileSha) body.sha = ghFileSha;
+
+    const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`;
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${ghToken}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      ghFileSha = data.content.sha;
+      setIndicator('✓ Synced to GitHub', '#22c55e');
+      setTimeout(() => setIndicator('✓ Synced', ''), 2000);
+    } else if (res.status === 409) {
+      // Conflict (another device saved first) — refresh SHA and retry once
+      await refreshGhSha();
+      await pushToGitHub();
+    } else {
+      throw new Error(`HTTP ${res.status}`);
+    }
+  } catch(e) {
+    console.warn('GitHub save failed:', e);
+    setIndicator('⚠ Sync failed', '#ef4444');
+  }
+}
+
+async function refreshGhSha() {
+  try {
+    const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}?ref=${GH_BRANCH}&t=${Date.now()}`;
+    const res = await fetch(url, {
+      headers: { 'Authorization': `token ${ghToken}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (res.ok) { const d = await res.json(); ghFileSha = d.sha; }
   } catch(e) {}
+}
+
+// ===== GITHUB CONFIG MODAL =====
+function openGhConfigModal() {
+  const mc = document.getElementById('modal-container');
+  const isConnected = ghEnabled();
+  mc.innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal-box" style="max-width:480px">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-gray-900">GitHub Sync</h2>
+          <span class="badge ${isConnected ? 'badge-active' : 'badge-planning'}">${isConnected ? '● Connected' : '○ Not connected'}</span>
+        </div>
+        <p class="text-sm text-gray-500 mb-4">Connect to your GitHub repo to sync workspace data across all your devices. Your token is stored only in <em>this browser</em> — it is never committed to GitHub.</p>
+
+        <label class="form-label">Personal Access Token (PAT)</label>
+        <input id="gh-token-input" type="password" class="form-input mb-1" placeholder="ghp_xxxxxxxxxxxx" value="${ghToken}" autocomplete="off">
+        <p class="text-xs text-gray-400 mb-4">Needs <strong>repo</strong> (or <strong>contents:write</strong> fine-grained) scope. <a href="https://github.com/settings/tokens/new?scopes=repo&description=InnerTable+Workspace" target="_blank" class="text-indigo-500 underline">Create one on GitHub ↗</a></p>
+
+        <div class="p-3 bg-gray-50 rounded-lg text-xs text-gray-500 mb-4 leading-5">
+          <strong>Repo:</strong> ${GH_OWNER}/${GH_REPO} &nbsp;·&nbsp; <strong>Branch:</strong> ${GH_BRANCH}<br>
+          <strong>Data file:</strong> <code>${GH_PATH}</code>
+        </div>
+
+        <div id="gh-config-status" class="text-sm mb-4 hidden"></div>
+
+        <div class="flex gap-2 justify-end flex-wrap">
+          ${isConnected ? '<button class="btn btn-danger btn-sm" onclick="disconnectGitHub()">Disconnect</button>' : ''}
+          <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-secondary" onclick="testGhConnection()" id="gh-test-btn">Test Connection</button>
+          <button class="btn btn-primary" onclick="saveGhConfig()">Save &amp; Reload</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function testGhConnection() {
+  const token = document.getElementById('gh-token-input').value.trim();
+  if (!token) { showGhStatus('Please enter a token first.', false); return; }
+  const btn = document.getElementById('gh-test-btn');
+  btn.textContent = 'Testing…'; btn.disabled = true;
+  try {
+    const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}?t=${Date.now()}`;
+    const res = await fetch(url, {
+      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (res.ok)          showGhStatus('✅ Connected — data file found.', true);
+    else if (res.status === 404)  showGhStatus('✅ Connected — data file will be created on first save.', true);
+    else if (res.status === 401)  showGhStatus('❌ Invalid token. Double-check your PAT.', false);
+    else if (res.status === 403)  showGhStatus('❌ Token lacks repo scope. Create a new one with repo access.', false);
+    else                 showGhStatus(`❌ Unexpected error: HTTP ${res.status}`, false);
+  } catch(e) { showGhStatus('❌ Network error — check your connection.', false); }
+  btn.textContent = 'Test Connection'; btn.disabled = false;
+}
+
+function showGhStatus(msg, ok) {
+  const el = document.getElementById('gh-config-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = `text-sm mb-4 ${ok ? 'text-green-600' : 'text-red-600'}`;
+}
+
+function saveGhConfig() {
+  const token = document.getElementById('gh-token-input').value.trim();
+  localStorage.setItem('gh_pat', token);
+  closeModal();
+  showToast(token ? 'GitHub sync enabled! Reloading…' : 'GitHub sync disabled.');
+  setTimeout(() => location.reload(), 1000);
+}
+
+function disconnectGitHub() {
+  if (!confirm('Remove GitHub token and disable sync? Your local data will be kept.')) return;
+  localStorage.removeItem('gh_pat');
+  closeModal();
+  showToast('GitHub sync disabled.');
+  setTimeout(() => location.reload(), 800);
 }
 
 // ===== TABS =====
@@ -1895,8 +2088,9 @@ function importData() {
         const imported = JSON.parse(ev.target.result);
         if (!confirm('Import will replace current workspace. Continue?')) return;
         state = imported;
+        ghFileSha = null; // force a fresh create/update on GitHub
         saveState();
-        location.reload();
+        setTimeout(() => location.reload(), ghEnabled() ? 2500 : 200);
       } catch(err) { alert('Invalid file format'); }
     };
     reader.readAsText(file);
@@ -1914,7 +2108,8 @@ function showToast(msg) {
 }
 
 // ===== INIT =====
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  state = await loadState();
   document.getElementById('header-app-name').textContent = state.app.name;
   document.getElementById('header-app-tagline').textContent = state.app.tagline || 'Dev Workspace';
   renderDashboard();
