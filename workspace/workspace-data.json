@@ -453,9 +453,9 @@
     {
       "id": "REL-6",
       "version": "0.1.0",
-      "name": "",
+      "name": "Code Refactoring",
       "targetDate": "",
-      "goals": "",
+      "goals": "Create some structure on the code base to split CSS and JS components into subcomponents by function.",
       "status": "active",
       "createdAt": "2026-04-12T18:41:56.137Z"
     }
