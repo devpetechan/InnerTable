@@ -328,12 +328,12 @@
       "priority": "P2",
       "area": "Other",
       "effort": "XL",
-      "status": "staged",
+      "status": "done",
       "acceptanceCriteria": "",
       "reproSteps": "",
       "affectedFiles": "",
       "tags": [],
-      "updatedAt": "2026-04-12T18:42:43.757Z",
+      "updatedAt": "2026-04-12T20:40:10.083Z",
       "releaseId": "REL-6",
       "createdAt": "2026-04-12T18:41:41.685Z"
     },
@@ -492,8 +492,9 @@
       "name": "Code Refactoring",
       "targetDate": "",
       "goals": "Create some structure on the code base to split CSS and JS components into subcomponents by function.",
-      "status": "active",
-      "createdAt": "2026-04-12T18:41:56.137Z"
+      "status": "released",
+      "createdAt": "2026-04-12T18:41:56.137Z",
+      "releasedAt": "2026-04-12T20:40:10.083Z"
     }
   ],
   "nextItemId": 19,
