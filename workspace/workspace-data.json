@@ -372,6 +372,24 @@
       "updatedAt": "2026-04-12T20:40:56.568Z",
       "releaseId": null,
       "createdAt": "2026-04-12T19:15:59.478Z"
+    },
+    {
+      "id": "1776027265158",
+      "itemId": "IT-019",
+      "type": "enhancement",
+      "title": "Update the color palette for the main style sheet",
+      "description": "Updating the color palatte to be something more personalised",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "M",
+      "status": "backlog",
+      "acceptanceCriteria": "colours are new, functionality is same",
+      "reproSteps": "",
+      "affectedFiles": "",
+      "tags": [],
+      "updatedAt": "2026-04-12T20:54:25.158Z",
+      "releaseId": null,
+      "createdAt": "2026-04-12T20:54:25.158Z"
     }
   ],
   "releases": [
@@ -497,6 +515,6 @@
       "releasedAt": "2026-04-12T20:40:10.083Z"
     }
   ],
-  "nextItemId": 19,
+  "nextItemId": 20,
   "nextReleaseId": 7
 }
