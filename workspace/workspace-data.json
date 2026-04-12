@@ -336,6 +336,24 @@
       "updatedAt": "2026-04-12T18:42:43.757Z",
       "releaseId": "REL-6",
       "createdAt": "2026-04-12T18:41:41.685Z"
+    },
+    {
+      "id": "1776020526375",
+      "itemId": "IT-017",
+      "type": "bug",
+      "title": "Map links connect to geo coordinates instead of actual business listing",
+      "description": "Expected behaviour: when clicking on the location in the entry card, the link should open the map app and connect to the actual business listing.\n\nActual behaviour: Link connects to the geo coordinates and not the business listing.",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "M",
+      "status": "backlog",
+      "acceptanceCriteria": "Location clicks open the map app to the actual business listing.",
+      "reproSteps": "1. Open the app\n2. Click on the location link for the Lucia's entry card\n3. Google maps opens to 51 degrees 32 mins 40.6\"N, 0 degrees 1 min 26.4\"W.  \n\nExpectation is that it connects to the actual business listing: https://maps.app.goo.gl/9vuEqf2ux17EUFex6",
+      "affectedFiles": "",
+      "tags": [],
+      "updatedAt": "2026-04-12T19:02:06.375Z",
+      "releaseId": null,
+      "createdAt": "2026-04-12T19:02:06.375Z"
     }
   ],
   "releases": [
@@ -460,6 +478,6 @@
       "createdAt": "2026-04-12T18:41:56.137Z"
     }
   ],
-  "nextItemId": 17,
+  "nextItemId": 18,
   "nextReleaseId": 7
 }
