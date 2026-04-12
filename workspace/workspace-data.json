@@ -408,6 +408,24 @@
       "updatedAt": "2026-04-12T21:42:00.207Z",
       "releaseId": "REL-7",
       "createdAt": "2026-04-12T21:41:52.647Z"
+    },
+    {
+      "id": "1776030610257",
+      "itemId": "IT-021",
+      "type": "enhancement",
+      "title": "AI Restaurant Matching Agent",
+      "description": "Add a feature to plan a night.  You mark the users (friends) that will be joining you and the agent will match the best place based on the friends you are going with and their preferences.",
+      "priority": "P2",
+      "area": "Other",
+      "effort": "XL",
+      "status": "backlog",
+      "acceptanceCriteria": "More ideation needed.",
+      "reproSteps": "",
+      "affectedFiles": "",
+      "tags": [],
+      "updatedAt": "2026-04-12T21:50:10.257Z",
+      "releaseId": null,
+      "createdAt": "2026-04-12T21:50:10.257Z"
     }
   ],
   "releases": [
@@ -542,6 +560,6 @@
       "createdAt": "2026-04-12T20:55:04.347Z"
     }
   ],
-  "nextItemId": 21,
+  "nextItemId": 22,
   "nextReleaseId": 8
 }
