@@ -351,8 +351,8 @@
       "reproSteps": "1. Open the app\n2. Click on the location link for the Lucia's entry card\n3. Google maps opens to 51 degrees 32 mins 40.6\"N, 0 degrees 1 min 26.4\"W.  \n\nExpectation is that it connects to the actual business listing: https://maps.app.goo.gl/9vuEqf2ux17EUFex6",
       "affectedFiles": "",
       "tags": [],
-      "updatedAt": "2026-04-12T20:41:18.963Z",
-      "releaseId": null,
+      "updatedAt": "2026-04-12T20:55:09.757Z",
+      "releaseId": "REL-7",
       "createdAt": "2026-04-12T19:02:06.375Z"
     },
     {
@@ -369,8 +369,8 @@
       "reproSteps": "1. Open an entry card.  \n2. Click on Go Now to mark as Go Now\n3. Click again to turn off.  This doesn't currently work.",
       "affectedFiles": "",
       "tags": [],
-      "updatedAt": "2026-04-12T20:40:56.568Z",
-      "releaseId": null,
+      "updatedAt": "2026-04-12T20:55:10.601Z",
+      "releaseId": "REL-7",
       "createdAt": "2026-04-12T19:15:59.478Z"
     },
     {
@@ -387,8 +387,8 @@
       "reproSteps": "",
       "affectedFiles": "",
       "tags": [],
-      "updatedAt": "2026-04-12T20:54:28.534Z",
-      "releaseId": null,
+      "updatedAt": "2026-04-12T20:55:11.435Z",
+      "releaseId": "REL-7",
       "createdAt": "2026-04-12T20:54:25.158Z"
     }
   ],
