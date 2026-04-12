@@ -310,6 +310,16 @@
       border-radius: 6px; transition: background .12s; line-height: 1;
     }
     .reaction-picker-btn:hover { background: var(--tan); }
+    /* Reaction viewers popup */
+    .reaction-viewers-popup {
+      position: absolute; bottom: calc(100% + 6px); left: 0;
+      background: var(--white); border: 1.5px solid var(--tan); border-radius: 12px;
+      padding: 8px 12px; box-shadow: 0 4px 16px rgba(44,36,22,.15);
+      z-index: 500; white-space: nowrap; min-width: 160px;
+    }
+    .reaction-viewer-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: .82rem; color: var(--text); }
+    .reaction-viewer-emoji { font-size: 1rem; min-width: 1.4rem; }
+    .reaction-viewer-names { color: var(--muted); }
 
     /* ═══ EMPTY STATE ═══ */
     .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
@@ -629,6 +639,13 @@
         <h2>Welcome to my Inner Table.</h2>
         <p>The Inner Table is a curated list of food and drink spots that your trusted inner circle of friends like or want to try. Add to the Inner Table list — but don't add crap places! Your friends will hate you.</p>
         <div class="home-ctas">
+          <button class="home-cta-btn" onclick="navigateToList('all')">
+            <span class="home-cta-icon">🗂</span>
+            <span class="home-cta-text">
+              <strong>View All</strong>
+              <span>See every place on the list</span>
+            </span>
+          </button>
           <button class="home-cta-btn" onclick="navigateToList('restaurant')">
             <span class="home-cta-icon">🍽</span>
             <span class="home-cta-text">
@@ -685,6 +702,13 @@
         <div class="filter-chip active" data-type="all"        onclick="setTypeFilter('all',this)">All</div>
         <div class="filter-chip"        data-type="restaurant" onclick="setTypeFilter('restaurant',this)">🍽 Restaurants</div>
         <div class="filter-chip"        data-type="bar"        onclick="setTypeFilter('bar',this)">🍸 Bars</div>
+      </div>
+
+      <!-- Sort options -->
+      <div class="filter-bar" id="sort-filter-bar">
+        <span class="filter-label">Sort:</span>
+        <div class="filter-chip active" data-sort="date"   onclick="setSort('date',this)">📅 Date</div>
+        <div class="filter-chip"        data-sort="rating" onclick="setSort('rating',this)">⭐ Rating</div>
       </div>
 
 <div class="section-title" id="count-title">
@@ -891,22 +915,16 @@
 
         <!-- Overall Rating + Go Now / Hard Pass on one row -->
         <div class="form-group">
-          <div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;">
-            <div style="flex:1;min-width:120px;">
-              <div class="form-label">Overall Rating (optional)</div>
-              <div class="star-picker" id="attach-star-picker">
-                <span onclick="setAttachStars(1)">☆</span><span onclick="setAttachStars(2)">☆</span>
-                <span onclick="setAttachStars(3)">☆</span><span onclick="setAttachStars(4)">☆</span>
-                <span onclick="setAttachStars(5)">☆</span>
-              </div>
-            </div>
-            <div>
-              <div class="form-label">Status *</div>
-              <div class="rec-toggle" style="margin-bottom:0;">
-                <button class="rec-btn yes" id="abtn-go-now"    onclick="setAttachGoNowOrHardPass('been-recommend')"><span class="go-icon">✓</span> Go Now!</button>
-                <button class="rec-btn no"  id="abtn-hard-pass" onclick="setAttachGoNowOrHardPass('been-skip')">🚫 Hard Pass</button>
-              </div>
-            </div>
+          <div class="form-label" style="margin-bottom:8px;">Overall Rating *</div>
+          <div class="star-picker" id="attach-star-picker">
+            <span onclick="setAttachStars(1)">☆</span><span onclick="setAttachStars(2)">☆</span>
+            <span onclick="setAttachStars(3)">☆</span><span onclick="setAttachStars(4)">☆</span>
+            <span onclick="setAttachStars(5)">☆</span>
+          </div>
+          <div class="form-label" style="margin-top:14px;margin-bottom:8px;">Go Now / Hard Pass <span style="font-weight:400;color:var(--muted)">(optional)</span></div>
+          <div class="rec-toggle" style="margin-bottom:0;">
+            <button class="rec-btn yes" id="abtn-go-now"    onclick="setAttachGoNowOrHardPass('been-recommend')"><span class="go-icon">✓</span> Go Now!</button>
+            <button class="rec-btn no"  id="abtn-hard-pass" onclick="setAttachGoNowOrHardPass('been-skip')">🚫 Hard Pass</button>
           </div>
         </div>
 
@@ -1020,6 +1038,7 @@ let currentView        = 'all';
 let currentFilter      = 'all';
 let currentTypeFilter  = 'all';
 let currentDisplayMode = 'list';
+let currentSort        = 'date'; // 'date' | 'rating'
 let selectedStars      = 0;
 let addType            = null;   // 'want-to-go' | 'been-recommend' | 'been-skip' (also accepts legacy 'try'/'been')
 let placeType          = 'restaurant';
@@ -1191,6 +1210,13 @@ function setTypeFilter(type, el) {
   }
 }
 
+function setSort(sort, el) {
+  currentSort = sort;
+  document.querySelectorAll('#sort-filter-bar .filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderCards();
+}
+
 function setDisplayMode(mode) {
   currentDisplayMode = mode;
   document.getElementById('mode-list').classList.toggle('active', mode === 'list');
@@ -1250,7 +1276,16 @@ function renderCards() {
     return;
   }
 
-  entries.sort((a,b) => (b[1].ts||0) - (a[1].ts||0));
+  if (currentSort === 'rating') {
+    entries.sort((a,b) => {
+      const avgA = computeAvgRating(a[1]).avg;
+      const avgB = computeAvgRating(b[1]).avg;
+      if (avgB !== avgA) return avgB - avgA;
+      return (b[1].ts||0) - (a[1].ts||0); // tie-break: newest first
+    });
+  } else {
+    entries.sort((a,b) => (b[1].ts||0) - (a[1].ts||0));
+  }
   container.innerHTML = `<div class="cards-grid">${entries.map(([id,r]) => cardHTML(id,r)).join('')}</div>`;
 }
 
@@ -1339,6 +1374,8 @@ function cardHTML(id, r) {
       beenBtnLabel = `✓ Go Now${myStars}`;
     } else if (myStatusVal === 'been-skip') {
       beenBtnLabel = 'Hard Pass';
+    } else if (myRating && (myRating.overall||0) > 0) {
+      beenBtnLabel = `✓ Rated ${'★'.repeat(myRating.overall)}`;
     } else {
       beenBtnLabel = '🍴 I\'ve Been Here';
     }
@@ -1346,21 +1383,21 @@ function cardHTML(id, r) {
       <button class="card-btn" onclick="toggleRatingForm('${id}')">${beenBtnLabel}</button>
     </div>`;
 
-    // Inline form: status toggle + optional star ratings
+    // Inline form: overall rating required; Go Now / Hard Pass optional
     nonAuthorSection += `
     <div class="inline-rating-form" id="rf-${id}" style="display:none">
-      <div class="form-label" style="margin-bottom:8px;">How was it?</div>
-      <div class="rec-toggle" id="visit-status-${id}" style="margin-bottom:14px;">
-        <button class="rec-btn yes" id="vs-gn-${id}" onclick="setVisitStatus('${id}','been-recommend')"><span class="go-icon">✓</span> Go Now</button>
-        <button class="rec-btn no"  id="vs-hp-${id}" onclick="setVisitStatus('${id}','been-skip')">🚫 Hard Pass</button>
-      </div>
-      <div class="form-label" style="margin-bottom:8px;">Overall Rating (optional)</div>
+      <div class="form-label" style="margin-bottom:8px;">Overall Rating *</div>
       <div class="star-picker" id="ur-stars-${id}">
         <span onclick="setUserRatingStar('${id}',1)">☆</span><span onclick="setUserRatingStar('${id}',2)">☆</span>
         <span onclick="setUserRatingStar('${id}',3)">☆</span><span onclick="setUserRatingStar('${id}',4)">☆</span>
         <span onclick="setUserRatingStar('${id}',5)">☆</span>
       </div>
-      <div class="form-label" style="margin-top:12px;margin-bottom:8px;">Detailed Ratings (optional)</div>
+      <div class="form-label" style="margin-top:14px;margin-bottom:8px;">Go Now / Hard Pass <span style="font-weight:400;color:var(--muted)">(optional)</span></div>
+      <div class="rec-toggle" id="visit-status-${id}" style="margin-bottom:14px;">
+        <button class="rec-btn yes" id="vs-gn-${id}" onclick="setVisitStatus('${id}','been-recommend')"><span class="go-icon">✓</span> Go Now</button>
+        <button class="rec-btn no"  id="vs-hp-${id}" onclick="setVisitStatus('${id}','been-skip')">🚫 Hard Pass</button>
+      </div>
+      <div class="form-label" style="margin-bottom:8px;">Detailed Ratings (optional)</div>
       <div class="factor-ratings-grid">
         ${['quality','service','value','ambiance'].map(f => `
         <div class="factor-item">
@@ -1373,7 +1410,7 @@ function cardHTML(id, r) {
         </div>`).join('')}
       </div>
       <div style="display:flex;gap:8px;margin-top:14px;">
-        <button class="card-btn primary-action" onclick="submitUserRating('${id}')">Save</button>
+        <button class="card-btn primary-action" id="ur-save-${id}" onclick="submitUserRating('${id}')" disabled>Save</button>
         <button class="card-btn" onclick="toggleRatingForm('${id}')">Cancel</button>
       </div>
     </div>`;
@@ -1405,25 +1442,17 @@ function cardHTML(id, r) {
       <button class="comment-action-btn" onclick="startEditComment('${id}','${ck}')">Edit</button>
       <button class="comment-action-btn danger" onclick="deleteComment('${id}','${ck}')">Delete</button>
     </div>` : '';
-    // Reaction pills
+    // Reaction pills — click to view who reacted
     const reactions = c.reactions || {};
     const reactionPills = Object.entries(reactions).map(([emoji, users]) => {
       const decodedEmoji = decodeURIComponent(emoji);
       const voters = Object.keys(users).filter(u => users[u]);
       if (!voters.length) return '';
       const isMine = voters.includes(currentUser);
-      return `<button class="reaction-pill${isMine ? ' mine' : ''}" onclick="toggleReaction('${id}','${ck}','${decodedEmoji}')" title="${voters.map(v=>esc(v)).join(', ')}">${decodedEmoji} <span class="reaction-count">${voters.length}</span></button>`;
+      return `<button class="reaction-pill${isMine ? ' mine' : ''}" onclick="showReactionViewers(this,'${id}','${ck}')" title="Click to see who reacted">${decodedEmoji} <span class="reaction-count">${voters.length}</span></button>`;
     }).join('');
-    const thumbsUpVoters = reactions['👍'] ? Object.keys(reactions['👍']).filter(u => reactions['👍'][u]) : [];
-    const iThumbedUp = thumbsUpVoters.includes(currentUser);
-    const reactionsHtml = `<div class="comment-reactions">${reactionPills}<button class="reaction-add-btn${iThumbedUp ? ' mine' : ''}"
-      onmousedown="reactionBtnDown(this,'${id}','${ck}')"
-      onmouseup="reactionBtnUp(this,'${id}','${ck}')"
-      onmouseleave="reactionBtnCancel(this)"
-      ontouchstart="reactionBtnDown(this,'${id}','${ck}')"
-      ontouchend="reactionBtnUp(this,'${id}','${ck}')"
-      ontouchcancel="reactionBtnCancel(this)"
-      title="Like · Hold for more reactions">👍</button></div>`;
+    // Separate "add reaction" button — single click opens picker
+    const reactionsHtml = `<div class="comment-reactions">${reactionPills}<button class="reaction-add-btn" onclick="showReactionPicker(this,'${id}','${ck}')" title="Add a reaction">＋ 😊</button></div>`;
     return `<div class="comment-item">
       <div class="avatar-sm ${cc}">${ci}</div>
       <div class="comment-body">
@@ -1804,7 +1833,7 @@ function deleteComment(recId, commentKey) {
 }
 
 // ── Emoji Reactions ──────────────────────────────
-const REACTION_EMOJIS = ['👍','❤️','💀','😂','😮','😢','👏','💩'];
+const REACTION_EMOJIS = ['👍','👎','❤️','💀','😂','😮','😢','💩'];
 
 function toggleReaction(recId, commentKey, emoji) {
   const path = `recommendations/${recId}/comments/${commentKey}/reactions/${encodeURIComponent(emoji)}/${currentUser}`;
@@ -1819,31 +1848,45 @@ function toggleReaction(recId, commentKey, emoji) {
   });
 }
 
-// Long-press threshold in ms — matches LinkedIn's feel
-const REACTION_HOLD_MS = 450;
+// Show a popup listing who has reacted, grouped by emoji
+function showReactionViewers(btn, recId, commentKey) {
+  document.querySelectorAll('.reaction-viewers-popup').forEach(p => p.remove());
+  const rec = allRecs[recId];
+  const comment = rec && rec.comments && rec.comments[commentKey];
+  const reactions = comment ? (comment.reactions || {}) : {};
 
-function reactionBtnDown(btn, recId, commentKey) {
-  btn._recId      = recId;
-  btn._commentKey = commentKey;
-  btn._longFired  = false;
-  btn._holdTimer  = setTimeout(() => {
-    btn._longFired = true;
-    showReactionPicker(btn, recId, commentKey);
-  }, REACTION_HOLD_MS);
-}
+  const popup = document.createElement('div');
+  popup.className = 'reaction-viewers-popup';
 
-function reactionBtnUp(btn, recId, commentKey) {
-  clearTimeout(btn._holdTimer);
-  if (!btn._longFired) {
-    // Short tap/click → toggle 👍
-    toggleReaction(recId, commentKey, '👍');
-  }
-  btn._longFired = false;
-}
+  let hasAny = false;
+  REACTION_EMOJIS.forEach(emoji => {
+    // Firebase keys may be encoded
+    const emojiReactions = reactions[emoji] || reactions[encodeURIComponent(emoji)] || {};
+    const voters = Object.keys(emojiReactions).filter(u => emojiReactions[u]);
+    if (!voters.length) return;
+    hasAny = true;
+    const row = document.createElement('div');
+    row.className = 'reaction-viewer-row';
+    row.innerHTML = `<span class="reaction-viewer-emoji">${emoji}</span><span class="reaction-viewer-names">${voters.map(v => esc(v)).join(', ')}</span>`;
+    popup.appendChild(row);
+  });
 
-function reactionBtnCancel(btn) {
-  clearTimeout(btn._holdTimer);
-  btn._longFired = false;
+  if (!hasAny) return;
+
+  btn.style.position = 'relative';
+  btn.appendChild(popup);
+
+  const close = (e) => {
+    if (!btn.contains(e.target)) {
+      popup.remove();
+      document.removeEventListener('mousedown', close);
+      document.removeEventListener('touchstart', close);
+    }
+  };
+  setTimeout(() => {
+    document.addEventListener('mousedown', close);
+    document.addEventListener('touchstart', close);
+  }, 0);
 }
 
 function showReactionPicker(btn, recId, commentKey) {
@@ -1935,11 +1978,11 @@ function setAttachExperience(type) {
   document.getElementById('atc-try').classList.toggle('active', !isBeen);
   if (isBeen) {
     document.getElementById('attach-rating-section').style.display = 'block';
-    // Need explicit Go Now / Hard Pass before save is enabled
     attachStatus = null;
     document.getElementById('abtn-go-now').classList.remove('active');
     document.getElementById('abtn-hard-pass').classList.remove('active');
-    document.getElementById('attach-submit-btn').disabled = true;
+    // Submit enabled only once an overall star rating is selected
+    document.getElementById('attach-submit-btn').disabled = (attachStars === 0);
   } else {
     attachStatus = 'want-to-go';
     document.getElementById('attach-rating-section').style.display = 'none';
@@ -1947,12 +1990,19 @@ function setAttachExperience(type) {
   }
 }
 
-// ── Attach Go Now / Hard Pass toggle ──
+// ── Attach Go Now / Hard Pass toggle (optional) ──
 function setAttachGoNowOrHardPass(status) {
-  attachStatus = status;
-  document.getElementById('abtn-go-now').classList.toggle('active',    status === 'been-recommend');
-  document.getElementById('abtn-hard-pass').classList.toggle('active', status === 'been-skip');
-  document.getElementById('attach-submit-btn').disabled = false;
+  // Toggle: clicking the active button clears the selection
+  if (attachStatus === status) {
+    attachStatus = null;
+    document.getElementById('abtn-go-now').classList.remove('active');
+    document.getElementById('abtn-hard-pass').classList.remove('active');
+  } else {
+    attachStatus = status;
+    document.getElementById('abtn-go-now').classList.toggle('active',    status === 'been-recommend');
+    document.getElementById('abtn-hard-pass').classList.toggle('active', status === 'been-skip');
+  }
+  // Save enablement is driven by star rating, not status
 }
 
 // ══════════════════════════════════════════════════
@@ -2280,6 +2330,9 @@ function toggleRatingForm(id) {
     const hpBtn = document.getElementById('vs-hp-' + id);
     if (gnBtn) gnBtn.classList.toggle('active', vs === 'been-recommend');
     if (hpBtn) hpBtn.classList.toggle('active', vs === 'been-skip');
+    // Enable Save if there is already an overall rating
+    const saveBtn = document.getElementById('ur-save-' + id);
+    if (saveBtn) saveBtn.disabled = !(pendingUserRatings[id].overall > 0);
   }
 }
 
@@ -2308,6 +2361,9 @@ function setUserRatingStar(id, n) {
   pendingUserRatings[id].overall = n;
   const el = document.getElementById('ur-stars-' + id);
   if (el) el.querySelectorAll('span').forEach((s,i) => { s.textContent = i < n ? '★' : '☆'; });
+  // Enable Save only when a star rating is chosen
+  const saveBtn = document.getElementById('ur-save-' + id);
+  if (saveBtn) saveBtn.disabled = (n === 0);
 }
 
 function setUserFactorStar(id, factor, n) {
@@ -2319,18 +2375,25 @@ function setUserFactorStar(id, factor, n) {
 
 function submitUserRating(id) {
   const state = pendingUserRatings[id] || { overall:0, quality:0, service:0, value:0, ambiance:0 };
+  if (!state.overall || state.overall < 1) {
+    showToast('Please select an overall star rating.');
+    return;
+  }
   const updates = {};
   updates[`recommendations/${id}/userRatings/${currentUser}`] = {
     overall: state.overall||0, quality: state.quality||0, service: state.service||0,
     value: state.value||0, ambiance: state.ambiance||0
   };
   if (state.visitStatus) {
-    updates[`recommendations/${id}/userStatuses/${currentUser}`] = { status: state.visitStatus };
+    updates[`recommendations/${id}/userStatuses/${currentUser}`] = { status: state.visitStatus, ts: Date.now() };
+    updates[`recommendations/${id}/triedBy/${currentUser}`] = true;
+  } else {
+    // No explicit Go Now/Hard Pass — just record that they've been here
     updates[`recommendations/${id}/triedBy/${currentUser}`] = true;
   }
   db.ref().update(updates)
     .then(() => {
-      const toast = state.visitStatus === 'been-recommend' ? 'Go Now saved!'
+      const toast = state.visitStatus === 'been-recommend' ? '✓ Go Now saved!'
                   : state.visitStatus === 'been-skip'      ? '🚫 Hard Pass saved!'
                   : '⭐ Rating saved!';
       showToast(toast);
@@ -2408,6 +2471,8 @@ function openPlaceDetail(id) {
       beenBtnLabel = `✓ Go Now${myStars}`;
     } else if (myStatusVal === 'been-skip') {
       beenBtnLabel = 'Hard Pass';
+    } else if (myRating && (myRating.overall||0) > 0) {
+      beenBtnLabel = `✓ Rated ${'★'.repeat(myRating.overall)}`;
     } else {
       beenBtnLabel = '🍴 I\'ve Been Here';
     }
@@ -2779,6 +2844,9 @@ function setAttachStatus(status) {
 function setAttachStars(n) {
   attachStars = n;
   document.querySelectorAll('#attach-star-picker span').forEach((s,i) => { s.textContent = i < n ? '★' : '☆'; });
+  // Enable submit when a star rating is chosen
+  const btn = document.getElementById('attach-submit-btn');
+  if (btn) btn.disabled = (n === 0);
 }
 
 function setAttachFactorStar(factor, n) {
@@ -2796,14 +2864,33 @@ function resetAttachStars() {
 }
 
 function submitAttach() {
-  if (!attachingToId || !attachStatus) return;
+  if (!attachingToId) return;
+
+  const isBeen = document.getElementById('atc-been')?.classList.contains('active');
+
+  // For "been" experience: overall star rating is required
+  if (isBeen && attachStars === 0) {
+    showToast('Please select an overall star rating.');
+    return;
+  }
+
   const btn = document.getElementById('attach-submit-btn');
   btn.disabled = true; btn.textContent = 'Saving…';
 
   const updates = {};
-  updates[`recommendations/${attachingToId}/userStatuses/${currentUser}`] = { status: attachStatus, ts: Date.now() };
 
-  const isBeen = (attachStatus === 'been-recommend' || attachStatus === 'been-skip');
+  if (attachStatus) {
+    // Go Now or Hard Pass explicitly chosen
+    updates[`recommendations/${attachingToId}/userStatuses/${currentUser}`] = { status: attachStatus, ts: Date.now() };
+    updates[`recommendations/${attachingToId}/triedBy/${currentUser}`] = true;
+  } else if (isBeen) {
+    // Rated but no explicit recommendation — just mark triedBy
+    updates[`recommendations/${attachingToId}/triedBy/${currentUser}`] = true;
+  } else {
+    // Want to go
+    updates[`recommendations/${attachingToId}/userStatuses/${currentUser}`] = { status: 'want-to-go', ts: Date.now() };
+  }
+
   if (isBeen && attachStars > 0) {
     const rating = { overall: attachStars };
     if (Object.values(attachFactorRatings).some(v => v > 0)) Object.assign(rating, attachFactorRatings);
@@ -2812,7 +2899,10 @@ function submitAttach() {
 
   db.ref().update(updates)
     .then(() => {
-      const toastMsg = attachStatus === 'been-recommend' ? 'Go Now saved!' : attachStatus === 'been-skip' ? '🚫 Hard Pass noted!' : '📌 Want-to-go saved!';
+      const toastMsg = attachStatus === 'been-recommend' ? '✓ Go Now saved!'
+                     : attachStatus === 'been-skip'      ? '🚫 Hard Pass noted!'
+                     : isBeen                            ? '⭐ Rating saved!'
+                     : '📌 Want-to-go saved!';
       showToast(toastMsg);
       closeModal();
       btn.disabled = false; btn.textContent = 'Save My Status';
