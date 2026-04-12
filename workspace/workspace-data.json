@@ -318,6 +318,24 @@
       "updatedAt": "2026-04-12T17:48:27.560Z",
       "releaseId": "REL-5",
       "createdAt": "2026-04-12T16:26:12.868Z"
+    },
+    {
+      "id": "1776019301685",
+      "itemId": "IT-016",
+      "type": "enhancement",
+      "title": "Code refactoring",
+      "description": "Structure code to split CSS and JS into functional structures",
+      "priority": "P2",
+      "area": "Other",
+      "effort": "XL",
+      "status": "backlog",
+      "acceptanceCriteria": "",
+      "reproSteps": "",
+      "affectedFiles": "",
+      "tags": [],
+      "updatedAt": "2026-04-12T18:41:41.685Z",
+      "releaseId": null,
+      "createdAt": "2026-04-12T18:41:41.685Z"
     }
   ],
   "releases": [
@@ -433,6 +451,6 @@
       "releasedAt": "2026-04-12T17:48:27.560Z"
     }
   ],
-  "nextItemId": 16,
+  "nextItemId": 17,
   "nextReleaseId": 6
 }
