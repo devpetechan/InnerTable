@@ -310,12 +310,12 @@
       "priority": "P2",
       "area": "UI",
       "effort": "S",
-      "status": "backlog",
+      "status": "staged",
       "acceptanceCriteria": "User gets to landing page, clicks \"View All\" and gets to the listing page with all listings showing.",
       "reproSteps": "",
       "affectedFiles": "",
       "tags": [],
-      "updatedAt": "2026-04-12T16:26:12.868Z",
+      "updatedAt": "2026-04-12T16:26:16.939Z",
       "releaseId": null,
       "createdAt": "2026-04-12T16:26:12.868Z"
     }
