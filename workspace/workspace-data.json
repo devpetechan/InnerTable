@@ -382,12 +382,12 @@
       "priority": "P2",
       "area": "UI",
       "effort": "M",
-      "status": "backlog",
+      "status": "staged",
       "acceptanceCriteria": "colours are new, functionality is same",
       "reproSteps": "",
       "affectedFiles": "",
       "tags": [],
-      "updatedAt": "2026-04-12T20:54:25.158Z",
+      "updatedAt": "2026-04-12T20:54:28.534Z",
       "releaseId": null,
       "createdAt": "2026-04-12T20:54:25.158Z"
     }
