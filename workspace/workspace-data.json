@@ -400,12 +400,12 @@
       "priority": "P2",
       "area": "UI",
       "effort": "S",
-      "status": "backlog",
+      "status": "staged",
       "acceptanceCriteria": "author, time, and date are visible for each entry noting when it was initially created.",
       "reproSteps": "",
       "affectedFiles": "",
       "tags": [],
-      "updatedAt": "2026-04-12T21:41:52.646Z",
+      "updatedAt": "2026-04-12T21:41:56.532Z",
       "releaseId": null,
       "createdAt": "2026-04-12T21:41:52.647Z"
     }
