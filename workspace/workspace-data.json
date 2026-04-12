@@ -292,12 +292,12 @@
       "priority": "P2",
       "area": "UI",
       "effort": "M",
-      "status": "backlog",
+      "status": "staged",
       "acceptanceCriteria": "Users can mark a restaurant that they've been to and provide an Overall Star Rating but not have to mark \"go here\" or \"hard pass\".  Those are solely for explicit recommendations one way or another but not mandatory to provide a rating.",
       "reproSteps": "1. Open the app\n2. Log in\n3. Click on \"I've Been Here\" for an entry card authored by someone else.\n4. Provide an Overall Rating.  Save is not available until marking \"Go Now\" or \"Hard Pass\".  This is not the desired behaviour.",
       "affectedFiles": "",
       "tags": [],
-      "updatedAt": "2026-04-12T16:20:01.039Z",
+      "updatedAt": "2026-04-12T16:20:07.173Z",
       "releaseId": null,
       "createdAt": "2026-04-12T16:20:01.039Z"
     }
