@@ -390,6 +390,24 @@
       "updatedAt": "2026-04-12T20:55:11.435Z",
       "releaseId": "REL-7",
       "createdAt": "2026-04-12T20:54:25.158Z"
+    },
+    {
+      "id": "1776030112646",
+      "itemId": "IT-020",
+      "type": "enhancement",
+      "title": "Indicate who created each entry card",
+      "description": "Add a small text towards the top of the entry card showing who created the entry and on what time and date.  include the timezone given there are global users",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "S",
+      "status": "backlog",
+      "acceptanceCriteria": "author, time, and date are visible for each entry noting when it was initially created.",
+      "reproSteps": "",
+      "affectedFiles": "",
+      "tags": [],
+      "updatedAt": "2026-04-12T21:41:52.646Z",
+      "releaseId": null,
+      "createdAt": "2026-04-12T21:41:52.647Z"
     }
   ],
   "releases": [
@@ -524,6 +542,6 @@
       "createdAt": "2026-04-12T20:55:04.347Z"
     }
   ],
-  "nextItemId": 20,
+  "nextItemId": 21,
   "nextReleaseId": 8
 }
