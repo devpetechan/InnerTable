@@ -477,8 +477,8 @@
       "reproSteps": "1. Open the app\n2. Navigate to an entry card with a comment.  \n3. Add a reaction.\n4. Add a different reaction.\n\nExpected behaviour is that you should only be able to change an existing reaction if you've already created one.  You should not be able to react multiple times with different emojis.",
       "affectedFiles": "",
       "tags": [],
-      "updatedAt": "2026-04-15T23:20:18.532Z",
-      "releaseId": null,
+      "updatedAt": "2026-04-15T23:20:25.451Z",
+      "releaseId": "REL-8",
       "createdAt": "2026-04-15T23:20:02.792Z"
     }
   ],
