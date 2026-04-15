@@ -106,12 +106,15 @@ function submitRec() {
     }
   }
 
+  // Capture the new entry's key synchronously — ThenableReference resolves
+  // to undefined in Firebase compat v10, so ref.key inside .then() would throw.
+  let newRef = null;
   const op = editingId
     ? db.ref('recommendations/' + editingId).update(rec)
-    : db.ref('recommendations').push(rec);
+    : (newRef = db.ref('recommendations').push(rec));
 
-  op.then((ref) => {
-    const savedId = editingId || ref.key;
+  op.then(() => {
+    const savedId = editingId || (newRef && newRef.key);
 
     // Write userStatuses for the author
     if (savedId) {

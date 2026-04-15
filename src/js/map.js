@@ -154,7 +154,12 @@ function renderMapMarkers() {
 // ══════════════════════════════════════════════════
 async function initAutocomplete() {
   const input = document.getElementById('f-name');
-  let sessionToken = new google.maps.places.AutocompleteSessionToken();
+
+  // Use importLibrary to correctly load the new Places API (New).
+  // Accessing google.maps.places.AutocompleteSuggestion directly when
+  // loading=async is used returns undefined, causing silent failures.
+  const { AutocompleteSuggestion, AutocompleteSessionToken } = await google.maps.importLibrary('places');
+  let sessionToken = new AutocompleteSessionToken();
 
   const wrap = input.parentElement;
   const dropdown = document.createElement('ul');
@@ -168,7 +173,7 @@ async function initAutocomplete() {
     if (val.length < 2) { hideDropdown(); return; }
 
     try {
-      const { suggestions } = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+      const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
         input: val,
         sessionToken,
       });
@@ -223,7 +228,7 @@ async function initAutocomplete() {
             }
           } catch (err) { console.error('Place detail fetch error:', err); }
 
-          sessionToken = new google.maps.places.AutocompleteSessionToken();
+          sessionToken = new AutocompleteSessionToken();
         });
 
         dropdown.appendChild(li);

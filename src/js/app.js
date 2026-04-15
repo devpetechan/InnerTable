@@ -310,13 +310,28 @@ function deleteComment(recId, commentKey) {
 const REACTION_EMOJIS = ['👍','👎','❤️','💀','😂','😮','😢','💩'];
 
 function toggleReaction(recId, commentKey, emoji) {
-  const path = `recommendations/${recId}/comments/${commentKey}/reactions/${encodeURIComponent(emoji)}/${currentUser}`;
-  const rec  = allRecs[recId];
-  const existing = rec && rec.comments && rec.comments[commentKey]
-    && rec.comments[commentKey].reactions
-    && rec.comments[commentKey].reactions[emoji]
-    && rec.comments[commentKey].reactions[emoji][currentUser];
-  db.ref(path).set(existing ? null : true).catch(err => {
+  const reactions = allRecs[recId]?.comments?.[commentKey]?.reactions || {};
+  const encodedEmoji = encodeURIComponent(emoji);
+
+  // Find the user's current reaction key (stored URL-encoded in Firebase).
+  // A user may only hold one reaction at a time, so we remove any existing
+  // one before adding the new selection.
+  let currentReactionKey = null;
+  for (const [key, users] of Object.entries(reactions)) {
+    if (users && users[currentUser]) { currentReactionKey = key; break; }
+  }
+
+  const updates = {};
+  // Remove the existing reaction (if any)
+  if (currentReactionKey) {
+    updates[`recommendations/${recId}/comments/${commentKey}/reactions/${currentReactionKey}/${currentUser}`] = null;
+  }
+  // Add the new emoji — unless the user tapped their existing one (toggle off)
+  if (currentReactionKey !== encodedEmoji) {
+    updates[`recommendations/${recId}/comments/${commentKey}/reactions/${encodedEmoji}/${currentUser}`] = true;
+  }
+
+  db.ref().update(updates).catch(err => {
     console.error(err);
     showToast('❌ Could not save reaction.');
   });
