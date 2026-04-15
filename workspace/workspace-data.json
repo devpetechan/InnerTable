@@ -459,7 +459,7 @@
       "reproSteps": "1. Open app\n2. Click add a place\n3. Input mandatory fields\n3. Try to save\n\nExpected behavior: new entry is saved as long as mandatory fields are filled out\n\nActual behavior: save button is not enabled regardless of fields filled",
       "affectedFiles": "",
       "tags": [],
-      "updatedAt": "2026-04-15T23:46:59.635Z",
+      "updatedAt": "2026-04-15T23:47:03.159Z",
       "releaseId": "REL-8",
       "createdAt": "2026-04-13T11:00:55.718Z"
     },
