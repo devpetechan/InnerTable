@@ -441,8 +441,8 @@
       "reproSteps": "1. Open App\n2. Click Add a Place\n3. Typing place names doesn't bring up the place.  Examples below\n\n- Lots of Happiness: should find a scandi Japanese takeaway on Bishopsgate in London\n\n- Donburi: should find a Japanese Korean restaurant in Artillery Passage in London",
       "affectedFiles": "",
       "tags": [],
-      "updatedAt": "2026-04-15T23:14:28.477Z",
-      "releaseId": null,
+      "updatedAt": "2026-04-15T23:15:37.322Z",
+      "releaseId": "REL-8",
       "createdAt": "2026-04-13T10:59:10.554Z"
     },
     {
