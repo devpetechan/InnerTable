@@ -595,8 +595,17 @@
       "status": "released",
       "createdAt": "2026-04-12T20:55:04.347Z",
       "releasedAt": "2026-04-12T22:07:09.839Z"
+    },
+    {
+      "id": "REL-8",
+      "version": "0.1.2",
+      "name": "Refactoring Bug Fixes",
+      "targetDate": "",
+      "goals": "Refactoring the code introduced a number of bugs.  We're squashing them.",
+      "status": "planning",
+      "createdAt": "2026-04-15T23:15:35.026Z"
     }
   ],
   "nextItemId": 24,
-  "nextReleaseId": 8
+  "nextReleaseId": 9
 }
