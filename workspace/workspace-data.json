@@ -436,12 +436,12 @@
       "priority": "P2",
       "area": "UI",
       "effort": "M",
-      "status": "staged",
+      "status": "done",
       "acceptanceCriteria": "Restaurants are found as typing",
       "reproSteps": "1. Open App\n2. Click Add a Place\n3. Typing place names doesn't bring up the place.  Examples below\n\n- Lots of Happiness: should find a scandi Japanese takeaway on Bishopsgate in London\n\n- Donburi: should find a Japanese Korean restaurant in Artillery Passage in London",
       "affectedFiles": "",
       "tags": [],
-      "updatedAt": "2026-04-15T23:15:37.322Z",
+      "updatedAt": "2026-04-15T23:35:40.101Z",
       "releaseId": "REL-8",
       "createdAt": "2026-04-13T10:59:10.554Z"
     },
@@ -454,12 +454,12 @@
       "priority": "P0",
       "area": "UI",
       "effort": "M",
-      "status": "staged",
+      "status": "done",
       "acceptanceCriteria": "Users can save new entries",
       "reproSteps": "1. Open app\n2. Click add a place\n3. Try to save\n\nExpected behavior: new entry is saved as long as mandatory fields are filled out\n\nActual behavior: save button is not enabled regardless of fields filled",
       "affectedFiles": "",
       "tags": [],
-      "updatedAt": "2026-04-15T23:15:40.066Z",
+      "updatedAt": "2026-04-15T23:35:40.101Z",
       "releaseId": "REL-8",
       "createdAt": "2026-04-13T11:00:55.718Z"
     },
@@ -472,12 +472,12 @@
       "priority": "P3",
       "area": "UI",
       "effort": "M",
-      "status": "staged",
+      "status": "done",
       "acceptanceCriteria": "User can only have 1 reaction to a comment.  If the user already has a reaction, the user should be able to change to a different reaction emoji.",
       "reproSteps": "1. Open the app\n2. Navigate to an entry card with a comment.  \n3. Add a reaction.\n4. Add a different reaction.\n\nExpected behaviour is that you should only be able to change an existing reaction if you've already created one.  You should not be able to react multiple times with different emojis.",
       "affectedFiles": "",
       "tags": [],
-      "updatedAt": "2026-04-15T23:20:25.451Z",
+      "updatedAt": "2026-04-15T23:35:40.101Z",
       "releaseId": "REL-8",
       "createdAt": "2026-04-15T23:20:02.792Z"
     }
@@ -620,8 +620,9 @@
       "name": "Refactoring Bug Fixes",
       "targetDate": "",
       "goals": "Refactoring the code introduced a number of bugs.  We're squashing them.",
-      "status": "planning",
-      "createdAt": "2026-04-15T23:15:35.026Z"
+      "status": "released",
+      "createdAt": "2026-04-15T23:15:35.026Z",
+      "releasedAt": "2026-04-15T23:35:40.101Z"
     }
   ],
   "nextItemId": 25,
