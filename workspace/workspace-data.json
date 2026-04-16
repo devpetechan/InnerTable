@@ -480,6 +480,24 @@
       "updatedAt": "2026-04-15T23:35:40.101Z",
       "releaseId": "REL-8",
       "createdAt": "2026-04-15T23:20:02.792Z"
+    },
+    {
+      "id": "1776327710498",
+      "itemId": "IT-025",
+      "type": "enhancement",
+      "title": "Cursor Redesign",
+      "description": "Redesign of UX using Cursor / Claude Opus 4.6",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "L",
+      "status": "backlog",
+      "acceptanceCriteria": "",
+      "reproSteps": "",
+      "affectedFiles": "",
+      "tags": [],
+      "updatedAt": "2026-04-16T08:21:50.498Z",
+      "releaseId": null,
+      "createdAt": "2026-04-16T08:21:50.498Z"
     }
   ],
   "releases": [
@@ -625,6 +643,6 @@
       "releasedAt": "2026-04-15T23:35:40.101Z"
     }
   ],
-  "nextItemId": 25,
+  "nextItemId": 26,
   "nextReleaseId": 9
 }
