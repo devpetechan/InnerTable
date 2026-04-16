@@ -490,12 +490,12 @@
       "priority": "P2",
       "area": "UI",
       "effort": "L",
-      "status": "backlog",
+      "status": "staged",
       "acceptanceCriteria": "",
       "reproSteps": "",
       "affectedFiles": "",
       "tags": [],
-      "updatedAt": "2026-04-16T08:21:50.498Z",
+      "updatedAt": "2026-04-16T08:21:58.417Z",
       "releaseId": null,
       "createdAt": "2026-04-16T08:21:50.498Z"
     }
