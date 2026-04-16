@@ -641,8 +641,17 @@
       "status": "released",
       "createdAt": "2026-04-15T23:15:35.026Z",
       "releasedAt": "2026-04-15T23:35:40.101Z"
+    },
+    {
+      "id": "REL-9",
+      "version": "0.2.0",
+      "name": "Cursor / Opus 4.6 redesign",
+      "targetDate": "",
+      "goals": "New IDE, new UX",
+      "status": "active",
+      "createdAt": "2026-04-16T08:22:33.630Z"
     }
   ],
   "nextItemId": 26,
-  "nextReleaseId": 9
+  "nextReleaseId": 10
 }
