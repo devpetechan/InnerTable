@@ -27,7 +27,13 @@ function renderCards() {
   document.getElementById('rec-count').textContent = entries.length;
 
   if (!entries.length) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🍜</div><p>Nothing here yet.<br>Be the first to add a spot!</p></div>`;
+    let emptyMsg = 'Nothing here yet — be the first to add a spot!';
+    if (currentView === 'try') emptyMsg = 'No "want to try" places yet. Add one from the + button!';
+    else if (currentView === 'recommended') emptyMsg = 'No recommended places yet. Visit somewhere and rate it!';
+    else if (currentFilter === 'mine') emptyMsg = "You haven't added any places yet. Tap + Add Place to get started.";
+    else if (currentTypeFilter === 'restaurant') emptyMsg = 'No restaurants match these filters.';
+    else if (currentTypeFilter === 'bar') emptyMsg = 'No bars match these filters.';
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🍜</div><p>${emptyMsg}</p></div>`;
     return;
   }
 
@@ -110,7 +116,7 @@ function cardHTML(id, r) {
   if (r.status === 'try' && r.triedBy) {
     const triedNames = Object.keys(r.triedBy).filter(n => n !== r.author);
     if (triedNames.length) {
-      triedNote = `<div class="card-tried-note"><span class="go-icon">✓</span> Tried by: ${triedNames.map(esc).join(', ')}</div>`;
+      triedNote = `<div class="card-tried-note">✅ Tried by: ${triedNames.map(esc).join(', ')}</div>`;
     }
   }
 
@@ -161,7 +167,7 @@ function cardHTML(id, r) {
       </div>
       <div class="form-label" style="margin-top:14px;margin-bottom:8px;">Go Now / Hard Pass <span style="font-weight:400;color:var(--muted)">(optional)</span></div>
       <div class="rec-toggle" id="visit-status-${id}" style="margin-bottom:14px;">
-        <button class="rec-btn yes" id="vs-gn-${id}" onclick="setVisitStatus('${id}','been-recommend')"><span class="go-icon">✓</span> Go Now</button>
+        <button class="rec-btn yes" id="vs-gn-${id}" onclick="setVisitStatus('${id}','been-recommend')">✅ Go Now</button>
         <button class="rec-btn no"  id="vs-hp-${id}" onclick="setVisitStatus('${id}','been-skip')">🚫 Hard Pass</button>
       </div>
       <div class="form-label" style="margin-bottom:8px;">Detailed Ratings (optional)</div>
@@ -259,8 +265,16 @@ function cardHTML(id, r) {
   // Social signals from userStatuses
   const socialSignals = buildSocialSignals(id, r);
 
+  const statusLabelMap = {
+    'recommended': '<span class="card-status-label recommended">✅ Recommended</span>',
+    'not-recommended': '<span class="card-status-label not-recommended">🚫 Hard Pass</span>',
+    'want-to-try': '<span class="card-status-label want-to-try">📌 Want to Try</span>',
+  };
+  const statusLabel = statusLabelMap[statusClass] || '';
+
   return `
     <div class="rec-card ${statusClass}">
+      ${statusLabel}
       <div class="card-top">
         <div class="card-name">${esc(r.name)}</div>
         ${avg > 0 ? `<div class="stars"${ratingTip}>${avgStars}</div>` : ''}
@@ -307,7 +321,7 @@ function openPlaceDetail(id) {
   const date = r.ts ? new Date(r.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
 
   const typeLabel = r.placeType === 'bar' ? '🍸 Bar' : '🍽 Restaurant';
-  const statusLabel = r.status === 'try' ? '📌 Want to Try' : r.status === 'not-recommended' ? '🚫 Hard Pass' : '<span class="go-icon">✓</span> Recommended';
+  const statusLabel = r.status === 'try' ? '📌 Want to Try' : r.status === 'not-recommended' ? '🚫 Hard Pass' : '✅ Recommended';
 
   // Factor ratings display
   let factorsHtml = '';
@@ -341,7 +355,7 @@ function openPlaceDetail(id) {
   let triedHtml = '';
   if (r.status === 'try' && r.triedBy) {
     const names = Object.keys(r.triedBy).filter(n => n !== r.author);
-    if (names.length) triedHtml = `<div class="card-tried-note" style="margin-top:8px;"><span class="go-icon">✓</span> Tried by: ${names.map(esc).join(', ')}</div>`;
+    if (names.length) triedHtml = `<div class="card-tried-note" style="margin-top:8px;">✅ Tried by: ${names.map(esc).join(', ')}</div>`;
   }
 
   // Non-author action buttons + inline "I've Been Here" form
@@ -371,7 +385,7 @@ function openPlaceDetail(id) {
     <div class="inline-rating-form" id="drf-${id}" style="display:none;margin-top:10px;">
       <div class="form-label" style="margin-bottom:8px;">How was it?</div>
       <div class="rec-toggle" id="dvisit-status-${id}" style="margin-bottom:14px;">
-        <button class="rec-btn yes" id="dvs-gn-${id}" onclick="setDetailVisitStatus('${id}','been-recommend')"><span class="go-icon">✓</span> Go Now</button>
+        <button class="rec-btn yes" id="dvs-gn-${id}" onclick="setDetailVisitStatus('${id}','been-recommend')">✅ Go Now</button>
         <button class="rec-btn no"  id="dvs-hp-${id}" onclick="setDetailVisitStatus('${id}','been-skip')">🚫 Hard Pass</button>
       </div>
       <div class="form-label" style="margin-bottom:8px;">Overall Rating (optional)</div>
@@ -567,11 +581,13 @@ function buildSocialSignals(id, r) {
 
   if (!recommends.length && !skips.length) return '';
 
+  const recLabel  = recommends.length === 1 ? '1 recommends' : `${recommends.length} recommend`;
+  const skipLabel = skips.length === 1 ? '1 hard pass' : `${skips.length} hard passes`;
   const recBtn  = recommends.length
-    ? `<button class="signal-btn" onclick="openStatusDetail('${id}','been-recommend')" title="See who recommends"><span class="go-icon">✓</span> <span class="signal-count">${recommends.length}</span></button>`
+    ? `<button class="signal-btn" onclick="openStatusDetail('${id}','been-recommend')" title="See who recommends">✅ <span class="signal-count">${recLabel}</span></button>`
     : '';
   const skipBtn = skips.length
-    ? `<button class="signal-btn" onclick="openStatusDetail('${id}','been-skip')" title="See who'd hard pass">🚫 <span class="signal-count">${skips.length}</span></button>`
+    ? `<button class="signal-btn" onclick="openStatusDetail('${id}','been-skip')" title="See who'd hard pass">🚫 <span class="signal-count">${skipLabel}</span></button>`
     : '';
 
   return `<div class="social-signals">${recBtn}${skipBtn}</div>`;
@@ -603,7 +619,7 @@ function openStatusDetail(id, filterStatus) {
 
   document.getElementById('detail-panel-title').textContent = r.name;
   document.getElementById('detail-panel-content').innerHTML =
-    nameList(recommends, '<span class="go-icon">✓</span>', 'Recommends') +
+    nameList(recommends, '✅', 'Recommends') +
     nameList(skips,      '🚫', 'Hard Passes') +
     `<div class="card-footer" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--tan);">
       <span style="font-size:.8rem;color:var(--muted);">Tap a name to see their other picks — coming soon</span>

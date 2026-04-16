@@ -14,7 +14,13 @@ document.getElementById('name-input').addEventListener('keydown', e => { if (e.k
 
 function enterApp() {
   const val = document.getElementById('name-input').value.trim();
-  if (!val) { shake(document.getElementById('name-input')); return; }
+  const errEl = document.getElementById('welcome-error');
+  if (!val) {
+    shake(document.getElementById('name-input'));
+    if (errEl) errEl.textContent = 'Please enter a name so your friends know who you are.';
+    return;
+  }
+  if (errEl) errEl.textContent = '';
   if (val === ADMIN_USER) {
     const pw = prompt('Enter admin password:');
     if (pw !== ADMIN_PASSWORD) { alert('Incorrect password.'); return; }

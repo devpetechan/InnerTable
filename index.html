@@ -19,8 +19,11 @@
     <h1>InnerTable</h1>
     <p>Your group's shared restaurant bible.<br>Save places to try, and share what you've loved — or didn't.</p>
     <div class="input-group">
-      <input type="text" id="name-input" placeholder="Enter your name to get started" maxlength="30" autocomplete="off" />
+      <label class="welcome-label" for="name-input">Your name</label>
+      <input type="text" id="name-input" placeholder="e.g. Peter" maxlength="30" autocomplete="off" />
+      <div class="welcome-error" id="welcome-error" aria-live="polite"></div>
       <button class="btn-primary">Let's eat →</button>
+      <p class="welcome-hint">No account needed — just a nickname your friends will recognise.</p>
     </div>
   </div>
 </div>
@@ -82,10 +85,10 @@
     <div id="list-map-section">
 
       <!-- Status view tabs -->
-      <div class="view-tabs">
-        <button class="view-tab active" data-view="all">🗂 All</button>
-        <button class="view-tab"        data-view="try">📌 Want to Try</button>
-        <button class="view-tab"        data-view="recommended"><span class="go-icon">✓</span> Recommended</button>
+      <div class="view-tabs" role="tablist" aria-label="Filter by status">
+        <button class="view-tab active" data-view="all" role="tab" aria-selected="true">🗂 All</button>
+        <button class="view-tab"        data-view="try" role="tab" aria-selected="false">📌 Want to Try</button>
+        <button class="view-tab"        data-view="recommended" role="tab" aria-selected="false">✅ Recommended</button>
       </div>
 
       <!-- List | Map toggle -->
@@ -96,26 +99,26 @@
         </div>
       </div>
 
-      <!-- Friend filter (list only) -->
-      <div class="filter-bar" id="friend-filter-bar">
-        <span class="filter-label">By:</span>
-        <div class="filter-chip active" data-filter="all">Everyone</div>
-        <div class="filter-chip" data-filter="mine">Just mine</div>
-      </div>
+      <!-- Filters collapsed into a single row on mobile -->
+      <div class="filters-row">
+        <div class="filter-bar" id="friend-filter-bar" role="group" aria-label="Filter by author">
+          <span class="filter-label">By</span>
+          <div class="filter-chip active" data-filter="all">Everyone</div>
+          <div class="filter-chip" data-filter="mine">Just mine</div>
+        </div>
 
-      <!-- Type filter chips -->
-      <div class="filter-bar" id="type-filter-bar">
-        <span class="filter-label">Type:</span>
-        <div class="filter-chip active" data-type="all">All</div>
-        <div class="filter-chip"        data-type="restaurant">🍽 Restaurants</div>
-        <div class="filter-chip"        data-type="bar">🍸 Bars</div>
-      </div>
+        <div class="filter-bar" id="type-filter-bar" role="group" aria-label="Filter by type">
+          <span class="filter-label">Type</span>
+          <div class="filter-chip active" data-type="all">All</div>
+          <div class="filter-chip"        data-type="restaurant">🍽 Restaurants</div>
+          <div class="filter-chip"        data-type="bar">🍸 Bars</div>
+        </div>
 
-      <!-- Sort options -->
-      <div class="filter-bar" id="sort-filter-bar">
-        <span class="filter-label">Sort:</span>
-        <div class="filter-chip active" data-sort="date">📅 Date</div>
-        <div class="filter-chip"        data-sort="rating">⭐ Rating</div>
+        <div class="filter-bar" id="sort-filter-bar" role="group" aria-label="Sort order">
+          <span class="filter-label">Sort</span>
+          <div class="filter-chip active" data-sort="date">📅 Date</div>
+          <div class="filter-chip"        data-sort="rating">⭐ Rating</div>
+        </div>
       </div>
 
 <div class="section-title" id="count-title">
@@ -153,15 +156,16 @@
 
       <!-- Name with Places autocomplete -->
       <div class="form-group">
-        <label class="form-label">Name *</label>
+        <label class="form-label" for="f-name">Name <span class="required-star">*</span></label>
         <div class="autocomplete-wrap">
-          <input class="form-input" id="f-name" type="text" placeholder="Start typing a name…" maxlength="100" autocomplete="off" />
+          <input class="form-input" id="f-name" type="text" placeholder="Start typing a name…" maxlength="100" autocomplete="off" aria-required="true" />
         </div>
+        <span class="form-hint">Search powered by Google Places, or type any name.</span>
       </div>
 
       <!-- Location (auto-filled by Places) -->
       <div class="form-group">
-        <label class="form-label">Location / Neighborhood</label>
+        <label class="form-label" for="f-location">Location / Neighborhood</label>
         <input class="form-input" id="f-location" type="text" placeholder="e.g. Mission District, SF" maxlength="100" />
       </div>
 
@@ -176,7 +180,7 @@
 
       <!-- Experience toggle: I've Been / Want to Try -->
       <div class="form-group">
-        <label class="form-label">Your Experience</label>
+        <label class="form-label">Your Experience <span class="required-star">*</span></label>
         <div class="rec-toggle">
           <button class="rec-btn yes" id="exp-been">🍴 I've Been</button>
           <button class="rec-btn no"  id="exp-try">📌 Want to Try</button>
@@ -185,25 +189,24 @@
 
       <!-- BEEN-HERE fields -->
       <div id="been-fields" style="display:none">
+        <div class="section-context" id="been-context">Rate your experience and help friends decide.</div>
 
-        <!-- Overall Rating + Go Now / Hard Pass on one row -->
+        <!-- Overall Rating -->
         <div class="form-group">
-          <div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;">
-            <div style="flex:1;min-width:120px;">
-              <div class="form-label">Overall Rating</div>
-              <div class="star-picker" id="star-picker">
-                <span>☆</span><span>☆</span>
-                <span>☆</span><span>☆</span>
-                <span>☆</span>
-              </div>
-            </div>
-            <div>
-              <div class="form-label">Recommendation <span style="font-weight:400;color:var(--muted)">(optional)</span></div>
-              <div class="rec-toggle" style="margin-bottom:0;">
-                <button class="rec-btn yes" id="btn-go-now"><span class="go-icon">✓</span> Go Now!</button>
-                <button class="rec-btn no"  id="btn-hard-pass">🚫 Hard Pass</button>
-              </div>
-            </div>
+          <label class="form-label">Overall Rating</label>
+          <div class="star-picker" id="star-picker">
+            <span>☆</span><span>☆</span>
+            <span>☆</span><span>☆</span>
+            <span>☆</span>
+          </div>
+        </div>
+
+        <!-- Recommendation -->
+        <div class="form-group">
+          <label class="form-label">Recommendation <span class="form-label-optional">(optional)</span></label>
+          <div class="rec-toggle">
+            <button class="rec-btn yes" id="btn-go-now">✅ Go Now!</button>
+            <button class="rec-btn no"  id="btn-hard-pass">🚫 Hard Pass</button>
           </div>
         </div>
 
@@ -236,7 +239,7 @@
 
         <!-- Detailed Ratings -->
         <div class="factor-ratings-section" id="factor-ratings-group">
-          <div class="factor-ratings-title">Detailed Ratings (optional)</div>
+          <label class="form-label factor-ratings-title">Detailed Ratings <span class="form-label-optional">(optional)</span></label>
           <div class="factor-ratings-grid">
             <div class="factor-item">
               <div class="factor-label">Quality</div>
@@ -290,17 +293,21 @@
 
       <!-- WANT-TO-TRY fields -->
       <div id="try-fields" style="display:none">
+        <div class="section-context">Save this spot for later — add a note or link so you remember why.</div>
         <div class="form-group">
-          <label class="form-label">Note (optional)</label>
+          <label class="form-label">Note <span class="form-label-optional">(optional)</span></label>
           <textarea class="form-textarea" id="f-try-note" placeholder="Why it looks good, who told you about it…" maxlength="400"></textarea>
         </div>
         <div class="form-group">
-          <label class="form-label">Link / Review URL (optional)</label>
+          <label class="form-label">Link / Review URL <span class="form-label-optional">(optional)</span></label>
           <input class="form-input" id="f-url" type="url" placeholder="https://…" />
         </div>
       </div>
 
-      <button class="btn-submit" id="submit-btn" disabled>Save</button>
+      <div class="submit-wrap">
+        <button class="btn-submit" id="submit-btn" disabled>Save</button>
+        <p class="submit-hint" id="submit-hint" aria-live="polite">Fill in a name and choose your experience to save.</p>
+      </div>
     </div>
 
     <!-- Attach step: add your status to an existing entry -->
@@ -319,24 +326,26 @@
 
       <!-- Rating section (shown when I've Been is selected) -->
       <div id="attach-rating-section" style="display:none">
+        <div class="section-context">Rate your experience below.</div>
 
-        <!-- Overall Rating + Go Now / Hard Pass on one row -->
         <div class="form-group">
-          <div class="form-label" style="margin-bottom:8px;">Overall Rating *</div>
+          <label class="form-label">Overall Rating <span class="required-star">*</span></label>
           <div class="star-picker" id="attach-star-picker">
             <span>☆</span><span>☆</span>
             <span>☆</span><span>☆</span>
             <span>☆</span>
           </div>
-          <div class="form-label" style="margin-top:14px;margin-bottom:8px;">Go Now / Hard Pass <span style="font-weight:400;color:var(--muted)">(optional)</span></div>
-          <div class="rec-toggle" style="margin-bottom:0;">
-            <button class="rec-btn yes" id="abtn-go-now"><span class="go-icon">✓</span> Go Now!</button>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Recommendation <span class="form-label-optional">(optional)</span></label>
+          <div class="rec-toggle">
+            <button class="rec-btn yes" id="abtn-go-now">✅ Go Now!</button>
             <button class="rec-btn no"  id="abtn-hard-pass">🚫 Hard Pass</button>
           </div>
         </div>
 
         <div class="factor-ratings-section">
-          <div class="factor-ratings-title">Detailed Ratings (optional)</div>
+          <label class="form-label factor-ratings-title">Detailed Ratings <span class="form-label-optional">(optional)</span></label>
           <div class="factor-ratings-grid">
             <div class="factor-item">
               <div class="factor-label">Quality</div>

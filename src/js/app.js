@@ -87,8 +87,14 @@ function navigateToList(typeFilter) {
 // ══════════════════════════════════════════════════
 function setView(view, el) {
   currentView = view;
-  document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
-  if (el) el.classList.add('active');
+  document.querySelectorAll('.view-tab').forEach(t => {
+    t.classList.remove('active');
+    t.setAttribute('aria-selected', 'false');
+  });
+  if (el) {
+    el.classList.add('active');
+    el.setAttribute('aria-selected', 'true');
+  }
   if (currentDisplayMode === 'map' && mapInstance) {
     renderMapMarkers();
   } else {
@@ -464,14 +470,28 @@ function setGoNowOrHardPass(status) {
 function updateSubmitBtn() {
   const nameEl = document.getElementById('f-name');
   const btn    = document.getElementById('submit-btn');
+  const hint   = document.getElementById('submit-hint');
   if (!btn) return;
   const hasName = nameEl && nameEl.value.trim().length > 0;
   const isTry   = addType === 'want-to-go' || addType === 'try';
   const isBeen  = addType === 'been-recommend' || addType === 'been-skip' || addType === 'been';
-  if (!addType)       { btn.disabled = true;  return; }
-  if (isTry)          { btn.disabled = !hasName; return; }
-  if (isBeen)         { btn.disabled = !hasName; return; }
-  btn.disabled = true;
+
+  let disabled = true;
+  let hintText = '';
+
+  if (!addType) {
+    hintText = 'Fill in a name and choose your experience to save.';
+  } else if (!hasName) {
+    hintText = 'Enter a place name to continue.';
+  } else if (isTry || isBeen) {
+    disabled = false;
+  }
+
+  btn.disabled = disabled;
+  if (hint) {
+    hint.textContent = hintText;
+    hint.classList.toggle('hidden', !disabled);
+  }
 }
 
 // ── Attach experience toggle ──
