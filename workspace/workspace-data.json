@@ -490,12 +490,12 @@
       "priority": "P2",
       "area": "UI",
       "effort": "L",
-      "status": "staged",
+      "status": "done",
       "acceptanceCriteria": "",
       "reproSteps": "",
       "affectedFiles": "",
       "tags": [],
-      "updatedAt": "2026-04-16T08:22:40.194Z",
+      "updatedAt": "2026-04-16T08:22:45.436Z",
       "releaseId": "REL-9",
       "createdAt": "2026-04-16T08:21:50.498Z"
     }
@@ -648,8 +648,9 @@
       "name": "Cursor / Opus 4.6 redesign",
       "targetDate": "",
       "goals": "New IDE, new UX",
-      "status": "active",
-      "createdAt": "2026-04-16T08:22:33.630Z"
+      "status": "released",
+      "createdAt": "2026-04-16T08:22:33.630Z",
+      "releasedAt": "2026-04-16T08:22:45.436Z"
     }
   ],
   "nextItemId": 26,
