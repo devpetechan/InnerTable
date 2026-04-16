@@ -106,40 +106,54 @@ function submitRec() {
     }
   }
 
-  // push(data) returns a ThenableReference whose .then() does not reliably
-  // resolve in Firebase compat v10. Instead, use push() (no args) to generate
-  // a key synchronously, then set() which returns a proper native Promise.
-  const newKey = editingId ? null : db.ref('recommendations').push().key;
-  const op = editingId
-    ? db.ref('recommendations/' + editingId).update(rec)
-    : db.ref('recommendations/' + newKey).set(rec);
+  let writePromise;
 
-  op.then(() => {
-    const savedId = editingId || newKey;
-
-    // Write userStatuses for the author — only when a status was explicitly chosen.
-    // For been entries without Go Now or Hard Pass selected, skip writing userStatuses
-    // so the user isn't incorrectly counted in social signals as recommending the place.
-    if (savedId && (isTryType || beenStatusChosen)) {
-      db.ref(`recommendations/${savedId}/userStatuses/${currentUser}`).set({ status: userStatusValue, ts: Date.now() });
+  if (editingId) {
+    // Edit: write each field as a deep path so that sibling sub-nodes
+    // (comments, votes, other users' userStatuses, etc.) are preserved.
+    // Setting the parent object via update() would wipe those sub-nodes.
+    const editUpdates = {};
+    Object.entries(rec).forEach(([k, v]) => {
+      editUpdates[`recommendations/${editingId}/${k}`] = v;
+    });
+    if (beenStatusChosen) {
+      editUpdates[`recommendations/${editingId}/userStatuses/${currentUser}`] = { status: userStatusValue, ts: Date.now() };
     }
-
-    // Write author's rating to userRatings for been entries
-    if (isBeenType && savedId && selectedStars > 0) {
+    if (isBeenType && selectedStars > 0) {
       const authorRating = { overall: selectedStars };
-      if (Object.values(factorRatings).some(v => v > 0)) {
-        Object.assign(authorRating, factorRatings);
-      }
-      db.ref(`recommendations/${savedId}/userRatings/${currentUser}`).set(authorRating);
+      if (Object.values(factorRatings).some(v => v > 0)) Object.assign(authorRating, factorRatings);
+      editUpdates[`recommendations/${editingId}/userRatings/${currentUser}`] = authorRating;
     }
+    writePromise = db.ref().update(editUpdates);
+  } else {
+    // New entry: embed user-specific data directly into rec so the whole
+    // record is written in one set() call — avoids any chained-write timing issues.
+    if (isTryType || beenStatusChosen) {
+      rec.userStatuses = {};
+      rec.userStatuses[currentUser] = { status: userStatusValue, ts: Date.now() };
+    }
+    if (isBeenType && selectedStars > 0) {
+      const authorRating = { overall: selectedStars };
+      if (Object.values(factorRatings).some(v => v > 0)) Object.assign(authorRating, factorRatings);
+      rec.userRatings = {};
+      rec.userRatings[currentUser] = authorRating;
+    }
+    const newKey = db.ref('recommendations').push().key;
+    console.log('[submitRec] new entry key:', newKey);
+    writePromise = db.ref('recommendations/' + newKey).set(rec);
+  }
 
+  console.log('[submitRec] sending write…');
+
+  writePromise.then(() => {
+    console.log('[submitRec] write succeeded');
     const toastMsg = isTryType ? '📌 Saved to your list!' : addType === 'been-skip' ? '🚫 Hard Pass noted!' : '🎉 Review saved!';
     showToast(toastMsg);
     closeModal();
     btn.disabled = false; btn.textContent = 'Save';
   }).catch(err => {
-    showToast('❌ Error saving — check Firebase config.');
-    console.error(err);
+    console.error('[submitRec] write failed:', err);
+    showToast('❌ Error saving: ' + (err.message || err.code || err));
     btn.disabled = false; btn.textContent = 'Save';
   });
 }

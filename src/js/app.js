@@ -155,7 +155,10 @@ function setDisplayMode(mode) {
 //  MODAL
 // ══════════════════════════════════════════════════
 function openModal(prefillId) {
-  editingId = prefillId || null;
+  // prefillId is a string ID when called programmatically (e.g. upgradeToTried).
+  // When wired as a direct click listener the browser passes a PointerEvent —
+  // reject anything that isn't a plain string so editingId stays null.
+  editingId = (typeof prefillId === 'string') ? prefillId : null;
   document.getElementById('modal-overlay').classList.add('open');
   document.getElementById('form-step').style.display   = 'block';
   document.getElementById('attach-step').style.display = 'none';
