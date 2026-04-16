@@ -106,18 +106,21 @@ function submitRec() {
     }
   }
 
-  // Capture the new entry's key synchronously — ThenableReference resolves
-  // to undefined in Firebase compat v10, so ref.key inside .then() would throw.
-  let newRef = null;
+  // push(data) returns a ThenableReference whose .then() does not reliably
+  // resolve in Firebase compat v10. Instead, use push() (no args) to generate
+  // a key synchronously, then set() which returns a proper native Promise.
+  const newKey = editingId ? null : db.ref('recommendations').push().key;
   const op = editingId
     ? db.ref('recommendations/' + editingId).update(rec)
-    : (newRef = db.ref('recommendations').push(rec));
+    : db.ref('recommendations/' + newKey).set(rec);
 
   op.then(() => {
-    const savedId = editingId || (newRef && newRef.key);
+    const savedId = editingId || newKey;
 
-    // Write userStatuses for the author
-    if (savedId) {
+    // Write userStatuses for the author — only when a status was explicitly chosen.
+    // For been entries without Go Now or Hard Pass selected, skip writing userStatuses
+    // so the user isn't incorrectly counted in social signals as recommending the place.
+    if (savedId && (isTryType || beenStatusChosen)) {
       db.ref(`recommendations/${savedId}/userStatuses/${currentUser}`).set({ status: userStatusValue, ts: Date.now() });
     }
 

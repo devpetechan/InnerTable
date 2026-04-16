@@ -439,8 +439,11 @@ function setBeenOrTry(type) {
 
 // ── Go Now / Hard Pass toggle (inside been-fields) ──
 function setGoNowOrHardPass(status) {
-  // Toggle off: clicking the already-active button clears the selection
-  if (addType === status) {
+  // Toggle off only when this button was already explicitly active.
+  // Without the beenStatusChosen guard, clicking Go Now when addType is
+  // already 'been-recommend' (the neutral been state) would incorrectly
+  // fire the de-select branch instead of selecting the button.
+  if (addType === status && beenStatusChosen) {
     addType = 'been-recommend'; // reset to neutral been state
     beenStatusChosen = false;
     document.getElementById('btn-go-now').classList.remove('active');
@@ -464,7 +467,7 @@ function updateSubmitBtn() {
   const isBeen  = addType === 'been-recommend' || addType === 'been-skip' || addType === 'been';
   if (!addType)       { btn.disabled = true;  return; }
   if (isTry)          { btn.disabled = !hasName; return; }
-  if (isBeen)         { btn.disabled = !(hasName && beenStatusChosen); return; }
+  if (isBeen)         { btn.disabled = !hasName; return; }
   btn.disabled = true;
 }
 
