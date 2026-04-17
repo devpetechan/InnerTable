@@ -621,7 +621,7 @@
       "reproSteps": "",
       "affectedFiles": "supabase/migrations/0004_places.sql, scripts/backfill-places.sql",
       "tags": [],
-      "updatedAt": "2026-04-17T23:56:52.896Z",
+      "updatedAt": "2026-04-17T23:57:08.485Z",
       "releaseId": "REL-10",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
