@@ -1473,15 +1473,15 @@ function renderReleases() {
 
 function renderDraggableItemCard(item) {
   return `<div class="item-card drag-item" draggable="true" id="drag-${item.id}" data-item-id="${item.id}"
-    onclick="viewItem('${item.id}')" title="Click to view full details" style="cursor:pointer;">
+    ondblclick="viewItem('${item.id}')" title="Double-click to view full details">
     <div class="flex items-center gap-1 mb-1 flex-wrap">
       <span class="badge badge-${item.type}">${item.type==='bug'?'🐛':'✨'}</span>
       <span class="badge badge-${item.priority.toLowerCase()}">${item.priority}</span>
       <span class="text-xs text-gray-400 font-mono ml-auto">${item.itemId}</span>
-      <span class="text-gray-300 hover:text-indigo-400 ml-1 text-xs" title="View details">↗</span>
     </div>
     <div class="font-medium text-gray-800 text-xs leading-snug mt-1">${escHtml(item.title)}</div>
     <div class="text-xs text-gray-400 mt-1">${escHtml(item.area||'')} · ${item.effort}</div>
+    <div class="text-xs text-indigo-300 mt-1.5 italic">double-click to open</div>
   </div>`;
 }
 
