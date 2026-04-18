@@ -1756,7 +1756,7 @@
       "name": "Auth Foundation & Supabase Migration",
       "targetDate": "",
       "goals": "Move off nicknames and Firebase RTDB. Stand up Supabase (Postgres + Auth). Every user becomes a real UUID-backed identity. Secrets out of client code.",
-      "status": "planning",
+      "status": "active",
       "createdAt": "2026-04-17T22:50:19.435Z"
     }
   ],
