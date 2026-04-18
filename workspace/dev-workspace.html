@@ -241,7 +241,7 @@ async function loadState() {
     if (res.ok) {
       const data = await res.json();
       ghFileSha = data.sha;
-      const content = JSON.parse(atob(data.content.replace(/\n/g, '')));
+      const content = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g, '')))));
       localStorage.setItem('innertable_workspace', JSON.stringify(content));
       setIndicator('✓ Synced', '#22c55e');
       setTimeout(() => setIndicator('✓ Synced', ''), 2000);
