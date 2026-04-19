@@ -10,7 +10,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 document.getElementById('google-signin-btn').addEventListener('click', () => {
   supabaseClient.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.origin }
+    options: { redirectTo: window.location.href }
   });
 });
 
