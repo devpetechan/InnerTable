@@ -1521,7 +1521,7 @@
       "reproSteps": "",
       "affectedFiles": "docs/supabase-setup.md, .env.local (new, gitignored), .gitignore, test/supabase-smoke.html",
       "tags": [],
-      "updatedAt": "2026-04-19T20:00:09.322Z",
+      "updatedAt": "2026-04-19T20:00:16.371Z",
       "releaseId": "REL-18",
       "createdAt": "2026-04-17T22:49:30.728Z"
     }
