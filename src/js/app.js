@@ -272,7 +272,7 @@ function submitComment(id, btn) {
   if (!text) { input.focus(); return; }
   btn.disabled = true;
   db.ref('recommendations/' + id + '/comments').push({
-    author: currentUser, text, ts: Date.now()
+    author: currentUser.display_name, text, ts: Date.now()
   }).then(() => {
     btn.disabled = false;
   }).catch(err => {
@@ -327,17 +327,17 @@ function toggleReaction(recId, commentKey, emoji) {
   // one before adding the new selection.
   let currentReactionKey = null;
   for (const [key, users] of Object.entries(reactions)) {
-    if (users && users[currentUser]) { currentReactionKey = key; break; }
+    if (users && users[currentUser.display_name]) { currentReactionKey = key; break; }
   }
 
   const updates = {};
   // Remove the existing reaction (if any)
   if (currentReactionKey) {
-    updates[`recommendations/${recId}/comments/${commentKey}/reactions/${currentReactionKey}/${currentUser}`] = null;
+    updates[`recommendations/${recId}/comments/${commentKey}/reactions/${currentReactionKey}/${currentUser.display_name}`] = null;
   }
   // Add the new emoji — unless the user tapped their existing one (toggle off)
   if (currentReactionKey !== encodedEmoji) {
-    updates[`recommendations/${recId}/comments/${commentKey}/reactions/${encodedEmoji}/${currentUser}`] = true;
+    updates[`recommendations/${recId}/comments/${commentKey}/reactions/${encodedEmoji}/${currentUser.display_name}`] = true;
   }
 
   db.ref().update(updates).catch(err => {

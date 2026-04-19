@@ -97,7 +97,7 @@ function renderMapMarkers() {
   // Friend/author filter (same as list view)
   entries = entries.filter(([,r]) => {
     if (currentFilter === 'all')  return true;
-    if (currentFilter === 'mine') return r.author === currentUser;
+    if (currentFilter === 'mine') return r.author === currentUser.display_name;
     return r.author === currentFilter;
   });
 

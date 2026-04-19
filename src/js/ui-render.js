@@ -20,7 +20,7 @@ function renderCards() {
   // Author filter
   entries = entries.filter(([,r]) => {
     if (currentFilter === 'all')  return true;
-    if (currentFilter === 'mine') return r.author === currentUser;
+    if (currentFilter === 'mine') return r.author === currentUser.display_name;
     return r.author === currentFilter;
   });
 
@@ -51,7 +51,7 @@ function renderCards() {
 }
 
 function cardHTML(id, r) {
-  const isMine      = isAdmin || r.author === currentUser;
+  const isMine      = isAdmin || r.author === currentUser.display_name;
   const statusClass = r.status === 'recommended' ? 'recommended' : r.status === 'not-recommended' ? 'not-recommended' : 'want-to-try';
   const color       = getUserColor(r.author);
   const initials    = (r.author||'?').slice(0,2).toUpperCase();
@@ -134,9 +134,9 @@ function cardHTML(id, r) {
   // Non-author actions + inline "I've Been Here" form
   let nonAuthorSection = '';
   if (!isMine) {
-    const myUserStatus = r.userStatuses && r.userStatuses[currentUser];
+    const myUserStatus = r.userStatuses && r.userStatuses[currentUser.display_name];
     const myStatusVal  = myUserStatus ? myUserStatus.status : null;
-    const myRating     = r.userRatings && r.userRatings[currentUser];
+    const myRating     = r.userRatings && r.userRatings[currentUser.display_name];
 
     // Button label reflects the user's current visit status.
     // go-icon is intentionally omitted here — the consolidated social signals section
@@ -192,7 +192,7 @@ function cardHTML(id, r) {
   // Vote buttons (non-authors only)
   let voteRow = '';
   if (!isMine) {
-    const myVote    = r.votes ? r.votes[currentUser] : null;
+    const myVote    = r.votes ? r.votes[currentUser.display_name] : null;
     const upClass   = myVote === 'up'   ? 'vote-btn active-up'   : 'vote-btn';
     const downClass = myVote === 'down' ? 'vote-btn active-down' : 'vote-btn';
     voteRow = `<div class="vote-row">
@@ -210,7 +210,7 @@ function cardHTML(id, r) {
     const cc = getUserColor(c.author);
     const ci = (c.author||'?').slice(0,2).toUpperCase();
     const cd = c.ts ? new Date(c.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
-    const isMyComment = c.author === currentUser;
+    const isMyComment = c.author === currentUser.display_name;
     const editActions = isMyComment ? `<div class="comment-edit-actions">
       <button class="comment-action-btn" onclick="startEditComment('${id}','${ck}')">Edit</button>
       <button class="comment-action-btn danger" onclick="deleteComment('${id}','${ck}')">Delete</button>
@@ -221,7 +221,7 @@ function cardHTML(id, r) {
       const decodedEmoji = decodeURIComponent(emoji);
       const voters = Object.keys(users).filter(u => users[u]);
       if (!voters.length) return '';
-      const isMine = voters.includes(currentUser);
+      const isMine = voters.includes(currentUser.display_name);
       return `<button class="reaction-pill${isMine ? ' mine' : ''}" onclick="showReactionViewers(this,'${id}','${ck}')" title="Click to see who reacted">${decodedEmoji} <span class="reaction-count">${voters.length}</span></button>`;
     }).join('');
     // Separate "add reaction" button — single click opens picker
@@ -312,7 +312,7 @@ function openPlaceDetail(id) {
   const r = allRecs[id];
   if (!r) return;
 
-  const isMine = isAdmin || r.author === currentUser;
+  const isMine = isAdmin || r.author === currentUser.display_name;
   const { avg, count } = computeAvgRating(r);
   const avgStars = avg > 0 ? '★'.repeat(Math.round(avg))+'☆'.repeat(5-Math.round(avg)) : '';
   const avgFactors = computeAvgFactors(r);
@@ -361,9 +361,9 @@ function openPlaceDetail(id) {
   // Non-author action buttons + inline "I've Been Here" form
   let nonAuthorHtml = '';
   if (!isMine) {
-    const myUserStatus = r.userStatuses && r.userStatuses[currentUser];
+    const myUserStatus = r.userStatuses && r.userStatuses[currentUser.display_name];
     const myStatusVal  = myUserStatus ? myUserStatus.status : null;
-    const myRating     = r.userRatings && r.userRatings[currentUser];
+    const myRating     = r.userRatings && r.userRatings[currentUser.display_name];
 
     // go-icon omitted — the consolidated social signals button is the single checkmark indicator
     let beenBtnLabel;
@@ -469,7 +469,7 @@ function closeDetailOnBg(e) {
 
 function markAsTriedFromDetail(id) {
   const updates = {};
-  updates[`recommendations/${id}/triedBy/${currentUser}`] = true;
+  updates[`recommendations/${id}/triedBy/${currentUser.display_name}`] = true;
   db.ref().update(updates)
     .then(() => { showToast('✅ Marked as tried!'); openPlaceDetail(id); })
     .catch(err => { console.error(err); showToast('❌ Could not save.'); });
@@ -478,8 +478,8 @@ function markAsTriedFromDetail(id) {
 function toggleDetailRatingForm(id) {
   if (!pendingUserRatings[id]) {
     const r = allRecs[id];
-    const existing       = r && r.userRatings  && r.userRatings[currentUser];
-    const existingStatus = r && r.userStatuses && r.userStatuses[currentUser];
+    const existing       = r && r.userRatings  && r.userRatings[currentUser.display_name];
+    const existingStatus = r && r.userStatuses && r.userStatuses[currentUser.display_name];
     pendingUserRatings[id] = existing
       ? { overall: existing.overall||0, quality: existing.quality||0, service: existing.service||0, value: existing.value||0, ambiance: existing.ambiance||0 }
       : { overall: 0, quality: 0, service: 0, value: 0, ambiance: 0 };
@@ -539,16 +539,16 @@ function setDetailUserFactorStar(id, factor, n) {
 function submitDetailUserRating(id) {
   const state = pendingUserRatings[id] || { overall:0, quality:0, service:0, value:0, ambiance:0 };
   const updates = {};
-  updates[`recommendations/${id}/userRatings/${currentUser}`] = {
+  updates[`recommendations/${id}/userRatings/${currentUser.display_name}`] = {
     overall: state.overall||0, quality: state.quality||0, service: state.service||0,
     value: state.value||0, ambiance: state.ambiance||0
   };
   if (state.visitStatus) {
-    updates[`recommendations/${id}/userStatuses/${currentUser}`] = { status: state.visitStatus };
-    updates[`recommendations/${id}/triedBy/${currentUser}`] = true;
+    updates[`recommendations/${id}/userStatuses/${currentUser.display_name}`] = { status: state.visitStatus };
+    updates[`recommendations/${id}/triedBy/${currentUser.display_name}`] = true;
   } else if (state.visitStatus === null) {
     // User explicitly toggled off — delete their status entry
-    updates[`recommendations/${id}/userStatuses/${currentUser}`] = null;
+    updates[`recommendations/${id}/userStatuses/${currentUser.display_name}`] = null;
   }
   db.ref().update(updates)
     .then(() => {

@@ -8,6 +8,8 @@
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <!-- Supabase (UMD bundle — exposes window.supabase globally) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <link rel="stylesheet" href="src/styles/main.css" />
 </head>
 <body>
@@ -19,11 +21,8 @@
     <h1>InnerTable</h1>
     <p>Your group's shared restaurant bible.<br>Save places to try, and share what you've loved — or didn't.</p>
     <div class="input-group">
-      <label class="welcome-label" for="name-input">Your name</label>
-      <input type="text" id="name-input" placeholder="e.g. Peter" maxlength="30" autocomplete="off" />
-      <div class="welcome-error" id="welcome-error" aria-live="polite"></div>
-      <button class="btn-primary">Let's eat →</button>
-      <p class="welcome-hint">No account needed — just a nickname your friends will recognise.</p>
+      <button id="google-signin-btn" class="btn-primary">Sign in with Google</button>
+      <p class="welcome-hint">We use Google to keep your recommendations tied to you.</p>
     </div>
   </div>
 </div>
@@ -33,7 +32,7 @@
   <header>
     <div class="header-inner">
       <div class="header-logo" title="Home"><span>🍽️</span>InnerTable</div>
-      <div class="user-chip" title="Switch user">
+      <div class="user-chip" title="Sign out">
         <div class="avatar" id="header-avatar">?</div>
         <span id="header-name">You</span>
       </div>

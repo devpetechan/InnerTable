@@ -1,54 +1,59 @@
 // ══════════════════════════════════════════════════
-//  WELCOME / AUTH
+//  AUTH — Supabase Google sign-in
+//  currentUser shape: { id, display_name, avatar_url }
 // ══════════════════════════════════════════════════
-window.onload = function() {
-  const saved = localStorage.getItem('it_user');
-  if (saved) {
-    currentUser = saved;
-    isAdmin = localStorage.getItem('it_admin') === '1';
+
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── Google OAuth sign-in ──────────────────────────
+// Redirects to Google; Supabase handles the callback and sets a session cookie.
+document.getElementById('google-signin-btn').addEventListener('click', () => {
+  supabaseClient.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin }
+  });
+});
+
+// ── Auth state listener ───────────────────────────
+// Handles all auth state transitions in one place:
+//  - INITIAL_SESSION: fires on every page load. If a session exists it means
+//    either the user just returned from OAuth or they have a stored session.
+//  - SIGNED_IN: fires after token refresh or explicit sign-in events.
+//  - SIGNED_OUT: fires after signOut() — reload to show the welcome screen.
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
+    buildCurrentUser(session.user);
     showApp();
+  } else if (event === 'SIGNED_OUT') {
+    location.reload();
   }
-};
+});
 
-document.getElementById('name-input').addEventListener('keydown', e => { if (e.key === 'Enter') enterApp(); });
-
-function enterApp() {
-  const val = document.getElementById('name-input').value.trim();
-  const errEl = document.getElementById('welcome-error');
-  if (!val) {
-    shake(document.getElementById('name-input'));
-    if (errEl) errEl.textContent = 'Please enter a name so your friends know who you are.';
-    return;
-  }
-  if (errEl) errEl.textContent = '';
-  if (val === ADMIN_USER) {
-    const pw = prompt('Enter admin password:');
-    if (pw !== ADMIN_PASSWORD) { alert('Incorrect password.'); return; }
-    isAdmin = true;
-    localStorage.setItem('it_admin', '1');
-  } else {
-    isAdmin = false;
-    localStorage.removeItem('it_admin');
-  }
-  currentUser = val;
-  localStorage.setItem('it_user', val);
-  showApp();
+// ── Helpers ───────────────────────────────────────
+function buildCurrentUser(user) {
+  currentUser = {
+    id:           user.id,
+    display_name: user.user_metadata?.full_name || user.email,
+    avatar_url:   user.user_metadata?.avatar_url || null
+  };
 }
 
 function showApp() {
   document.getElementById('welcome-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-  document.getElementById('header-avatar').textContent = currentUser.slice(0,2).toUpperCase();
-  document.getElementById('header-name').textContent = currentUser;
+
+  const avatarEl = document.getElementById('header-avatar');
+  if (currentUser.avatar_url) {
+    avatarEl.innerHTML = `<img src="${currentUser.avatar_url}" alt="${currentUser.display_name}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+  } else {
+    avatarEl.textContent = currentUser.display_name.slice(0, 2).toUpperCase();
+  }
+  document.getElementById('header-name').textContent = currentUser.display_name;
+
   goHome();
   loadRecs();
 }
 
-function switchUser() {
-  if (confirm(`Switch from "${currentUser}"?`)) {
-    localStorage.removeItem('it_user');
-    localStorage.removeItem('it_admin');
-    location.reload();
-  }
+function signOut() {
+  supabaseClient.auth.signOut();
 }
-

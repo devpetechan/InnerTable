@@ -7,16 +7,12 @@
 
 document.addEventListener('DOMContentLoaded', function () {
 
-  // ── Welcome ───────────────────────────────────────
-  document.querySelector('#welcome-screen .btn-primary')
-    .addEventListener('click', enterApp);
-
   // ── Header ────────────────────────────────────────
   document.querySelector('.header-logo')
     .addEventListener('click', goHome);
 
   document.querySelector('.user-chip')
-    .addEventListener('click', switchUser);
+    .addEventListener('click', signOut);
 
   // ── Home CTAs ─────────────────────────────────────
   const homeBtns = document.querySelectorAll('.home-cta-btn');

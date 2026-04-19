@@ -21,11 +21,11 @@ function loadRecs() {
 //  VOTING
 // ══════════════════════════════════════════════════
 function castVote(id, direction) {
-  const existing = allRecs[id] && allRecs[id].votes ? allRecs[id].votes[currentUser] : null;
+  const existing = allRecs[id] && allRecs[id].votes ? allRecs[id].votes[currentUser.display_name] : null;
   // Toggle off if clicking the same direction again
   const newVote = existing === direction ? null : direction;
   const update = {};
-  update[`recommendations/${id}/votes/${currentUser}`] = newVote;
+  update[`recommendations/${id}/votes/${currentUser.display_name}`] = newVote;
   db.ref().update(update).catch(err => {
     console.error(err);
     showToast('❌ Could not save vote.');
@@ -47,7 +47,7 @@ function submitRec() {
     name,
     placeType,
     location: document.getElementById('f-location').value.trim(),
-    author:   currentUser,
+    author:   currentUser.display_name,
     ts:       Date.now()
   };
 
@@ -117,12 +117,12 @@ function submitRec() {
       editUpdates[`recommendations/${editingId}/${k}`] = v;
     });
     if (beenStatusChosen) {
-      editUpdates[`recommendations/${editingId}/userStatuses/${currentUser}`] = { status: userStatusValue, ts: Date.now() };
+      editUpdates[`recommendations/${editingId}/userStatuses/${currentUser.display_name}`] = { status: userStatusValue, ts: Date.now() };
     }
     if (isBeenType && selectedStars > 0) {
       const authorRating = { overall: selectedStars };
       if (Object.values(factorRatings).some(v => v > 0)) Object.assign(authorRating, factorRatings);
-      editUpdates[`recommendations/${editingId}/userRatings/${currentUser}`] = authorRating;
+      editUpdates[`recommendations/${editingId}/userRatings/${currentUser.display_name}`] = authorRating;
     }
     writePromise = db.ref().update(editUpdates);
   } else {
@@ -130,13 +130,13 @@ function submitRec() {
     // record is written in one set() call — avoids any chained-write timing issues.
     if (isTryType || beenStatusChosen) {
       rec.userStatuses = {};
-      rec.userStatuses[currentUser] = { status: userStatusValue, ts: Date.now() };
+      rec.userStatuses[currentUser.display_name] = { status: userStatusValue, ts: Date.now() };
     }
     if (isBeenType && selectedStars > 0) {
       const authorRating = { overall: selectedStars };
       if (Object.values(factorRatings).some(v => v > 0)) Object.assign(authorRating, factorRatings);
       rec.userRatings = {};
-      rec.userRatings[currentUser] = authorRating;
+      rec.userRatings[currentUser.display_name] = authorRating;
     }
     const newKey = db.ref('recommendations').push().key;
     console.log('[submitRec] new entry key:', newKey);
@@ -174,7 +174,7 @@ function deleteEntry(id) {
 // ══════════════════════════════════════════════════
 function markAsTried(id) {
   const updates = {};
-  updates[`recommendations/${id}/triedBy/${currentUser}`] = true;
+  updates[`recommendations/${id}/triedBy/${currentUser.display_name}`] = true;
   db.ref().update(updates)
     .then(() => { showToast('✅ Marked as tried!'); toggleRatingForm(id); })
     .catch(err => { console.error(err); showToast('❌ Could not save.'); });
@@ -184,8 +184,8 @@ function toggleRatingForm(id) {
   // Pre-fill with existing user rating + status if available
   if (!pendingUserRatings[id]) {
     const r = allRecs[id];
-    const existing       = r && r.userRatings   && r.userRatings[currentUser];
-    const existingStatus = r && r.userStatuses  && r.userStatuses[currentUser];
+    const existing       = r && r.userRatings   && r.userRatings[currentUser.display_name];
+    const existingStatus = r && r.userStatuses  && r.userStatuses[currentUser.display_name];
     pendingUserRatings[id] = existing
       ? { overall: existing.overall||0, quality: existing.quality||0, service: existing.service||0, value: existing.value||0, ambiance: existing.ambiance||0 }
       : { overall: 0, quality: 0, service: 0, value: 0, ambiance: 0 };
@@ -260,20 +260,20 @@ function submitUserRating(id) {
     return;
   }
   const updates = {};
-  updates[`recommendations/${id}/userRatings/${currentUser}`] = {
+  updates[`recommendations/${id}/userRatings/${currentUser.display_name}`] = {
     overall: state.overall||0, quality: state.quality||0, service: state.service||0,
     value: state.value||0, ambiance: state.ambiance||0
   };
   if (state.visitStatus) {
-    updates[`recommendations/${id}/userStatuses/${currentUser}`] = { status: state.visitStatus, ts: Date.now() };
-    updates[`recommendations/${id}/triedBy/${currentUser}`] = true;
+    updates[`recommendations/${id}/userStatuses/${currentUser.display_name}`] = { status: state.visitStatus, ts: Date.now() };
+    updates[`recommendations/${id}/triedBy/${currentUser.display_name}`] = true;
   } else if (state.visitStatus === null) {
     // User explicitly toggled off — delete their status entry
-    updates[`recommendations/${id}/userStatuses/${currentUser}`] = null;
-    updates[`recommendations/${id}/triedBy/${currentUser}`] = true;
+    updates[`recommendations/${id}/userStatuses/${currentUser.display_name}`] = null;
+    updates[`recommendations/${id}/triedBy/${currentUser.display_name}`] = true;
   } else {
     // No explicit Go Now/Hard Pass — just record that they've been here
-    updates[`recommendations/${id}/triedBy/${currentUser}`] = true;
+    updates[`recommendations/${id}/triedBy/${currentUser.display_name}`] = true;
   }
   db.ref().update(updates)
     .then(() => {
@@ -301,7 +301,7 @@ function checkForDuplicate(placeId, placeName) {
     const [existingId, existingRec] = entries[0];
 
     pendingDupId    = existingId;
-    pendingDupIsOwn = existingRec.author === currentUser;
+    pendingDupIsOwn = existingRec.author === currentUser.display_name;
 
     if (pendingDupIsOwn) {
       document.getElementById('dup-message').textContent =
@@ -430,20 +430,20 @@ function submitAttach() {
 
   if (attachStatus) {
     // Go Now or Hard Pass explicitly chosen
-    updates[`recommendations/${attachingToId}/userStatuses/${currentUser}`] = { status: attachStatus, ts: Date.now() };
-    updates[`recommendations/${attachingToId}/triedBy/${currentUser}`] = true;
+    updates[`recommendations/${attachingToId}/userStatuses/${currentUser.display_name}`] = { status: attachStatus, ts: Date.now() };
+    updates[`recommendations/${attachingToId}/triedBy/${currentUser.display_name}`] = true;
   } else if (isBeen) {
     // Rated but no explicit recommendation — just mark triedBy
-    updates[`recommendations/${attachingToId}/triedBy/${currentUser}`] = true;
+    updates[`recommendations/${attachingToId}/triedBy/${currentUser.display_name}`] = true;
   } else {
     // Want to go
-    updates[`recommendations/${attachingToId}/userStatuses/${currentUser}`] = { status: 'want-to-go', ts: Date.now() };
+    updates[`recommendations/${attachingToId}/userStatuses/${currentUser.display_name}`] = { status: 'want-to-go', ts: Date.now() };
   }
 
   if (isBeen && attachStars > 0) {
     const rating = { overall: attachStars };
     if (Object.values(attachFactorRatings).some(v => v > 0)) Object.assign(rating, attachFactorRatings);
-    updates[`recommendations/${attachingToId}/userRatings/${currentUser}`] = rating;
+    updates[`recommendations/${attachingToId}/userRatings/${currentUser.display_name}`] = rating;
   }
 
   db.ref().update(updates)
