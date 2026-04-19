@@ -513,7 +513,7 @@
       "reproSteps": "",
       "affectedFiles": "supabase/migrations/0001_users.sql",
       "tags": [],
-      "updatedAt": "2026-04-19T20:25:01.564Z",
+      "updatedAt": "2026-04-19T23:24:23.735Z",
       "releaseId": "REL-18",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
