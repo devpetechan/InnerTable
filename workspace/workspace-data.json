@@ -1516,12 +1516,12 @@
       "priority": "P0",
       "area": "Other",
       "effort": "M",
-      "status": "backlog",
+      "status": "done",
       "acceptanceCriteria": "- Supabase project exists and is linked locally.\n- .env.local contains working SUPABASE_URL + SUPABASE_ANON_KEY, and .env.local is gitignored.\n- docs/supabase-setup.md walks through the setup end-to-end.\n- A throwaway test HTML connects and reads/writes successfully.",
       "reproSteps": "",
       "affectedFiles": "docs/supabase-setup.md, .env.local (new, gitignored), .gitignore, test/supabase-smoke.html",
       "tags": [],
-      "updatedAt": "2026-04-17T22:49:30.728Z",
+      "updatedAt": "2026-04-19T20:00:09.322Z",
       "releaseId": "REL-18",
       "createdAt": "2026-04-17T22:49:30.728Z"
     }
