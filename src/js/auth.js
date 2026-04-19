@@ -23,9 +23,24 @@ document.getElementById('google-signin-btn').addEventListener('click', () => {
 //  - SIGNED_IN: fires after token refresh or explicit sign-in events.
 //  - SIGNED_OUT: fires after signOut() — reload to show the welcome screen.
 supabaseClient.auth.onAuthStateChange(async (event, session) => {
+  console.log('[auth] event:', event, '| has session:', !!session);
   if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
-    await buildCurrentUser(session.user);
-    showApp();
+    try {
+      await buildCurrentUser(session.user);
+      showApp();
+    } catch (err) {
+      console.error('[auth] buildCurrentUser or showApp failed:', err);
+      // Still show the app using whatever we have from the session itself
+      if (!currentUser) {
+        currentUser = {
+          id:           session.user.id,
+          display_name: session.user.user_metadata?.full_name || session.user.email,
+          avatar_url:   session.user.user_metadata?.avatar_url || null,
+          is_admin:     false
+        };
+      }
+      showApp();
+    }
   } else if (event === 'SIGNED_OUT') {
     location.reload();
   }
@@ -36,11 +51,13 @@ supabaseClient.auth.onAuthStateChange(async (event, session) => {
 // We query the public.users table to get the stored display_name and the
 // is_admin flag (set manually in the Supabase dashboard, never in client code).
 async function buildCurrentUser(user) {
-  const { data: profile } = await supabaseClient
+  const { data: profile, error } = await supabaseClient
     .from('users')
     .select('display_name, is_admin')
     .eq('id', user.id)
     .single();
+
+  if (error) console.warn('[auth] users table query:', error.message);
 
   currentUser = {
     id:           user.id,
