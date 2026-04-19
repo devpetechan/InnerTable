@@ -4,7 +4,9 @@
 .env.local
 .env.*.local
 scripts/.env.migration
-src/js/env.js
+# NOTE: src/js/env.js is intentionally NOT gitignored so GitHub Pages can serve it.
+# The Supabase anon key is safe to expose publicly — RLS protects the data.
+# Restrict the Google Maps API key to your domain in Google Cloud Console.
 
 # ── Node ──────────────────────────────────────────────────────────────────────
 node_modules/
