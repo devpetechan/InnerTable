@@ -61,13 +61,13 @@ function geocodeEntry(id, r) {
   if (!googleMapsReady) return;
   const query = [r.name, r.location].filter(Boolean).join(', ');
   const geocoder = new google.maps.Geocoder();
-  geocoder.geocode({ address: query }, (results, status) => {
+  geocoder.geocode({ address: query }, async (results, status) => {
     geocodingCache.delete(id);
     if (status !== 'OK' || !results[0]) return;
     const lat = results[0].geometry.location.lat();
     const lng = results[0].geometry.location.lng();
-    // Save coords to Firebase — the on('value') listener will auto re-render the map
-    db.ref(`recommendations/${id}`).update({ lat, lng });
+    // Save coords to Supabase — the Realtime subscription will auto re-render the map
+    await supabaseClient.from('recommendations').update({ lat, lng }).eq('id', id);
   });
 }
 

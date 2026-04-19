@@ -266,20 +266,21 @@ function toggleCommentForm(id) {
   if (opening) document.getElementById('ci-' + id).focus();
 }
 
-function submitComment(id, btn) {
+async function submitComment(id, btn) {
   const input = document.getElementById('ci-' + id);
   const text  = input.value.trim();
   if (!text) { input.focus(); return; }
   btn.disabled = true;
-  db.ref('recommendations/' + id + '/comments').push({
-    author: currentUser.display_name, text, ts: Date.now()
-  }).then(() => {
-    btn.disabled = false;
-  }).catch(err => {
-    console.error(err);
-    showToast('❌ Could not post comment.');
-    btn.disabled = false;
+  const { error } = await supabaseClient.from('comments').insert({
+    recommendation_id: id,
+    author_id:         currentUser.id,
+    text
   });
+  if (error) {
+    console.error(error);
+    showToast('❌ Could not post comment.');
+  }
+  btn.disabled = false;
 }
 
 function startEditComment(recId, commentKey) {
@@ -293,57 +294,46 @@ function cancelEditComment(recId, commentKey) {
   document.getElementById('cv-'  + recId + '-' + commentKey).style.display = 'block';
 }
 
-function saveCommentEdit(recId, commentKey, btn) {
+async function saveCommentEdit(recId, commentKey, btn) {
   const textarea = document.getElementById('cet-' + recId + '-' + commentKey);
   const text = textarea.value.trim();
   if (!text) { textarea.focus(); return; }
   btn.disabled = true;
-  db.ref('recommendations/' + recId + '/comments/' + commentKey).update({ text }).then(() => {
-    btn.disabled = false;
-  }).catch(err => {
-    console.error(err);
+  const { error } = await supabaseClient.from('comments')
+    .update({ text }).eq('id', commentKey);
+  if (error) {
+    console.error(error);
     showToast('❌ Could not save edit.');
-    btn.disabled = false;
-  });
+  }
+  btn.disabled = false;
 }
 
-function deleteComment(recId, commentKey) {
+async function deleteComment(recId, commentKey) {
   if (!confirm('Delete this comment? This cannot be undone.')) return;
-  db.ref('recommendations/' + recId + '/comments/' + commentKey).update({ deleted: true, text: null }).catch(err => {
-    console.error(err);
+  const { error } = await supabaseClient.from('comments')
+    .update({ deleted: true, text: null }).eq('id', commentKey);
+  if (error) {
+    console.error(error);
     showToast('❌ Could not delete comment.');
-  });
+  }
 }
 
 // ── Emoji Reactions ──────────────────────────────
 const REACTION_EMOJIS = ['👍','👎','❤️','💀','😂','😮','😢','💩'];
 
-function toggleReaction(recId, commentKey, emoji) {
-  const reactions = allRecs[recId]?.comments?.[commentKey]?.reactions || {};
-  const encodedEmoji = encodeURIComponent(emoji);
-
-  // Find the user's current reaction key (stored URL-encoded in Firebase).
-  // A user may only hold one reaction at a time, so we remove any existing
-  // one before adding the new selection.
-  let currentReactionKey = null;
-  for (const [key, users] of Object.entries(reactions)) {
-    if (users && users[currentUser.display_name]) { currentReactionKey = key; break; }
-  }
-
-  const updates = {};
-  // Remove the existing reaction (if any)
-  if (currentReactionKey) {
-    updates[`recommendations/${recId}/comments/${commentKey}/reactions/${currentReactionKey}/${currentUser.display_name}`] = null;
-  }
-  // Add the new emoji — unless the user tapped their existing one (toggle off)
-  if (currentReactionKey !== encodedEmoji) {
-    updates[`recommendations/${recId}/comments/${commentKey}/reactions/${encodedEmoji}/${currentUser.display_name}`] = true;
-  }
-
-  db.ref().update(updates).catch(err => {
-    console.error(err);
-    showToast('❌ Could not save reaction.');
+async function toggleReaction(recId, commentKey, emoji) {
+  // Handled server-side by a SECURITY DEFINER SQL function (0005 migration).
+  // That function lets any authenticated user toggle their own reaction on any
+  // comment, even though the comments RLS otherwise restricts updates to the
+  // comment author.
+  const { error } = await supabaseClient.rpc('toggle_reaction', {
+    p_comment_id: commentKey,
+    p_emoji:      emoji
   });
+  if (error) {
+    console.error(error);
+    showToast('❌ Could not save reaction.');
+  }
 }
 
 // Show a popup listing who has reacted, grouped by emoji

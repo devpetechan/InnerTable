@@ -467,12 +467,11 @@ function closeDetailOnBg(e) {
   if (e.target === document.getElementById('place-detail-overlay')) closeDetailPanel();
 }
 
-function markAsTriedFromDetail(id) {
-  const updates = {};
-  updates[`recommendations/${id}/triedBy/${currentUser.display_name}`] = true;
-  db.ref().update(updates)
-    .then(() => { showToast('✅ Marked as tried!'); openPlaceDetail(id); })
-    .catch(err => { console.error(err); showToast('❌ Could not save.'); });
+async function markAsTriedFromDetail(id) {
+  const { error } = await _upsertInteraction(id, { tried: true });
+  if (error) { console.error(error); showToast('❌ Could not save.'); return; }
+  showToast('✅ Marked as tried!');
+  openPlaceDetail(id);
 }
 
 function toggleDetailRatingForm(id) {
@@ -536,30 +535,30 @@ function setDetailUserFactorStar(id, factor, n) {
   if (el) el.querySelectorAll('span').forEach((s,i) => { s.textContent = i < n ? '★' : '☆'; });
 }
 
-function submitDetailUserRating(id) {
+async function submitDetailUserRating(id) {
   const state = pendingUserRatings[id] || { overall:0, quality:0, service:0, value:0, ambiance:0 };
-  const updates = {};
-  updates[`recommendations/${id}/userRatings/${currentUser.display_name}`] = {
-    overall: state.overall||0, quality: state.quality||0, service: state.service||0,
-    value: state.value||0, ambiance: state.ambiance||0
+
+  const ix = {
+    tried:           true,
+    rating_overall:  state.overall  || 0,
+    rating_quality:  state.quality  || 0,
+    rating_service:  state.service  || 0,
+    rating_value:    state.value    || 0,
+    rating_ambiance: state.ambiance || 0
   };
-  if (state.visitStatus) {
-    updates[`recommendations/${id}/userStatuses/${currentUser.display_name}`] = { status: state.visitStatus };
-    updates[`recommendations/${id}/triedBy/${currentUser.display_name}`] = true;
-  } else if (state.visitStatus === null) {
-    // User explicitly toggled off — delete their status entry
-    updates[`recommendations/${id}/userStatuses/${currentUser.display_name}`] = null;
+  if (state.visitStatus !== undefined) {
+    ix.status = state.visitStatus; // null clears the column; string sets it
   }
-  db.ref().update(updates)
-    .then(() => {
-      const toast = state.visitStatus === 'been-recommend' ? 'Go Now saved!'
-                  : state.visitStatus === 'been-skip'      ? '🚫 Hard Pass saved!'
-                  : '⭐ Rating saved!';
-      showToast(toast);
-      delete pendingUserRatings[id];
-      openPlaceDetail(id); // refresh panel
-    })
-    .catch(err => { console.error(err); showToast('❌ Could not save.'); });
+
+  const { error } = await _upsertInteraction(id, ix);
+  if (error) { console.error(error); showToast('❌ Could not save.'); return; }
+
+  const toast = state.visitStatus === 'been-recommend' ? 'Go Now saved!'
+              : state.visitStatus === 'been-skip'      ? '🚫 Hard Pass saved!'
+              : '⭐ Rating saved!';
+  showToast(toast);
+  delete pendingUserRatings[id];
+  openPlaceDetail(id); // refresh panel
 }
 
 // ══════════════════════════════════════════════════

@@ -13,13 +13,4 @@ const ADMIN_PASSWORD = "sactown";
 const SUPABASE_URL      = "https://eaufghntbhnbewexphjj.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhdWZnaG50YmhuYmV3ZXhwaGpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MTk1NjMsImV4cCI6MjA5MjA5NTU2M30.6j6fO_vZ9U-cBaUC1Uy8vlMC_C1XuGNBJKvJ0bciNvc";
 
-const firebaseConfig = {
-  apiKey:            "AIzaSyDVemZ2c93K06gQRrMRdc3X-GTgkkElxfE",
-  authDomain:        "innertable.firebaseapp.com",
-  databaseURL:       "https://innertable-default-rtdb.firebaseio.com",
-  projectId:         "innertable",
-  storageBucket:     "innertable.firebasestorage.app",
-  messagingSenderId: "902947609845",
-  appId:             "1:902947609845:web:36dc2f183657d4ba9b39bc"
-};
 
