@@ -567,7 +567,7 @@
       "reproSteps": "",
       "affectedFiles": "scripts/migrate-firebase-to-supabase.js, scripts/nickname-uuid-map.json",
       "tags": [],
-      "updatedAt": "2026-04-19T23:24:40.857Z",
+      "updatedAt": "2026-04-19T23:24:44.918Z",
       "releaseId": "REL-18",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
