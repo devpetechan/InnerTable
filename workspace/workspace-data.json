@@ -549,7 +549,7 @@
       "reproSteps": "",
       "affectedFiles": "supabase/migrations/0002_recommendations.sql, supabase/migrations/0003_comments_votes.sql",
       "tags": [],
-      "updatedAt": "2026-04-19T22:44:27.224Z",
+      "updatedAt": "2026-04-19T23:24:27.953Z",
       "releaseId": "REL-18",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
