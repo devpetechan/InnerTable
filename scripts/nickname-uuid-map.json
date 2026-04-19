@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2026-04-19T22:37:59.811Z",
+  "dryRun": false,
+  "nicknameUUIDMap": {
+    "Peter": "c8862b4d-3a14-4383-b789-0b7552e9a931",
+    "PC": "86d3d07d-0c8c-4d8d-bee9-208ad6e26525",
+    "BobKat": "c5b84f8e-6c66-473d-80e8-d723d5c21b5e",
+    "Peter Chan": "8c363b8d-c052-4064-b67a-3ab84fe1fdbf"
+  },
+  "rowCounts": {
+    "firebase": 12,
+    "recommendations": 12,
+    "comments": 7,
+    "votes": 1
+  }
+}

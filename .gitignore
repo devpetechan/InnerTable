@@ -1,0 +1,24 @@
+# ── Secrets & local environment files ────────────────────────────────────────
+# These files contain API keys and must NEVER be committed.
+.env
+.env.local
+.env.*.local
+scripts/.env.migration
+
+# ── Node ──────────────────────────────────────────────────────────────────────
+node_modules/
+scripts/node_modules/
+
+# ── OS files ──────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Editor files ─────────────────────────────────────────────────────────────
+.vscode/settings.json
+
+# ── Supabase ─────────────────────────────────────────────────────────────────
+supabase/.branches
+supabase/.temp
+supabase/.env.keys
+supabase/.env.local
+supabase/.env.*.local
