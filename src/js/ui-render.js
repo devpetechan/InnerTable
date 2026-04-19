@@ -51,7 +51,7 @@ function renderCards() {
 }
 
 function cardHTML(id, r) {
-  const isMine      = isAdmin || r.author === currentUser.display_name;
+  const isMine      = currentUser?.is_admin || r.author === currentUser.display_name;
   const statusClass = r.status === 'recommended' ? 'recommended' : r.status === 'not-recommended' ? 'not-recommended' : 'want-to-try';
   const color       = getUserColor(r.author);
   const initials    = (r.author||'?').slice(0,2).toUpperCase();
@@ -312,7 +312,7 @@ function openPlaceDetail(id) {
   const r = allRecs[id];
   if (!r) return;
 
-  const isMine = isAdmin || r.author === currentUser.display_name;
+  const isMine = currentUser?.is_admin || r.author === currentUser.display_name;
   const { avg, count } = computeAvgRating(r);
   const avgStars = avg > 0 ? '★'.repeat(Math.round(avg))+'☆'.repeat(5-Math.round(avg)) : '';
   const avgFactors = computeAvgFactors(r);

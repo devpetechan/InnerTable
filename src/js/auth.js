@@ -22,9 +22,9 @@ document.getElementById('google-signin-btn').addEventListener('click', () => {
 //    either the user just returned from OAuth or they have a stored session.
 //  - SIGNED_IN: fires after token refresh or explicit sign-in events.
 //  - SIGNED_OUT: fires after signOut() — reload to show the welcome screen.
-supabaseClient.auth.onAuthStateChange((event, session) => {
+supabaseClient.auth.onAuthStateChange(async (event, session) => {
   if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
-    buildCurrentUser(session.user);
+    await buildCurrentUser(session.user);
     showApp();
   } else if (event === 'SIGNED_OUT') {
     location.reload();
@@ -32,11 +32,21 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
 });
 
 // ── Helpers ───────────────────────────────────────
-function buildCurrentUser(user) {
+// buildCurrentUser: builds the global currentUser object.
+// We query the public.users table to get the stored display_name and the
+// is_admin flag (set manually in the Supabase dashboard, never in client code).
+async function buildCurrentUser(user) {
+  const { data: profile } = await supabaseClient
+    .from('users')
+    .select('display_name, is_admin')
+    .eq('id', user.id)
+    .single();
+
   currentUser = {
     id:           user.id,
-    display_name: user.user_metadata?.full_name || user.email,
-    avatar_url:   user.user_metadata?.avatar_url || null
+    display_name: profile?.display_name || user.user_metadata?.full_name || user.email,
+    avatar_url:   user.user_metadata?.avatar_url || null,
+    is_admin:     profile?.is_admin || false
   };
 }
 

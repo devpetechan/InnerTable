@@ -5,8 +5,7 @@
 // ══════════════════════════════════════════════════
 //  STATE
 // ══════════════════════════════════════════════════
-let currentUser        = null;
-let isAdmin            = false;
+let currentUser        = null;  // shape: { id, display_name, avatar_url, is_admin }
 let currentView        = 'all';
 let currentFilter      = 'all';
 let currentTypeFilter  = 'all';
