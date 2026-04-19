@@ -3,7 +3,9 @@
 //  currentUser shape: { id, display_name, avatar_url }
 // ══════════════════════════════════════════════════
 
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { flowType: 'implicit' }
+});
 
 // ── Google OAuth sign-in ──────────────────────────
 // Redirects to Google; Supabase handles the callback and sets a session cookie.
