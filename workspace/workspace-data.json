@@ -513,7 +513,7 @@
       "reproSteps": "",
       "affectedFiles": "supabase/migrations/0001_users.sql",
       "tags": [],
-      "updatedAt": "2026-04-19T23:24:23.735Z",
+      "updatedAt": "2026-04-19T23:24:57.983Z",
       "releaseId": "REL-18",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
@@ -531,7 +531,7 @@
       "reproSteps": "",
       "affectedFiles": "index.html, src/js/auth.js, src/js/app.js (currentUser refactor), src/js/config.js",
       "tags": [],
-      "updatedAt": "2026-04-19T23:24:25.940Z",
+      "updatedAt": "2026-04-19T23:24:57.983Z",
       "releaseId": "REL-18",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
@@ -549,7 +549,7 @@
       "reproSteps": "",
       "affectedFiles": "supabase/migrations/0002_recommendations.sql, supabase/migrations/0003_comments_votes.sql",
       "tags": [],
-      "updatedAt": "2026-04-19T23:24:27.953Z",
+      "updatedAt": "2026-04-19T23:24:57.983Z",
       "releaseId": "REL-18",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
@@ -567,7 +567,7 @@
       "reproSteps": "",
       "affectedFiles": "scripts/migrate-firebase-to-supabase.js, scripts/nickname-uuid-map.json",
       "tags": [],
-      "updatedAt": "2026-04-19T23:24:44.918Z",
+      "updatedAt": "2026-04-19T23:24:57.983Z",
       "releaseId": "REL-18",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
@@ -585,7 +585,7 @@
       "reproSteps": "",
       "affectedFiles": "src/js/firebase.js (delete), src/js/places-service.js, src/js/app.js, src/js/config.js, index.html",
       "tags": [],
-      "updatedAt": "2026-04-19T23:24:47.934Z",
+      "updatedAt": "2026-04-19T23:24:57.983Z",
       "releaseId": "REL-18",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
@@ -603,7 +603,7 @@
       "reproSteps": "",
       "affectedFiles": "src/js/config.js, src/js/auth.js, src/js/places-service.js, .env.local, .gitignore",
       "tags": [],
-      "updatedAt": "2026-04-19T23:24:19.314Z",
+      "updatedAt": "2026-04-19T23:24:57.983Z",
       "releaseId": "REL-18",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
@@ -1521,7 +1521,7 @@
       "reproSteps": "",
       "affectedFiles": "docs/supabase-setup.md, .env.local (new, gitignored), .gitignore, test/supabase-smoke.html",
       "tags": [],
-      "updatedAt": "2026-04-19T23:24:51.770Z",
+      "updatedAt": "2026-04-19T23:24:57.983Z",
       "releaseId": "REL-18",
       "createdAt": "2026-04-17T22:49:30.728Z"
     }
@@ -1756,8 +1756,9 @@
       "name": "Auth Foundation & Supabase Migration",
       "targetDate": "",
       "goals": "Move off nicknames and Firebase RTDB. Stand up Supabase (Postgres + Auth). Every user becomes a real UUID-backed identity. Secrets out of client code.",
-      "status": "active",
-      "createdAt": "2026-04-17T22:50:19.435Z"
+      "status": "released",
+      "createdAt": "2026-04-17T22:50:19.435Z",
+      "releasedAt": "2026-04-19T23:24:57.983Z"
     }
   ],
   "nextItemId": 83,
