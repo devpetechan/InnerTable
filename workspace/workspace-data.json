@@ -1684,7 +1684,7 @@
       "name": "Relational Data Model",
       "targetDate": "",
       "goals": "Normalize the schema: places, entries, comments, reactions as first-class tables. Refactor UI to 'one place, many takes'.",
-      "status": "planning",
+      "status": "active",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
     {
