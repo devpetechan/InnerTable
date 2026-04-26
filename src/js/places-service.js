@@ -22,9 +22,20 @@
 
 // ── Module-private state ─────────────────────────
 let _userIdToName    = {};   // { uuid: displayName } — built fresh each fetch
+let _recIdToEntryId  = {};   // { rec_uuid: entry_uuid } — v0.3 bridge for comments
+let _entryIdToRecId  = {};   // inverse, used when stitching comments back into allRecs
 let _realtimeChannel = null; // Supabase Realtime channel (set up once)
 let _debounceTimer   = null; // prevents a burst of change events from causing
                              // multiple back-to-back re-fetches
+
+
+// Helper: returns the entry_id that corresponds to a recommendation_id, or null
+// if no entry exists yet (e.g. the rec was added but the user never created
+// their entry for that place).  Used by app.js submitComment to translate the
+// UI-level recId into the entry_id that the new comments table requires.
+function recIdToEntryId(recId) {
+  return _recIdToEntryId[recId] || null;
+}
 
 
 // ══════════════════════════════════════════════════
@@ -53,15 +64,52 @@ async function fetchAllRecs() {
   const { data: votes } = await supabaseClient
     .from('votes').select('*');
 
-  // 4. Comments (oldest first so thread order is correct)
+  // 4. Comments (oldest first so thread order is correct).
+  //    v0.3: comments are now keyed to entries (not recommendations) and the
+  //    `deleted` boolean has been replaced by a `deleted_at` timestamp.  We
+  //    translate both back to the legacy shape below so ui-render.js doesn't
+  //    have to change yet (that's IT-035 territory).
   const { data: comments } = await supabaseClient
     .from('comments')
     .select('*')
     .order('created_at', { ascending: true });
 
+  // 4a. Reactions live in their own table now — one row per (comment, user).
+  //     We aggregate them client-side back into the legacy jsonb shape:
+  //       { "<emoji>": { "<displayName>": true } }
+  //     so ui-render.js + app.js continue working until the IT-035 rewrite.
+  const { data: reactionRows } = await supabaseClient
+    .from('comment_reactions')
+    .select('*');
+
   // 5. Per-user interactions (status / tried / ratings)
   const { data: interactions } = await supabaseClient
     .from('user_rec_interactions').select('*');
+
+  // 6. Entries (v0.3 first-class table).  We load these only to build a
+  //    rec_id ↔ entry_id translation map — each rec was backfilled into the
+  //    entry that matches its (author_id, place_id) pair.  Comments below are
+  //    keyed to entry_id; we use this map to attach them to the right rec.
+  const { data: entriesRows } = await supabaseClient
+    .from('entries')
+    .select('id, user_id, place_id');
+
+  // Build the bridge maps.  The unique (user_id, place_id) constraint on
+  // entries guarantees this is a 1:1 mapping with rec.(author_id, place_id).
+  _recIdToEntryId = {};
+  _entryIdToRecId = {};
+  const _entryByUserPlace = {}; // "user_id|place_id" → entry_id, for fast rec lookup
+  for (const e of entriesRows || []) {
+    _entryByUserPlace[`${e.user_id}|${e.place_id}`] = e.id;
+  }
+  for (const rec of recs || []) {
+    const key = `${rec.author_id}|${rec.place_id}`;
+    const entryId = _entryByUserPlace[key];
+    if (entryId) {
+      _recIdToEntryId[rec.id]    = entryId;
+      _entryIdToRecId[entryId]   = rec.id;
+    }
+  }
 
   // ── Build result object, keyed by recommendation UUID ──────────────────
   const result = {};
@@ -104,30 +152,35 @@ async function fetchAllRecs() {
   }
 
   // ── Attach comments ───────────────────────────────
-  // comments table: { id, recommendation_id, author_id, text, deleted, reactions }
-  // reactions JSONB shape in DB:  { "emoji": { "user_uuid": true } }
-  // adapter output shape:         { "emoji": { "DisplayName": true } }
-  for (const c of comments || []) {
-    const rec = result[c.recommendation_id];
-    if (!rec) continue;
+  // v0.3 comments table: { id, entry_id, author_id, text, deleted_at, ... }
+  // v0.3 comment_reactions: one row per (comment_id, user_id, emoji)
+  //
+  // We translate back to the legacy adapter shape for ui-render compatibility:
+  //   - entry_id → recommendation_id (via _entryIdToRecId)
+  //   - deleted_at → deleted boolean (true iff deleted_at IS NOT NULL)
+  //   - reactions rows → { "<emoji>": { "<displayName>": true } } jsonb shape
 
-    // Map user UUIDs → display names inside reactions
-    const adaptedReactions = {};
-    if (c.reactions) {
-      for (const [emoji, voters] of Object.entries(c.reactions)) {
-        adaptedReactions[emoji] = {};
-        for (const [uid, val] of Object.entries(voters || {})) {
-          if (val) adaptedReactions[emoji][_userIdToName[uid] || uid] = true;
-        }
-      }
-    }
+  // First pass: bucket reactions by comment_id so we can attach in O(1) below.
+  const reactionsByComment = {};
+  for (const r of reactionRows || []) {
+    if (!reactionsByComment[r.comment_id]) reactionsByComment[r.comment_id] = {};
+    const bucket = reactionsByComment[r.comment_id];
+    if (!bucket[r.emoji]) bucket[r.emoji] = {};
+    bucket[r.emoji][_userIdToName[r.user_id] || r.user_id] = true;
+  }
+
+  for (const c of comments || []) {
+    const recId = _entryIdToRecId[c.entry_id];
+    if (!recId) continue; // comment on an entry that has no matching rec — skip
+    const rec = result[recId];
+    if (!rec) continue;
 
     rec.comments[c.id] = {
       author:    _userIdToName[c.author_id] || c.author_id,
       text:      c.text,
       ts:        new Date(c.created_at).getTime(),
-      deleted:   c.deleted,
-      reactions: adaptedReactions
+      deleted:   c.deleted_at !== null && c.deleted_at !== undefined, // legacy boolean
+      reactions: reactionsByComment[c.id] || {}
     };
   }
 
@@ -181,7 +234,9 @@ async function loadRecs() {
   _realtimeChannel = supabaseClient
     .channel('inner-table-realtime')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'recommendations' },        _onDbChange)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'entries' },                _onDbChange)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' },               _onDbChange)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'comment_reactions' },      _onDbChange)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'votes' },                  _onDbChange)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'user_rec_interactions' },  _onDbChange)
     .subscribe();

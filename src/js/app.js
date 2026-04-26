@@ -270,9 +270,22 @@ async function submitComment(id, btn) {
   const text  = input.value.trim();
   if (!text) { input.focus(); return; }
   btn.disabled = true;
+
+  // v0.3: comments are keyed to entries, not recommendations.  Each rec was
+  // backfilled into exactly one entry; recIdToEntryId() looks that up.  If
+  // no entry exists yet (legacy rec without a place_id), we surface an error
+  // instead of silently dropping the comment.
+  const entryId = recIdToEntryId(id);
+  if (!entryId) {
+    console.error('[submitComment] no entry exists for rec', id);
+    showToast('❌ Cannot post comment — this place is missing data. Please refresh.');
+    btn.disabled = false;
+    return;
+  }
+
   const { error } = await supabaseClient.from('comments').insert({
-    recommendation_id: id,
-    author_id:         currentUser.id,
+    entry_id:  entryId,
+    author_id: currentUser.id,
     text
   });
   if (error) {
@@ -309,8 +322,11 @@ async function saveCommentEdit(recId, commentKey, btn) {
 
 async function deleteComment(recId, commentKey) {
   if (!confirm('Delete this comment? This cannot be undone.')) return;
+  // v0.3: soft-delete is now a timestamp (`deleted_at`), not a boolean.
+  // The legacy `deleted` column no longer exists.
   const { error } = await supabaseClient.from('comments')
-    .update({ deleted: true, text: null }).eq('id', commentKey);
+    .update({ deleted_at: new Date().toISOString(), text: null })
+    .eq('id', commentKey);
   if (error) {
     console.error(error);
     showToast('❌ Could not delete comment.');
@@ -321,14 +337,45 @@ async function deleteComment(recId, commentKey) {
 const REACTION_EMOJIS = ['👍','👎','❤️','💀','😂','😮','😢','💩'];
 
 async function toggleReaction(recId, commentKey, emoji) {
-  // Handled server-side by a SECURITY DEFINER SQL function (0005 migration).
-  // That function lets any authenticated user toggle their own reaction on any
-  // comment, even though the comments RLS otherwise restricts updates to the
-  // comment author.
-  const { error } = await supabaseClient.rpc('toggle_reaction', {
-    p_comment_id: commentKey,
-    p_emoji:      emoji
-  });
+  // v0.3: reactions live in their own table (public.comment_reactions) with
+  // (comment_id, user_id) as the primary key — at most one reaction per
+  // user per comment, enforced by Postgres.  RLS restricts writes to rows
+  // where user_id = auth.uid(), so each user can only toggle their own.
+  //
+  // Toggle semantics (matches the legacy RPC):
+  //   - User has THIS emoji on this comment        → DELETE the row (toggle off)
+  //   - User has a DIFFERENT emoji on this comment → UPSERT to the new emoji
+  //   - User has no reaction yet                   → INSERT
+  //
+  // We read current state from allRecs (already fetched) instead of round-
+  // tripping to the DB.  Realtime will re-render after the write lands.
+  const rec     = allRecs[recId];
+  const comment = rec && rec.comments && rec.comments[commentKey];
+  const myName  = currentUser.display_name;
+
+  // Find what emoji (if any) this user currently has on this comment.
+  let currentEmoji = null;
+  if (comment && comment.reactions) {
+    for (const [e, voters] of Object.entries(comment.reactions)) {
+      if (voters && voters[myName]) { currentEmoji = e; break; }
+    }
+  }
+
+  let error;
+  if (currentEmoji === emoji) {
+    // Toggle off: same emoji clicked again
+    ({ error } = await supabaseClient.from('comment_reactions').delete()
+      .eq('comment_id', commentKey)
+      .eq('user_id',    currentUser.id));
+  } else {
+    // Insert or change emoji.  upsert on the (comment_id, user_id) PK does
+    // both in one round-trip: insert if absent, update emoji if present.
+    ({ error } = await supabaseClient.from('comment_reactions').upsert(
+      { comment_id: commentKey, user_id: currentUser.id, emoji },
+      { onConflict: 'comment_id,user_id' }
+    ));
+  }
+
   if (error) {
     console.error(error);
     showToast('❌ Could not save reaction.');
