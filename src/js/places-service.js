@@ -1,221 +1,170 @@
 // ══════════════════════════════════════════════════
-//  SUPABASE DATA SERVICE
-//  Replaces the old firebase.js + all db.ref() calls.
+//  SUPABASE DATA SERVICE (IT-035 place-centric adapter)
 //
 //  HOW IT WORKS (overview for learning):
 //  ─────────────────────────────────────
-//  Firebase Realtime Database is a live JSON tree — every client subscribes to
-//  a path and Firebase pushes updates automatically.
-//
-//  Supabase stores data in normal SQL tables.  To get the same "live update"
+//  Supabase stores data in normal SQL tables.  To get "live update"
 //  behaviour we use two Supabase features:
 //    1. Regular queries (SELECT) to load data on demand.
 //    2. Supabase Realtime — a WebSocket channel that fires when any row in a
 //       subscribed table changes.  When we get a change event we re-fetch
 //       everything and re-render.
 //
-//  The fetchAllRecs() function runs four queries, then stitches the results
-//  into the same `allRecs` object shape that ui-render.js already expects.
-//  This "adapter" pattern means ui-render.js needs zero changes.
+//  fetchAllPlaces() runs five queries and stitches the results into the
+//  `allPlaces` object: one entry per *place*, each carrying the takes
+//  (entries) friends have on it, the shared per-place comment thread, and
+//  pre-computed aggregates.  The renderer (Phase 3) consumes this shape.
 // ══════════════════════════════════════════════════
+
+
+// ── Global state ─────────────────────────────────
+// allPlaces replaces the legacy allRecs (still declared in app.js until the
+// Phase 3/4 rewrites remove the last readers of it).
+let allPlaces = {};
 
 
 // ── Module-private state ─────────────────────────
 let _userIdToName    = {};   // { uuid: displayName } — built fresh each fetch
-let _recIdToEntryId  = {};   // { rec_uuid: entry_uuid } — v0.3 bridge for comments
-let _entryIdToRecId  = {};   // inverse, used when stitching comments back into allRecs
 let _realtimeChannel = null; // Supabase Realtime channel (set up once)
 let _debounceTimer   = null; // prevents a burst of change events from causing
                              // multiple back-to-back re-fetches
-
-
-// Helper: returns the entry_id that corresponds to a recommendation_id, or null
-// if no entry exists yet (e.g. the rec was added but the user never created
-// their entry for that place).  Used by app.js submitComment to translate the
-// UI-level recId into the entry_id that the new comments table requires.
-function recIdToEntryId(recId) {
-  return _recIdToEntryId[recId] || null;
-}
 
 
 // ══════════════════════════════════════════════════
 //  DATA LOADING & REALTIME
 // ══════════════════════════════════════════════════
 
-// fetchAllRecs: runs 5 parallel-ish queries and assembles allRecs
-async function fetchAllRecs() {
-  // 1. All user profiles — needed to turn UUIDs into display names
+// fetchAllPlaces: runs 5 queries and assembles allPlaces, keyed by place uuid.
+async function fetchAllPlaces() {
+  // 1. Users (uuid → display_name lookup)
   const { data: users } = await supabaseClient
     .from('users').select('id, display_name');
   _userIdToName = {};
   (users || []).forEach(u => { _userIdToName[u.id] = u.display_name; });
 
-  // 2. Recommendations (newest first)
-  const { data: recs, error: recsErr } = await supabaseClient
-    .from('recommendations')
-    .select('*')
-    .order('created_at', { ascending: false });
-  if (recsErr) {
-    console.error('[fetchAllRecs] recommendations query failed:', recsErr);
+  // 2. All places
+  const { data: places, error: placesErr } = await supabaseClient
+    .from('places').select('*').order('name');
+  if (placesErr) {
+    console.error('[fetchAllPlaces] places query failed:', placesErr);
     return {};
   }
 
-  // 3. Votes
-  const { data: votes } = await supabaseClient
-    .from('votes').select('*');
+  // 3. All entries (each user's take on a place)
+  const { data: entries } = await supabaseClient
+    .from('entries').select('*').order('created_at', { ascending: false });
 
-  // 4. Comments (oldest first so thread order is correct).
-  //    v0.3: comments are now keyed to entries (not recommendations) and the
-  //    `deleted` boolean has been replaced by a `deleted_at` timestamp.  We
-  //    translate both back to the legacy shape below so ui-render.js doesn't
-  //    have to change yet (that's IT-035 territory).
+  // 4. Comments — place-keyed since migration 0010, with quote-reply columns
   const { data: comments } = await supabaseClient
-    .from('comments')
-    .select('*')
-    .order('created_at', { ascending: true });
+    .from('comments').select('*').order('created_at', { ascending: true });
 
-  // 4a. Reactions live in their own table now — one row per (comment, user).
-  //     We aggregate them client-side back into the legacy jsonb shape:
-  //       { "<emoji>": { "<displayName>": true } }
-  //     so ui-render.js + app.js continue working until the IT-035 rewrite.
+  // 5. Reactions — one row per (comment, user, emoji)
   const { data: reactionRows } = await supabaseClient
-    .from('comment_reactions')
-    .select('*');
+    .from('comment_reactions').select('*');
 
-  // 5. Per-user interactions (status / tried / ratings)
-  const { data: interactions } = await supabaseClient
-    .from('user_rec_interactions').select('*');
-
-  // 6. Entries (v0.3 first-class table).  We load these only to build a
-  //    rec_id ↔ entry_id translation map — each rec was backfilled into the
-  //    entry that matches its (author_id, place_id) pair.  Comments below are
-  //    keyed to entry_id; we use this map to attach them to the right rec.
-  const { data: entriesRows } = await supabaseClient
-    .from('entries')
-    .select('id, user_id, place_id');
-
-  // Build the bridge maps.  The unique (user_id, place_id) constraint on
-  // entries guarantees this is a 1:1 mapping with rec.(author_id, place_id).
-  _recIdToEntryId = {};
-  _entryIdToRecId = {};
-  const _entryByUserPlace = {}; // "user_id|place_id" → entry_id, for fast rec lookup
-  for (const e of entriesRows || []) {
-    _entryByUserPlace[`${e.user_id}|${e.place_id}`] = e.id;
-  }
-  for (const rec of recs || []) {
-    const key = `${rec.author_id}|${rec.place_id}`;
-    const entryId = _entryByUserPlace[key];
-    if (entryId) {
-      _recIdToEntryId[rec.id]    = entryId;
-      _entryIdToRecId[entryId]   = rec.id;
-    }
-  }
-
-  // ── Build result object, keyed by recommendation UUID ──────────────────
+  // 6. Build the result skeleton, keyed by place uuid
   const result = {};
-
-  for (const rec of recs || []) {
-    result[rec.id] = {
-      // Map snake_case Supabase columns → camelCase Firebase-compatible shape
-      name:          rec.name,
-      author:        _userIdToName[rec.author_id] || rec.author_id,
-      ts:            new Date(rec.created_at).getTime(),  // ms since epoch (matches Firebase)
-      status:        rec.status,
-      rating:        rec.rating,
-      cuisine:       rec.cuisine,
-      price:         rec.price,
-      notes:         rec.notes,
-      tryNote:       rec.try_note,
-      url:           rec.url,
-      location:      rec.location,
-      lat:           rec.lat,
-      lng:           rec.lng,
-      placeId:       rec.google_place_id,
-      placeType:     rec.place_type || 'restaurant',
-      factorRatings: rec.factor_ratings || null,
-      // Sub-collections — populated in the loops below
-      votes:         {},
-      comments:      {},
-      userStatuses:  {},
-      userRatings:   {},
-      triedBy:       {}
+  for (const p of places || []) {
+    result[p.id] = {
+      id:            p.id,
+      name:          p.name,
+      cuisine:       p.cuisine,
+      price:         p.price,
+      location:      p.location,
+      lat:           p.lat,
+      lng:           p.lng,
+      googlePlaceId: p.google_place_id,
+      placeType:     p.place_type || 'restaurant',
+      takes:         [],
+      comments:      [],
+      aggregate:     { avgRating: 0, ratingsCount: 0, recommends: [], hardPasses: [], wantsToGo: [], triedBy: [] }
     };
   }
 
-  // ── Attach votes ─────────────────────────────────
-  // votes table: { recommendation_id, user_id, value: 'up'|'down' }
-  for (const v of votes || []) {
-    const rec = result[v.recommendation_id];
-    if (rec) {
-      rec.votes[_userIdToName[v.user_id] || v.user_id] = v.value;
-    }
+  // 7. Attach takes
+  for (const e of entries || []) {
+    const place = result[e.place_id];
+    if (!place) continue;
+    place.takes.push({
+      entryId:       e.id,
+      userId:        e.user_id,
+      author:        _userIdToName[e.user_id] || e.user_id,
+      ts:            new Date(e.created_at).getTime(),
+      // DB stores want-to-go takes as 'try' (CHECK constraint, migration
+      // 0008); the IT-035 shape uses 'want-to-go'.  Normalize here so the
+      // renderer only ever sees 'want-to-go' | 'been-recommend' | 'been-skip'.
+      status:        e.status === 'try' ? 'want-to-go' : e.status,
+      // NOTE: the plan's reference code reads e.rating_overall / e.rating_*,
+      // but entries (migration 0008) actually uses overall_rating + bare
+      // factor names — no migration ever renamed them.
+      rating:        e.overall_rating || 0,
+      factorRatings: {
+        quality:  e.quality  || 0,
+        service:  e.service  || 0,
+        value:    e.value    || 0,
+        ambiance: e.ambiance || 0
+      },
+      notes:    e.notes    || '',
+      tryNote:  e.try_note || '',
+      url:      e.url      || ''
+    });
   }
 
-  // ── Attach comments ───────────────────────────────
-  // v0.3 comments table: { id, entry_id, author_id, text, deleted_at, ... }
-  // v0.3 comment_reactions: one row per (comment_id, user_id, emoji)
-  //
-  // We translate back to the legacy adapter shape for ui-render compatibility:
-  //   - entry_id → recommendation_id (via _entryIdToRecId)
-  //   - deleted_at → deleted boolean (true iff deleted_at IS NOT NULL)
-  //   - reactions rows → { "<emoji>": { "<displayName>": true } } jsonb shape
-
-  // First pass: bucket reactions by comment_id so we can attach in O(1) below.
+  // 8. Bucket reactions by comment_id (jsonb-shape compatible with existing render)
   const reactionsByComment = {};
   for (const r of reactionRows || []) {
     if (!reactionsByComment[r.comment_id]) reactionsByComment[r.comment_id] = {};
-    const bucket = reactionsByComment[r.comment_id];
-    if (!bucket[r.emoji]) bucket[r.emoji] = {};
-    bucket[r.emoji][_userIdToName[r.user_id] || r.user_id] = true;
+    if (!reactionsByComment[r.comment_id][r.emoji]) reactionsByComment[r.comment_id][r.emoji] = {};
+    reactionsByComment[r.comment_id][r.emoji][_userIdToName[r.user_id] || r.user_id] = true;
   }
 
+  // 9. Attach comments (one shared thread per place)
   for (const c of comments || []) {
-    const recId = _entryIdToRecId[c.entry_id];
-    if (!recId) continue; // comment on an entry that has no matching rec — skip
-    const rec = result[recId];
-    if (!rec) continue;
-
-    rec.comments[c.id] = {
-      author:    _userIdToName[c.author_id] || c.author_id,
-      text:      c.text,
-      ts:        new Date(c.created_at).getTime(),
-      deleted:   c.deleted_at !== null && c.deleted_at !== undefined, // legacy boolean
-      reactions: reactionsByComment[c.id] || {}
-    };
+    const place = result[c.place_id];
+    if (!place) continue;
+    place.comments.push({
+      id:               c.id,
+      author:           _userIdToName[c.author_id] || c.author_id,
+      authorId:         c.author_id,
+      text:             c.text || '',
+      ts:               new Date(c.created_at).getTime(),
+      deleted:          c.deleted_at !== null && c.deleted_at !== undefined,
+      reactions:        reactionsByComment[c.id] || {},
+      quotedCommentId:  c.quoted_comment_id,
+      quotedAuthor:     c.quoted_author,
+      quotedText:       c.quoted_text,
+      mentions:         parseMentions(c.text || '')
+    });
   }
 
-  // ── Attach user interactions ──────────────────────
-  // user_rec_interactions: { recommendation_id, user_id, status, tried,
-  //                          rating_overall, rating_quality, … }
-  for (const ix of interactions || []) {
-    const rec = result[ix.recommendation_id];
-    if (!rec) continue;
-    const name = _userIdToName[ix.user_id] || ix.user_id;
-
-    if (ix.status) {
-      rec.userStatuses[name] = { status: ix.status, ts: new Date(ix.ts).getTime() };
+  // 10. Compute aggregates per place
+  for (const place of Object.values(result)) {
+    let total = 0, count = 0;
+    for (const t of place.takes) {
+      if (t.status === 'been-recommend') place.aggregate.recommends.push(t.author);
+      if (t.status === 'been-skip')      place.aggregate.hardPasses.push(t.author);
+      if (t.status === 'want-to-go')     place.aggregate.wantsToGo.push(t.author);
+      if (t.status === 'been-recommend' || t.status === 'been-skip') place.aggregate.triedBy.push(t.author);
+      if (t.rating > 0) { total += t.rating; count++; }
     }
-    if (ix.tried) {
-      rec.triedBy[name] = true;
-    }
-    if (ix.rating_overall) {
-      rec.userRatings[name] = {
-        overall:  ix.rating_overall,
-        quality:  ix.rating_quality  || 0,
-        service:  ix.rating_service  || 0,
-        value:    ix.rating_value    || 0,
-        ambiance: ix.rating_ambiance || 0
-      };
-    }
+    place.aggregate.avgRating    = count > 0 ? total / count : 0;
+    place.aggregate.ratingsCount = count;
   }
 
   return result;
 }
 
-// loadRecs: entry-point called by auth.js → showApp()
+// Helper: parse @mentions out of comment text into a list of display names.
+// Matches @Alice, @alice_b, @Bob-Smith. Stops at whitespace or punctuation.
+function parseMentions(text) {
+  const matches = text.match(/@([a-zA-Z0-9_-]+)/g) || [];
+  return matches.map(m => m.slice(1));
+}
+
+// loadPlaces: entry-point called by auth.js → showApp()
 // Fetches all data and sets up the Realtime subscription.
-async function loadRecs() {
-  allRecs = await fetchAllRecs();
+async function loadPlaces() {
+  allPlaces = await fetchAllPlaces();
 
   // Re-render if the list is currently visible
   if (document.getElementById('list-map-section').style.display !== 'none') {
@@ -228,17 +177,15 @@ async function loadRecs() {
   updateFriendFilters();
 
   // ── Set up Realtime subscription (once per session) ──
-  // We subscribe to all four tables.  Any INSERT / UPDATE / DELETE in any of
-  // them triggers a debounced re-fetch + re-render.
+  // Any INSERT / UPDATE / DELETE in any of the four tables triggers a
+  // debounced re-fetch + re-render.
   if (_realtimeChannel) return;
   _realtimeChannel = supabaseClient
     .channel('inner-table-realtime')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'recommendations' },        _onDbChange)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'entries' },                _onDbChange)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' },               _onDbChange)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'comment_reactions' },      _onDbChange)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'votes' },                  _onDbChange)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'user_rec_interactions' },  _onDbChange)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'places'            }, _onDbChange)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'entries'           }, _onDbChange)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'comments'          }, _onDbChange)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'comment_reactions' }, _onDbChange)
     .subscribe();
 }
 
@@ -248,7 +195,7 @@ async function loadRecs() {
 function _onDbChange() {
   clearTimeout(_debounceTimer);
   _debounceTimer = setTimeout(async () => {
-    allRecs = await fetchAllRecs();
+    allPlaces = await fetchAllPlaces();
     if (document.getElementById('list-map-section').style.display !== 'none') {
       if (currentDisplayMode === 'map' && mapInstance) {
         renderMapMarkers();
@@ -262,155 +209,11 @@ function _onDbChange() {
 
 
 // ══════════════════════════════════════════════════
-//  VOTING
+//  RATING FORM UI HELPERS (legacy — Phase 3/4 replace these)
+//  Pure DOM/state helpers still wired to onclick handlers generated by
+//  ui-render.js.  Their submit path (the dropped interactions table) is
+//  gone; they survive only so the legacy renderer doesn't throw on load.
 // ══════════════════════════════════════════════════
-async function castVote(id, direction) {
-  // If the user already voted this direction → toggle off (delete the vote row)
-  const existing = allRecs[id]?.votes?.[currentUser.display_name];
-  const newVote  = existing === direction ? null : direction;
-
-  if (newVote === null) {
-    const { error } = await supabaseClient.from('votes').delete()
-      .eq('recommendation_id', id)
-      .eq('user_id', currentUser.id);
-    if (error) { console.error(error); showToast('❌ Could not save vote.'); }
-  } else {
-    // upsert: insert if no row exists, update if one does
-    const { error } = await supabaseClient.from('votes').upsert(
-      { recommendation_id: id, user_id: currentUser.id, value: newVote },
-      { onConflict: 'recommendation_id,user_id' }
-    );
-    if (error) { console.error(error); showToast('❌ Could not save vote.'); }
-  }
-}
-
-
-// ══════════════════════════════════════════════════
-//  SUBMIT (new entry or edit)
-// ══════════════════════════════════════════════════
-async function submitRec() {
-  const name = document.getElementById('f-name').value.trim();
-  if (!name) { shake(document.getElementById('f-name')); return; }
-
-  const btn = document.getElementById('submit-btn');
-  btn.disabled = true; btn.textContent = 'Saving…';
-
-  // ── Determine status values (same logic as before) ──────────────────
-  const isTryType  = (addType === 'try'  || addType === 'want-to-go');
-  const isBeenType = (addType === 'been' || addType === 'been-recommend' || addType === 'been-skip');
-
-  let topStatus;
-  if (addType === 'been-skip') topStatus = 'not-recommended';
-  else if (isTryType)          topStatus = 'try';
-  else                         topStatus = 'recommended';
-
-  let userStatusValue;
-  if (addType === 'want-to-go' || addType === 'try') userStatusValue = 'want-to-go';
-  else if (addType === 'been-skip')                  userStatusValue = 'been-skip';
-  else                                               userStatusValue = 'been-recommend';
-
-  // ── Build the recommendation row (Supabase column names are snake_case) ──
-  const recRow = {
-    name,
-    place_type: placeType,
-    location:   document.getElementById('f-location').value.trim(),
-    status:     topStatus
-  };
-
-  if (selectedPlaceLat !== null) { recRow.lat = selectedPlaceLat; recRow.lng = selectedPlaceLng; }
-  if (selectedPlaceId)           recRow.google_place_id = selectedPlaceId;
-
-  if (isTryType) {
-    recRow.try_note = document.getElementById('f-try-note').value.trim();
-    recRow.url      = document.getElementById('f-url').value.trim();
-  } else {
-    recRow.cuisine = document.getElementById('f-cuisine').value;
-    recRow.price   = document.getElementById('f-price').value;
-    recRow.notes   = document.getElementById('f-notes').value.trim();
-    recRow.rating  = selectedStars || null;
-    const anyRated = Object.values(factorRatings).some(v => v > 0);
-    if (anyRated) recRow.factor_ratings = { ...factorRatings };
-    else if (addType === 'been') {
-      document.getElementById('factor-hint').style.display = 'block';
-    }
-  }
-
-  // ── Write to Supabase ────────────────────────────
-  let recId;
-  try {
-    if (editingId) {
-      // Edit: preserve original coordinates / placeId if user didn't re-select
-      const orig = allRecs[editingId];
-      if (orig) {
-        if (orig.lat && recRow.lat === undefined) { recRow.lat = orig.lat; recRow.lng = orig.lng; }
-        if (orig.placeId && !recRow.google_place_id) recRow.google_place_id = orig.placeId;
-      }
-      // RLS only allows the original author to UPDATE
-      const { error } = await supabaseClient.from('recommendations')
-        .update(recRow).eq('id', editingId);
-      if (error) throw error;
-      recId = editingId;
-
-    } else {
-      // New entry — include author_id
-      recRow.author_id = currentUser.id;
-      const { data, error } = await supabaseClient.from('recommendations')
-        .insert(recRow).select('id').single();
-      if (error) throw error;
-      recId = data.id;
-    }
-  } catch (err) {
-    console.error('[submitRec] write failed:', err);
-    showToast('❌ Error saving: ' + (err.message || err.code || err));
-    btn.disabled = false; btn.textContent = 'Save';
-    return;
-  }
-
-  // ── Write user interaction row (status / ratings) ────────────────────
-  if (isTryType || beenStatusChosen) {
-    const ix = { status: userStatusValue };
-    if (isBeenType) ix.tried = true;
-    if (isBeenType && selectedStars > 0) {
-      ix.rating_overall = selectedStars;
-      const { quality, service, value, ambiance } = factorRatings;
-      if (quality)  ix.rating_quality  = quality;
-      if (service)  ix.rating_service  = service;
-      if (value)    ix.rating_value    = value;
-      if (ambiance) ix.rating_ambiance = ambiance;
-    }
-    await _upsertInteraction(recId, ix);
-  }
-
-  console.log('[submitRec] write succeeded, recId:', recId);
-  const toastMsg = isTryType ? '📌 Saved to your list!'
-    : addType === 'been-skip' ? '🚫 Hard Pass noted!'
-    : '🎉 Review saved!';
-  showToast(toastMsg);
-  closeModal();
-  btn.disabled = false; btn.textContent = 'Save';
-}
-
-
-// ══════════════════════════════════════════════════
-//  DELETE
-// ══════════════════════════════════════════════════
-async function deleteEntry(id) {
-  if (!confirm('Delete this entry? This cannot be undone.')) return;
-  const { error } = await supabaseClient.from('recommendations').delete().eq('id', id);
-  if (error) { console.error(error); showToast('❌ Could not delete.'); return; }
-  showToast('🗑 Entry deleted.');
-}
-
-
-// ══════════════════════════════════════════════════
-//  MARK AS TRIED + USER RATINGS
-// ══════════════════════════════════════════════════
-async function markAsTried(id) {
-  const { error } = await _upsertInteraction(id, { tried: true });
-  if (error) { console.error(error); showToast('❌ Could not save.'); return; }
-  showToast('✅ Marked as tried!');
-  toggleRatingForm(id);
-}
 
 function toggleRatingForm(id) {
   // Pre-fill the rating form with any existing data for this user
@@ -479,226 +282,4 @@ function setUserFactorStar(id, factor, n) {
   pendingUserRatings[id][factor] = n;
   const el = document.getElementById(`ur-${factor}-${id}`);
   if (el) el.querySelectorAll('span').forEach((s,i) => { s.textContent = i < n ? '★' : '☆'; });
-}
-
-async function submitUserRating(id) {
-  const state = pendingUserRatings[id] || { overall:0, quality:0, service:0, value:0, ambiance:0 };
-  if (!state.overall || state.overall < 1) {
-    showToast('Please select an overall star rating.');
-    return;
-  }
-
-  const ix = {
-    tried:           true,
-    rating_overall:  state.overall,
-    rating_quality:  state.quality  || 0,
-    rating_service:  state.service  || 0,
-    rating_value:    state.value    || 0,
-    rating_ambiance: state.ambiance || 0
-  };
-
-  // visitStatus can be: a string (explicit choice), null (user toggled off),
-  // or undefined (user never touched the toggle — don't change it in the DB)
-  if (state.visitStatus !== undefined) {
-    ix.status = state.visitStatus; // null clears the status column
-  }
-
-  const { error } = await _upsertInteraction(id, ix);
-  if (error) { console.error(error); showToast('❌ Could not save.'); return; }
-
-  const toast = state.visitStatus === 'been-recommend' ? '✓ Go Now saved!'
-              : state.visitStatus === 'been-skip'      ? '🚫 Hard Pass saved!'
-              : '⭐ Rating saved!';
-  showToast(toast);
-  delete pendingUserRatings[id];
-  const form = document.getElementById('rf-' + id);
-  if (form) form.style.display = 'none';
-}
-
-
-// ══════════════════════════════════════════════════
-//  DUPLICATE DETECTION
-// ══════════════════════════════════════════════════
-async function checkForDuplicate(placeId, placeName) {
-  if (!placeId) return;
-
-  const { data, error } = await supabaseClient
-    .from('recommendations')
-    .select('id, name, author_id')
-    .eq('google_place_id', placeId)
-    .limit(1);
-
-  if (error || !data || !data.length) return;
-
-  const existing          = data[0];
-  const existingAuthorName = _userIdToName[existing.author_id] || existing.author_id;
-  pendingDupId    = existing.id;
-  pendingDupIsOwn = existing.author_id === currentUser.id;
-
-  if (pendingDupIsOwn) {
-    document.getElementById('dup-message').textContent =
-      `You already added "${existing.name}" to InnerTable. Would you like to edit your existing entry?`;
-    document.getElementById('dup-primary-btn').textContent = 'Yes, edit my existing entry';
-  } else {
-    document.getElementById('dup-message').textContent =
-      `"${existing.name}" is already on InnerTable (added by ${existingAuthorName}). Would you like to add your status to the existing entry instead?`;
-    document.getElementById('dup-primary-btn').textContent = 'Yes, add my status to the existing entry';
-  }
-
-  document.getElementById('dup-overlay').classList.add('open');
-}
-
-function closeDupOnBg(e) {
-  if (e.target === document.getElementById('dup-overlay')) closeDupPrompt();
-}
-
-function closeDupPrompt() {
-  document.getElementById('dup-overlay').classList.remove('open');
-  pendingDupId    = null;
-  pendingDupIsOwn = false;
-}
-
-function closeDupPromptAndContinue() {
-  document.getElementById('dup-overlay').classList.remove('open');
-  pendingDupId    = null;
-  pendingDupIsOwn = false;
-}
-
-function confirmDup() {
-  if (pendingDupIsOwn) {
-    const targetId = pendingDupId;
-    pendingDupId    = null;
-    pendingDupIsOwn = false;
-    document.getElementById('dup-overlay').classList.remove('open');
-    closeModal();
-    editEntry(targetId);
-  } else {
-    confirmAttach();
-  }
-}
-
-function confirmAttach() {
-  if (!pendingDupId) return;
-  const targetId = pendingDupId;
-  pendingDupId   = null;
-  document.getElementById('dup-overlay').classList.remove('open');
-
-  const r = allRecs[targetId];
-  closeModal(); // resets form state; we re-set attachingToId below
-  attachingToId = targetId;
-
-  document.getElementById('modal-overlay').classList.add('open');
-  document.getElementById('modal-title').textContent   = 'Add Your Status';
-  document.getElementById('type-step').style.display   = 'none';
-  document.getElementById('form-step').style.display   = 'none';
-  document.getElementById('attach-step').style.display = 'block';
-  document.getElementById('attach-place-name').textContent = r ? r.name : '';
-
-  attachStatus        = null;
-  attachStars         = 0;
-  attachFactorRatings = { quality: 0, service: 0, value: 0, ambiance: 0 };
-  document.getElementById('attach-submit-btn').disabled       = true;
-  document.getElementById('attach-rating-section').style.display = 'none';
-  document.getElementById('atc-been').classList.remove('active');
-  document.getElementById('atc-try').classList.remove('active');
-  document.getElementById('abtn-go-now').classList.remove('active');
-  document.getElementById('abtn-hard-pass').classList.remove('active');
-  resetAttachStars();
-  document.querySelector('.modal').scrollTop = 0;
-}
-
-
-// ══════════════════════════════════════════════════
-//  ATTACH FORM CONTROLS
-// ══════════════════════════════════════════════════
-function setAttachStatus(status) {
-  attachStatus = status;
-  const isBeen = (status === 'been-recommend' || status === 'been-skip');
-  document.getElementById('attach-rating-section').style.display = isBeen ? 'block' : 'none';
-  document.getElementById('attach-submit-btn').disabled = false;
-}
-
-function setAttachStars(n) {
-  attachStars = n;
-  document.querySelectorAll('#attach-star-picker span').forEach((s,i) => { s.textContent = i < n ? '★' : '☆'; });
-  const btn = document.getElementById('attach-submit-btn');
-  if (btn) btn.disabled = (n === 0);
-}
-
-function setAttachFactorStar(factor, n) {
-  attachFactorRatings[factor] = n;
-  document.querySelectorAll(`#afp-${factor} span`).forEach((s,i) => { s.textContent = i < n ? '★' : '☆'; });
-}
-
-function resetAttachStars() {
-  attachStars = 0;
-  document.querySelectorAll('#attach-star-picker span').forEach(s => { s.textContent = '☆'; });
-  attachFactorRatings = { quality: 0, service: 0, value: 0, ambiance: 0 };
-  ['quality','service','value','ambiance'].forEach(f => {
-    document.querySelectorAll(`#afp-${f} span`).forEach(s => { s.textContent = '☆'; });
-  });
-}
-
-async function submitAttach() {
-  if (!attachingToId) return;
-
-  const isBeen = document.getElementById('atc-been')?.classList.contains('active');
-
-  if (isBeen && attachStars === 0) {
-    showToast('Please select an overall star rating.');
-    return;
-  }
-
-  const btn = document.getElementById('attach-submit-btn');
-  btn.disabled = true; btn.textContent = 'Saving…';
-
-  const ix = {};
-  if (attachStatus) {
-    ix.status = attachStatus;
-    ix.tried  = true;
-  } else if (isBeen) {
-    ix.tried = true;
-  } else {
-    ix.status = 'want-to-go';
-  }
-
-  if (isBeen && attachStars > 0) {
-    ix.rating_overall = attachStars;
-    const { quality, service, value, ambiance } = attachFactorRatings;
-    if (quality)  ix.rating_quality  = quality;
-    if (service)  ix.rating_service  = service;
-    if (value)    ix.rating_value    = value;
-    if (ambiance) ix.rating_ambiance = ambiance;
-  }
-
-  const { error } = await _upsertInteraction(attachingToId, ix);
-  if (error) {
-    console.error(error);
-    showToast('❌ Could not save status.');
-    btn.disabled = false; btn.textContent = 'Save My Status';
-    return;
-  }
-
-  const toastMsg = attachStatus === 'been-recommend' ? '✓ Go Now saved!'
-                 : attachStatus === 'been-skip'      ? '🚫 Hard Pass noted!'
-                 : isBeen                            ? '⭐ Rating saved!'
-                 : '📌 Want-to-go saved!';
-  showToast(toastMsg);
-  closeModal();
-  btn.disabled = false; btn.textContent = 'Save My Status';
-}
-
-
-// ══════════════════════════════════════════════════
-//  SHARED HELPER
-// ══════════════════════════════════════════════════
-
-// _upsertInteraction: insert or update the current user's row in
-// user_rec_interactions.  Only the fields present in `fields` are written;
-// anything omitted is left unchanged on update.
-async function _upsertInteraction(recId, fields) {
-  return supabaseClient.from('user_rec_interactions').upsert(
-    { recommendation_id: recId, user_id: currentUser.id, ...fields },
-    { onConflict: 'recommendation_id,user_id' }
-  );
 }

@@ -90,7 +90,7 @@ function showApp() {
   document.getElementById('header-name').textContent = currentUser.display_name;
 
   goHome();
-  loadRecs();
+  loadPlaces();
 }
 
 function signOut() {
