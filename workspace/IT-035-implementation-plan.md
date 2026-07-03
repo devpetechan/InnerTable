@@ -20,6 +20,20 @@ This document is meant to be fed into Cursor in pieces. Each phase is sized so t
 
 ---
 
+## How to use this doc with Cursor
+
+For each phase below:
+
+1. **Open the files the phase touches** (listed in the phasing table at the bottom) in Cursor's editor before pasting. Cursor weighs open files heavily as context, so this anchors it on the right code instead of guessing.
+
+2. **Paste the phase's section into Cursor with this preamble in front:**
+
+   > Implement only this phase. Don't commit anything. When you're done, list what you changed and tell me how to run the acceptance check.
+
+3. **Run the acceptance check at the bottom of the phase before starting the next one.** Some phases (notably Phase 2) intentionally leave the app in a half-broken state — the next phase fixes it. That's expected. Don't skip ahead.
+
+---
+
 ## Phase 0 — Branch + safety
 
 ```
@@ -742,8 +756,12 @@ Each phase is a self-contained Cursor session. When you start a phase, paste the
 
 ---
 
-## Open questions to confirm before Phase 1 starts
+## Resolved decisions
 
-1. **Place edits — admin-only or anyone-with-an-entry?** The current ticket says "for v0.3, update the places row (admin-like — log the change)." But there's no admin UI today. Easiest interpretation: anyone with an entry on a place can update the place's cuisine/price; we're trusting friends. Confirm or push this to a later ticket.
-2. **`@-mention` matching is case-insensitive on autocomplete but stored exactly as typed.** Is that acceptable, or do we want to normalize on insert?
-3. **Quote-reply nesting.** A comment that quotes another comment can itself be quoted. The snapshot model handles this fine, but the UI only ever shows *one* level of quote. Is that the intended behavior?
+These were the open questions before Phase 1; they've been answered and the resolution is baked into the phase code below.
+
+1. **Place metadata edits — none.** Place rows (cuisine, price, place_type, location) are locked after creation. `submitEntry` only ever inserts new places, never updates existing ones. The flexible/social classification layer is being moved to a tags system in IT-083 (v0.4) and is deferred out of this scope.
+
+2. **`@-mention` matching is case-insensitive on render.** Comment text is stored exactly as typed. The renderer compares against a lowercased Set of known display names and styles `@alice` as a chip even if Alice's `display_name` is `Alice`. No normalization on insert.
+
+3. **Quote replies are one level only.** When a comment quotes another, only the quoted comment's bare `text` field is snapshot into `quoted_text` — never the rendered output including any nested quote block. The `.comment-quote` div renders a single quoted author + text and never recurses.

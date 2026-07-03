@@ -1524,6 +1524,24 @@
       "updatedAt": "2026-04-19T23:24:57.983Z",
       "releaseId": "REL-18",
       "createdAt": "2026-04-17T22:49:30.728Z"
+    },
+    {
+      "id": "1778198400000",
+      "itemId": "IT-083",
+      "type": "enhancement",
+      "title": "[v0.4] Place tags — multi-author classification, replaces binary place_type",
+      "description": "CONTEXT: After IT-035/036 ship, place metadata (cuisine, price, place_type, location) is locked at creation time and only Google's metadata informs it. The binary restaurant/bar place_type is rigid — Tartine is a bakery to Alice but a coffee spot to Bob. We want a flexible, multi-author tag layer that captures this without a heavy edit-permissions story on the places row itself.\n\nGOAL: Add a place_tags layer where any user can attach tags to any place. Tags become the social, editable classification — place_type and cuisine stay frozen as whatever Google said when the place was created.\n\nSCHEMA:\n- place_tags table: place_id uuid, tag text (lowercased), added_by_user_id uuid, created_at timestamptz.\n- Primary key (place_id, tag, added_by_user_id) so a single user can't add the same tag twice, but multiple users can each add the same tag.\n- Suggested-tag list lives in JS config for v1 (Bakery, Coffee, Cocktails, Wine bar, Pizza, Brunch, Dessert, etc.) plus free-text input.\n\nUI:\n- Tag chips render on each place card, ordered by count of users who added each tag (most-tagged first).\n- '+ Add tag' affordance on the card opens a small picker: suggested tags + free-text input.\n- Removing a tag only removes the current user's contribution; the tag persists if anyone else added it.\n- Filter bar gains a 'by tag' option (augments or replaces the existing type filter).\n\nDEFER (separate v2 follow-up ticket): smart ranking that orders tags based on comment content — e.g., if comments mention croissants, 'Bakery' bubbles up over 'Coffee'. Two implementation paths to evaluate: cheap (keyword frequency table) or smart (LLM scoring). Don't build until manual tags are in use and we observe the wrong tag winning.",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "M",
+      "status": "backlog",
+      "acceptanceCriteria": "- place_tags table exists with primary key (place_id, tag, added_by_user_id).\n- Any signed-in user can attach a tag to any place via the card UI.\n- Tags render as chips on each place card, ordered by aggregate count (most-tagged first).\n- Removing a tag only removes the current user's contribution to it.\n- Filter bar can filter places by tag.\n- place_type field is left in schema but no longer drives UI categorization — deprecated, removable in a later ticket.",
+      "reproSteps": "",
+      "affectedFiles": "supabase/migrations/0011_place_tags.sql (new), src/js/places-service.js, src/js/ui-render.js, src/js/ui-events.js, src/styles/main.css, index.html",
+      "tags": [],
+      "updatedAt": "2026-05-04T00:00:00.000Z",
+      "releaseId": "REL-11",
+      "createdAt": "2026-05-04T00:00:00.000Z"
     }
   ],
   "releases": [

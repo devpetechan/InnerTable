@@ -2,15 +2,30 @@
 -- Backfill: scripts/backfill-comments.sql
 -- One-time script to migrate v0.2 comments + jsonb reactions into the v0.3
 -- normalised tables (public.comments + public.comment_reactions).
--- (IT-034, InnerTable v0.3.0)
+-- (IT-034 + IT-035, InnerTable v0.3.0)
+--
+-- UPDATED FOR IT-035
+-- ─────────────────────────────────────────────────────────────────
+-- IT-034 originally keyed comments to entries (comments.entry_id).  IT-035
+-- then re-keyed comments to places (comments.place_id) and dropped entry_id
+-- in migration 0010.  This script now writes place_id directly, looking it
+-- up via the recommendation row that the legacy comment was attached to.
+-- The entries table isn't on the path comment → place_id any more — the
+-- chain is: legacy comment.recommendation_id → recommendations.place_id.
 --
 -- PREREQUISITES
 -- ─────────────────────────────────────────────────────────────────
---   1. Migration 0008_entries.sql has been applied
---   2. scripts/backfill-entries.sql has been run
---      (so every (author, place) pair has an entry row)
---   3. Migration 0009_comments.sql has been applied
+--   1. Migration 0007_places.sql has been applied
+--   2. scripts/backfill-places.sql has been run
+--      (so every public.recommendations row has a non-NULL place_id)
+--   3. Migration 0008_entries.sql has been applied
+--   4. scripts/backfill-entries.sql has been run
+--      (entries aren't directly used here, but they're part of the v0.3 state
+--       this script is migrating into)
+--   5. Migration 0009_comments.sql has been applied
 --      (so public.comments_v2 exists alongside the new public.comments table)
+--   6. Migration 0010_comments_place_id_and_quotes.sql has been applied
+--      (so public.comments has place_id NOT NULL and no entry_id)
 --
 -- Run this in the Supabase SQL editor (or psql).  The whole script is wrapped
 -- in a transaction; any verification failure rolls back cleanly without
@@ -19,10 +34,10 @@
 -- WHAT THIS DOES
 -- ─────────────────────────────────────────────────────────────────
 --   PHASE 1 — copy comment rows
---     For each row in comments_v2, look up the entry that matches
---     (recommendation.author_id, recommendation.place_id).  Insert into
---     the new comments table with deleted_at derived from the legacy
---     `deleted` boolean (true → created_at as a placeholder, false → NULL).
+--     For each row in comments_v2, look up the recommendation it was attached
+--     to and copy that recommendation's place_id onto the new comment.
+--     deleted_at is derived from the legacy `deleted` boolean (true →
+--     created_at as a placeholder, false → NULL).
 --
 --   PHASE 2 — explode jsonb reactions into comment_reactions rows
 --     Legacy jsonb shape:  { "🔥": { "<user_id>": true, ... }, "👍": {...} }
@@ -65,8 +80,8 @@ END $$;
 
 -- -----------------------------------------------------------------------------
 -- Prereq check: every legacy comment must point at a recommendation whose
--- (author_id, place_id) maps to a real entry.  If not, the entries backfill
--- (IT-033) didn't finish or the recommendation was deleted out from under it.
+-- place_id is set.  If any are missing, scripts/backfill-places.sql wasn't
+-- run (or didn't finish) — fix that first.
 -- -----------------------------------------------------------------------------
 DO $$
 DECLARE
@@ -75,13 +90,11 @@ BEGIN
   SELECT count(*) INTO v_orphans
   FROM public.comments_v2 c
   LEFT JOIN public.recommendations r ON r.id = c.recommendation_id
-  LEFT JOIN public.entries        e ON e.user_id  = r.author_id
-                                    AND e.place_id = r.place_id
-  WHERE e.id IS NULL;
+  WHERE r.id IS NULL OR r.place_id IS NULL;
 
   IF v_orphans > 0 THEN
     RAISE EXCEPTION
-      'Cannot backfill comments: % comment row(s) have no matching entry — check that scripts/backfill-entries.sql ran cleanly',
+      'Cannot backfill comments: % comment row(s) reference a recommendation that is missing or has no place_id — check that scripts/backfill-places.sql ran cleanly',
       v_orphans;
   END IF;
 END $$;
@@ -89,10 +102,12 @@ END $$;
 
 -- =============================================================================
 -- PHASE 1: Copy comment rows from comments_v2 → comments
+-- Comments are now place-keyed (IT-035, migration 0010).  We pull place_id
+-- straight from the recommendation the legacy comment was attached to.
 -- =============================================================================
 INSERT INTO public.comments (
   id,
-  entry_id,
+  place_id,
   author_id,
   text,
   deleted_at,
@@ -101,16 +116,14 @@ INSERT INTO public.comments (
 )
 SELECT
   c.id                                                AS id,         -- preserve the uuid
-  e.id                                                AS entry_id,   -- the (author, place) entry
+  r.place_id                                          AS place_id,   -- the place this comment is about
   c.author_id                                         AS author_id,
   c.text                                              AS text,
   CASE WHEN c.deleted THEN c.created_at ELSE NULL END AS deleted_at,
   c.created_at                                        AS created_at,
   c.updated_at                                        AS updated_at
 FROM public.comments_v2 c
-JOIN public.recommendations r ON r.id = c.recommendation_id
-JOIN public.entries         e ON e.user_id  = r.author_id
-                              AND e.place_id = r.place_id;
+JOIN public.recommendations r ON r.id = c.recommendation_id;
 
 
 -- =============================================================================
@@ -147,7 +160,7 @@ DECLARE
   v_new_comments            bigint;
   v_legacy_reaction_pairs   bigint;
   v_new_reactions           bigint;
-  v_orphan_entries          bigint;
+  v_orphan_places           bigint;
   v_orphan_comments         bigint;
   v_pk_violations           bigint;
 BEGIN
@@ -171,12 +184,12 @@ BEGIN
 
   SELECT count(*) INTO v_new_reactions FROM public.comment_reactions;
 
-  -- Sanity: every new comment should reference a real entry, and every
+  -- Sanity: every new comment should reference a real place, and every
   -- reaction should reference a real comment.  FKs make this impossible,
   -- but checking is cheap.
-  SELECT count(*) INTO v_orphan_entries
+  SELECT count(*) INTO v_orphan_places
     FROM public.comments c
-    WHERE NOT EXISTS (SELECT 1 FROM public.entries e WHERE e.id = c.entry_id);
+    WHERE NOT EXISTS (SELECT 1 FROM public.places p WHERE p.id = c.place_id);
 
   SELECT count(*) INTO v_orphan_comments
     FROM public.comment_reactions r
@@ -196,7 +209,7 @@ BEGIN
   RAISE NOTICE '  New comments                     : %', v_new_comments;
   RAISE NOTICE '  Legacy distinct (comment, user)  : %', v_legacy_reaction_pairs;
   RAISE NOTICE '  New comment_reactions            : %', v_new_reactions;
-  RAISE NOTICE '  Comments with missing entry FK   : %', v_orphan_entries;
+  RAISE NOTICE '  Comments with missing place FK   : %', v_orphan_places;
   RAISE NOTICE '  Reactions with missing comment FK: %', v_orphan_comments;
   RAISE NOTICE '  Reaction PK violations           : %', v_pk_violations;
 
@@ -212,10 +225,10 @@ BEGIN
       v_legacy_reaction_pairs, v_new_reactions;
   END IF;
 
-  IF v_orphan_entries > 0 OR v_orphan_comments > 0 THEN
+  IF v_orphan_places > 0 OR v_orphan_comments > 0 THEN
     RAISE EXCEPTION
-      'Backfill FAILED: orphan FK references (entries: %, comments: %) — rolled back',
-      v_orphan_entries, v_orphan_comments;
+      'Backfill FAILED: orphan FK references (places: %, comments: %) — rolled back',
+      v_orphan_places, v_orphan_comments;
   END IF;
 
   IF v_pk_violations > 0 THEN
