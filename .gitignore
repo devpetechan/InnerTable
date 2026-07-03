@@ -25,3 +25,11 @@ supabase/.temp
 supabase/.env.keys
 supabase/.env.local
 supabase/.env.*.local
+supabase/snippets/
+
+# ── Local-only data dumps (contain real user PII — never commit) ────────────
+prod-data.sql
+
+# ── Local tool state & OS noise ──────────────────────────────────────────────
+.claude/
+.DS_Store
