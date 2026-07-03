@@ -22,25 +22,35 @@ document.getElementById('google-signin-btn').addEventListener('click', () => {
 //    either the user just returned from OAuth or they have a stored session.
 //  - SIGNED_IN: fires after token refresh or explicit sign-in events.
 //  - SIGNED_OUT: fires after signOut() — reload to show the welcome screen.
-supabaseClient.auth.onAuthStateChange(async (event, session) => {
+// DEADLOCK WARNING — do not make this callback async or await Supabase calls
+// inside it.  supabase-js awaits this callback while it is still initializing
+// the client.  Any Supabase call in here (even indirectly, via
+// buildCurrentUser) waits for that same initialization to finish → circular
+// wait → every later call hangs forever.  Only bites when the page loads with
+// a stored session (INITIAL_SESSION), which made it look like a sign-in loop.
+// setTimeout(…, 0) defers our work until after the callback returns, letting
+// initialization complete first — the officially recommended pattern.
+supabaseClient.auth.onAuthStateChange((event, session) => {
   console.log('[auth] event:', event, '| has session:', !!session);
   if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
-    try {
-      await buildCurrentUser(session.user);
-      showApp();
-    } catch (err) {
-      console.error('[auth] buildCurrentUser or showApp failed:', err);
-      // Still show the app using whatever we have from the session itself
-      if (!currentUser) {
-        currentUser = {
-          id:           session.user.id,
-          display_name: session.user.user_metadata?.full_name || session.user.email,
-          avatar_url:   session.user.user_metadata?.avatar_url || null,
-          is_admin:     false
-        };
+    setTimeout(async () => {
+      try {
+        await buildCurrentUser(session.user);
+        showApp();
+      } catch (err) {
+        console.error('[auth] buildCurrentUser or showApp failed:', err);
+        // Still show the app using whatever we have from the session itself
+        if (!currentUser) {
+          currentUser = {
+            id:           session.user.id,
+            display_name: session.user.user_metadata?.full_name || session.user.email,
+            avatar_url:   session.user.user_metadata?.avatar_url || null,
+            is_admin:     false
+          };
+        }
+        showApp();
       }
-      showApp();
-    }
+    }, 0);
   } else if (event === 'SIGNED_OUT') {
     location.reload();
   }

@@ -5,8 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>InnerTable 🍽️</title>
 
-  <!-- Supabase (UMD bundle — exposes window.supabase globally) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <!-- Supabase (UMD bundle — exposes window.supabase globally)
+       Pinned version: an unpinned @2 auto-upgrades under us (the CDN serves
+       whatever the latest 2.x is), which is how the auth deadlock appeared with
+       zero code changes on our side. Upgrade deliberately by bumping this number. -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0/dist/umd/supabase.js"></script>
   <link rel="stylesheet" href="src/styles/main.css" />
 </head>
 <body>
