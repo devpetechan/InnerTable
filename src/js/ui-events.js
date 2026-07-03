@@ -98,44 +98,16 @@ document.addEventListener('DOMContentLoaded', function () {
       .forEach((span, i) => span.addEventListener('click', () => setFactorStar(factor, i + 1)));
   });
 
-  // Main submit button
+  // Main submit button — IT-035 Phase 4 wires this to submitEntry().
+  // The legacy submitRec() is gone; saving is disabled until then.
   document.getElementById('submit-btn')
-    .addEventListener('click', submitRec);
+    .addEventListener('click', () => showToast('Saving is being rebuilt (IT-036) — coming in the next update.'));
 
-  // ── Attach step ───────────────────────────────────
-  document.getElementById('atc-been')
-    .addEventListener('click', () => setAttachExperience('been'));
-  document.getElementById('atc-try')
-    .addEventListener('click', () => setAttachExperience('try'));
-
-  document.querySelectorAll('#attach-star-picker span')
-    .forEach((span, i) => span.addEventListener('click', () => setAttachStars(i + 1)));
-
-  document.getElementById('abtn-go-now')
-    .addEventListener('click', () => setAttachGoNowOrHardPass('been-recommend'));
-  document.getElementById('abtn-hard-pass')
-    .addEventListener('click', () => setAttachGoNowOrHardPass('been-skip'));
-
-  ['quality', 'service', 'value', 'ambiance'].forEach(factor => {
-    document.querySelectorAll(`#afp-${factor} span`)
-      .forEach((span, i) => span.addEventListener('click', () => setAttachFactorStar(factor, i + 1)));
-  });
-
-  document.getElementById('attach-submit-btn')
-    .addEventListener('click', submitAttach);
-
-  // ── Duplicate prompt ──────────────────────────────
-  document.getElementById('dup-overlay')
-    .addEventListener('click', closeDupOnBg);
-
-  document.querySelector('#dup-overlay .btn-close')
-    .addEventListener('click', closeDupPrompt);
-
-  document.getElementById('dup-primary-btn')
-    .addEventListener('click', confirmDup);
-
-  document.querySelector('#dup-overlay .btn-ghost')
-    .addEventListener('click', closeDupPromptAndContinue);
+  // ── Attach step + duplicate prompt ────────────────
+  // Wiring removed in IT-035 Phase 3: their handlers were deleted with the
+  // legacy write path, and Phase 4 deletes the #attach-step / #dup-overlay
+  // markup itself.  (Leaving the old listeners in place threw a
+  // ReferenceError that aborted all wiring below this point.)
 
   // ── Place detail panel ────────────────────────────
   document.getElementById('place-detail-overlay')
