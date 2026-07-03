@@ -226,11 +226,10 @@ async function initAutocomplete() {
               selectedPlaceLat = place.location.lat();
               selectedPlaceLng = place.location.lng();
             }
-            // Store Place ID for duplicate detection
+            // Store Place ID — submitEntry() uses it to attach to an
+            // existing place silently (IT-036: no duplicate-prompt modal)
             if (place.id) {
               selectedPlaceId = place.id;
-              // Only check for duplicates when adding (not editing)
-              if (!editingId) checkForDuplicate(place.id, place.displayName || input.value);
             }
           } catch (err) { console.error('Place detail fetch error:', err); }
 

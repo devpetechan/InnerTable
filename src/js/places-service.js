@@ -207,3 +207,141 @@ function _onDbChange() {
   }, 200);
 }
 
+
+// ══════════════════════════════════════════════════
+//  WRITE PATH (IT-036)
+//  submitEntry() = place resolution + entry upsert.  A place that already
+//  exists (matched by google_place_id or chosen via "Add your take") gets
+//  your entry attached silently — no duplicate-prompt modal.
+// ══════════════════════════════════════════════════
+
+// Map the modal's addType to the entries.status CHECK values.
+// NOTE: the DB stores want-to-go as 'try' (migration 0008); the adapter
+// normalizes it to 'want-to-go' on read.
+function computeUserStatus(type) {
+  if (type === 'try' || type === 'want-to-go') return 'try';
+  if (type === 'been-skip') return 'been-skip';
+  return 'been-recommend';
+}
+
+// Resolve the place row for this submission and return its id.
+//   - editing / adding a take on a known place → use the stored place id
+//   - Google-selected place → find by google_place_id, insert if new
+//   - free-text place → always insert
+// Places are never UPDATEd here: metadata is locked after creation
+// (resolved decision #1; the tags system in IT-083 replaces edits), and
+// RLS on places only grants SELECT + INSERT anyway.
+async function _resolvePlaceId(placeRow) {
+  if (editingPlaceId)  return editingPlaceId;
+  if (addingToPlaceId) return addingToPlaceId;
+
+  if (selectedPlaceId) {
+    placeRow.google_place_id = selectedPlaceId;
+    const { data: existing, error: findErr } = await supabaseClient
+      .from('places').select('id')
+      .eq('google_place_id', selectedPlaceId)
+      .maybeSingle();
+    if (findErr) throw findErr;
+    if (existing) return existing.id;   // silent attach — no modal
+  }
+
+  const { data, error } = await supabaseClient
+    .from('places').insert(placeRow).select('id').single();
+  if (error) {
+    // 23505 = unique violation on google_place_id: someone inserted the same
+    // place between our select and insert.  Re-select and attach to theirs.
+    if (error.code === '23505' && placeRow.google_place_id) {
+      const { data: raced } = await supabaseClient
+        .from('places').select('id')
+        .eq('google_place_id', placeRow.google_place_id)
+        .single();
+      if (raced) return raced.id;
+    }
+    throw error;
+  }
+  return data.id;
+}
+
+async function submitEntry() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { shake(document.getElementById('f-name')); return; }
+  if (!addType) return; // submit button is disabled until an experience is chosen
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  // ── Place row (venue data, not user data) ──
+  // created_by is required by the places INSERT policy (WITH CHECK).
+  const placeRow = {
+    name,
+    place_type: placeType,
+    location:   document.getElementById('f-location').value.trim() || null,
+    cuisine:    document.getElementById('f-cuisine').value         || null,
+    price:      document.getElementById('f-price').value           || null,
+    lat:        selectedPlaceLat,
+    lng:        selectedPlaceLng,
+    created_by: currentUser.id
+  };
+
+  let placeId;
+  try {
+    placeId = await _resolvePlaceId(placeRow);
+  } catch (err) {
+    console.error('[submitEntry] place resolution failed:', err);
+    showToast('❌ Could not save the place.');
+    btn.disabled = false; btn.textContent = 'Save';
+    return;
+  }
+
+  // ── Entry row (the user's take) ──
+  // Rating columns are always written explicitly (null = not rated) so an
+  // edit that clears a rating actually clears it under upsert semantics.
+  const isTryType = (addType === 'try' || addType === 'want-to-go');
+  const entryRow = {
+    user_id:  currentUser.id,
+    place_id: placeId,
+    status:   computeUserStatus(addType),
+    notes:    document.getElementById('f-notes').value.trim()    || null,
+    try_note: document.getElementById('f-try-note').value.trim() || null,
+    url:      document.getElementById('f-url').value.trim()      || null,
+    overall_rating: null, quality: null, service: null, value: null, ambiance: null
+  };
+
+  if (!isTryType && selectedStars > 0) {
+    entryRow.overall_rating = selectedStars;
+    entryRow.quality  = factorRatings.quality  || null;
+    entryRow.service  = factorRatings.service  || null;
+    entryRow.value    = factorRatings.value    || null;
+    entryRow.ambiance = factorRatings.ambiance || null;
+  }
+
+  const { error: entryErr } = await supabaseClient
+    .from('entries').upsert(entryRow, { onConflict: 'user_id,place_id' });
+  if (entryErr) {
+    console.error('[submitEntry] entry write failed:', entryErr);
+    showToast('❌ Could not save your entry.');
+    btn.disabled = false; btn.textContent = 'Save';
+    return;
+  }
+
+  const toastMsg = isTryType ? '📌 Saved to your list!'
+    : addType === 'been-skip' ? '🚫 Hard Pass noted!'
+    : '🎉 Review saved!';
+  showToast(toastMsg);
+  closeModal();
+  btn.disabled = false; btn.textContent = 'Save';
+  // Realtime triggers the re-fetch + re-render.
+}
+
+
+// ══════════════════════════════════════════════════
+//  DELETE — removes *my entry* on a place, never the place itself.
+//  The place card stays visible with everyone else's takes.
+// ══════════════════════════════════════════════════
+async function deleteEntry(entryId) {
+  if (!confirm('Delete your take on this place? This cannot be undone.')) return;
+  const { error } = await supabaseClient.from('entries').delete().eq('id', entryId);
+  if (error) { console.error(error); showToast('❌ Could not delete.'); return; }
+  showToast('🗑 Your take was deleted.');
+}
+

@@ -103,12 +103,11 @@ function placeCardBodyHTML(place) {
     : '';
 
   // "Add your take" CTA — only when the current user has no take here.
-  // Opens the plain add modal for now; Phase 4 wires it to attach directly
-  // to this place.
+  // Opens the modal prefilled with this place (place fields locked).
   const hasMyTake = place.takes.some(t => t.userId === currentUser.id);
   const addTakeCta = hasMyTake ? '' : `
     <div class="add-your-take-cta">
-      <button class="card-btn primary-action" onclick="openModal()">➕ Add your take</button>
+      <button class="card-btn primary-action" onclick="addTakeForPlace('${place.id}')">➕ Add your take</button>
     </div>`;
 
   return `

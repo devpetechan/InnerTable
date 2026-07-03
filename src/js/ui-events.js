@@ -98,16 +98,9 @@ document.addEventListener('DOMContentLoaded', function () {
       .forEach((span, i) => span.addEventListener('click', () => setFactorStar(factor, i + 1)));
   });
 
-  // Main submit button — IT-035 Phase 4 wires this to submitEntry().
-  // The legacy submitRec() is gone; saving is disabled until then.
+  // Main submit button
   document.getElementById('submit-btn')
-    .addEventListener('click', () => showToast('Saving is being rebuilt (IT-036) — coming in the next update.'));
-
-  // ── Attach step + duplicate prompt ────────────────
-  // Wiring removed in IT-035 Phase 3: their handlers were deleted with the
-  // legacy write path, and Phase 4 deletes the #attach-step / #dup-overlay
-  // markup itself.  (Leaving the old listeners in place threw a
-  // ReferenceError that aborted all wiring below this point.)
+    .addEventListener('click', submitEntry);
 
   // ── Place detail panel ────────────────────────────
   document.getElementById('place-detail-overlay')
