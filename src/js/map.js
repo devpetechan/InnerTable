@@ -57,17 +57,19 @@ function initMap() {
   renderMapMarkers();
 }
 
-function geocodeEntry(id, r) {
+function geocodePlace(place) {
   if (!googleMapsReady) return;
-  const query = [r.name, r.location].filter(Boolean).join(', ');
+  const query = [place.name, place.location].filter(Boolean).join(', ');
   const geocoder = new google.maps.Geocoder();
   geocoder.geocode({ address: query }, async (results, status) => {
-    geocodingCache.delete(id);
+    geocodingCache.delete(place.id);
     if (status !== 'OK' || !results[0]) return;
     const lat = results[0].geometry.location.lat();
     const lng = results[0].geometry.location.lng();
-    // Save coords to Supabase — the Realtime subscription will auto re-render the map
-    await supabaseClient.from('recommendations').update({ lat, lng }).eq('id', id);
+    // Save coords to the place row — Realtime re-renders the map.
+    // NOTE: places currently has no UPDATE RLS policy (0007 only grants
+    // SELECT/INSERT), so this write may silently no-op until a policy lands.
+    await supabaseClient.from('places').update({ lat, lng }).eq('id', place.id);
   });
 }
 
@@ -79,50 +81,54 @@ function renderMapMarkers() {
 
   const noCoordsBanner = document.getElementById('map-no-coords');
 
-  let entries = Object.entries(allRecs);
+  // IT-035: one pin per place (deduplicated by design — allPlaces is place-keyed)
+  let places = Object.values(allPlaces);
 
-  // Status filter
-  entries = entries.filter(([,r]) => {
-    if (currentView === 'try')         return r.status === 'try';
-    if (currentView === 'recommended') return r.status === 'recommended';
-    if (currentView === 'no')          return r.status === 'not-recommended';
-    return true;
-  });
+  // Status filter — a place matches if any take matches
+  if (currentView !== 'all') {
+    places = places.filter(p => p.takes.some(t => {
+      if (currentView === 'try')         return t.status === 'want-to-go';
+      if (currentView === 'recommended') return t.status === 'been-recommend';
+      if (currentView === 'no')          return t.status === 'been-skip';
+      return true;
+    }));
+  }
 
   // Type filter
   if (currentTypeFilter !== 'all') {
-    entries = entries.filter(([,r]) => r.placeType === currentTypeFilter);
+    places = places.filter(p => p.placeType === currentTypeFilter);
   }
 
   // Friend/author filter (same as list view)
-  entries = entries.filter(([,r]) => {
+  places = places.filter(p => {
     if (currentFilter === 'all')  return true;
-    if (currentFilter === 'mine') return r.author === currentUser.display_name;
-    return r.author === currentFilter;
+    if (currentFilter === 'mine') return p.takes.some(t => t.author === currentUser.display_name);
+    return p.takes.some(t => t.author === currentFilter);
   });
 
-  if (!entries.length) {
+  if (!places.length) {
     noCoordsBanner.style.display = 'block';
     return;
   }
   noCoordsBanner.style.display = 'none';
 
-  // Geocode entries that don't yet have coordinates (fire-and-forget; Firebase update re-renders)
-  entries.filter(([,r]) => !r.lat || !r.lng).forEach(([id, r]) => {
-    if (!geocodingCache.has(id)) {
-      geocodingCache.add(id);
-      geocodeEntry(id, r);
+  // Geocode places that don't yet have coordinates (fire-and-forget; the
+  // Realtime subscription re-renders once coords land)
+  places.filter(p => !p.lat || !p.lng).forEach(p => {
+    if (!geocodingCache.has(p.id)) {
+      geocodingCache.add(p.id);
+      geocodePlace(p);
     }
   });
 
-  const withCoords = entries.filter(([,r]) => r.lat && r.lng);
+  const withCoords = places.filter(p => p.lat && p.lng);
   if (!withCoords.length) return; // geocoding in progress — markers will appear on next re-render
 
   const bounds = new google.maps.LatLngBounds();
 
-  withCoords.forEach(([id, r]) => {
-    const pos      = { lat: r.lat, lng: r.lng };
-    const pinColor = r.placeType === 'bar' ? '#4a6b7c' : '#c0522a';
+  withCoords.forEach(p => {
+    const pos      = { lat: p.lat, lng: p.lng };
+    const pinColor = p.placeType === 'bar' ? '#4a6b7c' : '#c0522a';
 
     const pinEl = document.createElement('div');
     pinEl.style.cssText = `width:16px;height:16px;border-radius:50%;background:${pinColor};border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);cursor:pointer;`;
@@ -130,11 +136,11 @@ function renderMapMarkers() {
     const marker = new google.maps.marker.AdvancedMarkerElement({
       position: pos,
       map: mapInstance,
-      title: r.name,
+      title: p.name,
       content: pinEl,
     });
 
-    marker.addListener('click', () => openPlaceDetail(id));
+    marker.addListener('click', () => openPlaceDetail(p.id));
 
     mapMarkers.push(marker);
     bounds.extend(pos);
@@ -220,11 +226,10 @@ async function initAutocomplete() {
               selectedPlaceLat = place.location.lat();
               selectedPlaceLng = place.location.lng();
             }
-            // Store Place ID for duplicate detection
+            // Store Place ID — submitEntry() uses it to attach to an
+            // existing place silently (IT-036: no duplicate-prompt modal)
             if (place.id) {
               selectedPlaceId = place.id;
-              // Only check for duplicates when adding (not editing)
-              if (!editingId) checkForDuplicate(place.id, place.displayName || input.value);
             }
           } catch (err) { console.error('Place detail fetch error:', err); }
 

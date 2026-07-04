@@ -19,14 +19,10 @@ let allRecs            = {};
 let factorRatings      = { quality: 0, service: 0, value: 0, ambiance: 0 };
 let selectedPlaceLat   = null;
 let selectedPlaceLng   = null;
-let selectedPlaceId    = null;   // Google Place ID for duplicate detection
+let selectedPlaceId    = null;   // Google Place ID of the place picked via autocomplete
 let beenStatusChosen   = false;  // true once user explicitly clicks Go Now or Hard Pass in been-fields
-let pendingDupId       = null;   // Firebase key of detected duplicate entry
-let pendingDupIsOwn    = false;  // true if current user is the author of the duplicate
-let attachingToId      = null;   // Firebase key of entry being attached to
-let attachStatus       = null;   // 'want-to-go' | 'been-recommend' | 'been-skip'
-let attachStars        = 0;
-let attachFactorRatings = { quality: 0, service: 0, value: 0, ambiance: 0 };
+let editingPlaceId     = null;   // place uuid of the entry being edited (place fields locked)
+let addingToPlaceId    = null;   // place uuid when adding a take to an existing place (CTA)
 let mapInstance        = null;
 let mapMarkers         = [];
 let googleMapsReady    = false;
@@ -159,101 +155,96 @@ function setDisplayMode(mode) {
 
 //  MODAL
 // ══════════════════════════════════════════════════
-function openModal(prefillId) {
-  // prefillId is a string ID when called programmatically (e.g. upgradeToTried).
-  // When wired as a direct click listener the browser passes a PointerEvent —
-  // reject anything that isn't a plain string so editingId stays null.
-  editingId = (typeof prefillId === 'string') ? prefillId : null;
+function openModal() {
+  // Fresh add only — editing goes through editEntry(), and adding a take to
+  // an existing place goes through addTakeForPlace().
+  clearForm();
   document.getElementById('modal-overlay').classList.add('open');
-  document.getElementById('form-step').style.display   = 'block';
-  document.getElementById('attach-step').style.display = 'none';
-  document.getElementById('modal-title').textContent = editingId ? 'Mark as Tried' : 'Add a Place';
-
-  // Reset experience toggle for fresh add
-  document.getElementById('exp-been').classList.remove('active');
-  document.getElementById('exp-try').classList.remove('active');
-  document.getElementById('been-fields').style.display = 'none';
-  document.getElementById('try-fields').style.display  = 'none';
-  document.getElementById('btn-go-now').classList.remove('active');
-  document.getElementById('btn-hard-pass').classList.remove('active');
-  addType = null;
-  beenStatusChosen = false;
-  updateSubmitBtn();
-
-  if (editingId) {
-    // For upgrade-to-tried: auto-select "I've Been" and show been-fields
-    setBeenOrTry('been');
-    const r = allRecs[editingId];
-    if (r) {
-      document.getElementById('f-name').value     = r.name     || '';
-      document.getElementById('f-location').value = r.location || '';
-      setPlaceType(r.placeType || 'restaurant');
-    }
-  }
+  document.getElementById('form-step').style.display = 'block';
+  document.getElementById('modal-title').textContent = 'Add a Place';
+  document.getElementById('form-step-title').style.display = 'none';
+  document.querySelector('.modal').scrollTop = 0;
 }
 
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
-  document.getElementById('attach-step').style.display = 'none';
   clearForm();
-  editingId     = null;
-  attachingToId = null;
-  attachStatus  = null;
 }
 
 function closeModalOnBg(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
 
-function upgradeToTried(id) { openModal(id); }
+// Lock/unlock the fields that belong to the place row (not the user's take).
+// Place metadata can't be edited after creation (IT-035 resolved decision #1),
+// so these are disabled whenever the place already exists.
+function setPlaceFieldsLocked(locked) {
+  ['f-name', 'f-location', 'f-cuisine', 'f-price'].forEach(id => {
+    document.getElementById(id).disabled = locked;
+  });
+  document.getElementById('tog-restaurant').disabled = locked;
+  document.getElementById('tog-bar').disabled        = locked;
+}
 
-function editEntry(id) {
-  const r = allRecs[id];
-  if (!r) return;
-  editingId = id;
+// Prefill the place fields of the modal from an allPlaces entry and lock them.
+function _prefillPlaceFields(place) {
+  document.getElementById('f-name').value     = place.name     || '';
+  document.getElementById('f-location').value = place.location || '';
+  document.getElementById('f-cuisine').value  = place.cuisine  || '';
+  document.getElementById('f-price').value    = place.price    || '';
+  setPlaceType(place.placeType || 'restaurant');
+  setPlaceFieldsLocked(true);
+}
+
+// "Add your take" CTA on a place card where the current user has no entry yet.
+function addTakeForPlace(placeId) {
+  const place = allPlaces[placeId];
+  if (!place) return;
+  openModal();
+  addingToPlaceId = placeId;
+  document.getElementById('modal-title').textContent = 'Add Your Take';
+  _prefillPlaceFields(place);
+  updateSubmitBtn();
+}
+
+function upgradeToTried(entryId) {
+  editEntry(entryId);
+  if (!editingId) return; // entry not found
+  document.getElementById('modal-title').textContent = 'Mark as Tried';
+  setBeenOrTry('been');
+}
+
+function editEntry(entryId) {
+  // Locate my take and its place in the place-keyed store
+  let place = null, take = null;
+  for (const p of Object.values(allPlaces)) {
+    const t = p.takes.find(t => t.entryId === entryId);
+    if (t) { place = p; take = t; break; }
+  }
+  if (!place) return;
+
+  clearForm();
+  editingId      = entryId;
+  editingPlaceId = place.id;
   document.getElementById('modal-overlay').classList.add('open');
-  document.getElementById('modal-title').textContent = 'Edit Place';
+  document.getElementById('modal-title').textContent = 'Edit Your Take';
   document.getElementById('form-step').style.display = 'block';
-  document.getElementById('attach-step').style.display = 'none';
+  document.getElementById('form-step-title').style.display = 'none';
 
-  if (r.status === 'try') {
-    addType = 'try';
-    beenStatusChosen = false;
-    document.getElementById('form-step-title').textContent = '📌 Edit Place to Try';
-    document.getElementById('form-step-title').style.display = 'block';
-    document.getElementById('try-fields').style.display  = 'block';
-    document.getElementById('been-fields').style.display = 'none';
-    document.getElementById('exp-been').classList.remove('active');
-    document.getElementById('exp-try').classList.add('active');
-    document.getElementById('f-try-note').value = r.tryNote || '';
-    document.getElementById('f-url').value       = r.url     || '';
+  _prefillPlaceFields(place);
+
+  if (take.status === 'want-to-go') {
+    setBeenOrTry('try');
+    document.getElementById('f-try-note').value = take.tryNote || '';
+    document.getElementById('f-url').value      = take.url     || '';
   } else {
-    const isSkip = r.status === 'not-recommended';
-    addType = isSkip ? 'been-skip' : 'been-recommend';
-    beenStatusChosen = true;
-    document.getElementById('form-step-title').textContent = "🍴 Edit Place You've Visited";
-    document.getElementById('form-step-title').style.display = 'block';
-    document.getElementById('try-fields').style.display  = 'none';
-    document.getElementById('been-fields').style.display = 'block';
-    document.getElementById('exp-been').classList.add('active');
-    document.getElementById('exp-try').classList.remove('active');
-    document.getElementById('btn-go-now').classList.toggle('active', !isSkip);
-    document.getElementById('btn-hard-pass').classList.toggle('active', isSkip);
-    document.getElementById('f-cuisine').value = r.cuisine || '';
-    document.getElementById('f-price').value   = r.price   || '';
-    // Use author's own rating if in userRatings, else fall back to top-level rating
-    const authorRating = r.userRatings && r.userRatings[r.author] ? r.userRatings[r.author] : r;
-    if (authorRating.rating || authorRating.overall) setStars(authorRating.overall || authorRating.rating || 0);
-    document.getElementById('f-notes').value   = r.notes   || '';
-    const fr = authorRating.factorRatings || (r.userRatings && r.userRatings[r.author]) || r.factorRatings;
-    if (fr) {
-      ['quality','service','value','ambiance'].forEach(f => {
-        if (fr[f]) setFactorStar(f, fr[f]);
-      });
-    }
+    setBeenOrTry('been');
+    setGoNowOrHardPass(take.status); // marks Go Now / Hard Pass active
+    if (take.rating > 0) setStars(take.rating);
+    ['quality','service','value','ambiance'].forEach(f => {
+      if (take.factorRatings && take.factorRatings[f]) setFactorStar(f, take.factorRatings[f]);
+    });
+    document.getElementById('f-notes').value = take.notes || '';
   }
 
-  document.getElementById('f-name').value     = r.name     || '';
-  document.getElementById('f-location').value = r.location || '';
-  setPlaceType(r.placeType || 'restaurant');
   updateSubmitBtn();
   document.querySelector('.modal').scrollTop = 0;
 }
@@ -265,34 +256,80 @@ function toggleCommentForm(id) {
   if (opening) document.getElementById('ci-' + id).focus();
 }
 
-async function submitComment(id, btn) {
-  const input = document.getElementById('ci-' + id);
+async function submitComment(placeId, btn) {
+  const input = document.getElementById('ci-' + placeId);
   const text  = input.value.trim();
   if (!text) { input.focus(); return; }
   btn.disabled = true;
 
-  // v0.3: comments are keyed to entries, not recommendations.  Each rec was
-  // backfilled into exactly one entry; recIdToEntryId() looks that up.  If
-  // no entry exists yet (legacy rec without a place_id), we surface an error
-  // instead of silently dropping the comment.
-  const entryId = recIdToEntryId(id);
-  if (!entryId) {
-    console.error('[submitComment] no entry exists for rec', id);
-    showToast('❌ Cannot post comment — this place is missing data. Please refresh.');
+  // IT-035 (migration 0010): comments are keyed straight to places — one
+  // shared thread per restaurant, regardless of whose take you're reading.
+  const row = {
+    place_id:  placeId,
+    author_id: currentUser.id,
+    text
+  };
+
+  // Quote reply: snapshot the original's author + text at write time.  A
+  // snapshot (rather than a parent_id join) survives the original being
+  // edited or deleted — quotes are a record of what was said at the time.
+  if (_pendingQuote && _pendingQuote.placeId === placeId) {
+    row.quoted_comment_id = _pendingQuote.commentId;
+    row.quoted_author     = _pendingQuote.author;
+    row.quoted_text       = _pendingQuote.text;
+  }
+
+  const { error } = await supabaseClient.from('comments').insert(row);
+  if (error) {
+    console.error(error);
+    showToast('❌ Could not post comment.');
     btn.disabled = false;
     return;
   }
 
-  const { error } = await supabaseClient.from('comments').insert({
-    entry_id:  entryId,
-    author_id: currentUser.id,
-    text
-  });
-  if (error) {
-    console.error(error);
-    showToast('❌ Could not post comment.');
-  }
+  input.value = '';
+  cancelQuote(placeId);
   btn.disabled = false;
+  // Refresh explicitly — don't rely on realtime (see workspace/phase-2-4-test-results.md:
+  // the realtime publication may not include the new tables).
+  await loadPlaces();
+}
+
+// ── Quote replies ─────────────────────────────────
+// _pendingQuote holds the comment being replied to until the reply is posted.
+// Keyed by placeId so an abandoned reply on one card can't leak into another.
+let _pendingQuote = null;
+
+function startQuoteReply(placeId, commentId) {
+  const place = allPlaces[placeId];
+  const c = place && place.comments.find(c => c.id === commentId);
+  if (!c || c.deleted) return;
+
+  _pendingQuote = { placeId, commentId: c.id, author: c.author, text: c.text };
+
+  // Make sure the comment form is open, then render the preview above it
+  const form = document.getElementById('cf-' + placeId);
+  if (form && form.style.display !== 'block') toggleCommentForm(placeId);
+
+  const previewEl = document.getElementById('quote-preview-' + placeId);
+  if (previewEl) {
+    const snippet = c.text.length > 140 ? c.text.slice(0, 140) + '…' : c.text;
+    previewEl.innerHTML = `
+      <div class="quote-preview">
+        <strong>Replying to ${esc(c.author)}:</strong>
+        <div class="quote-preview-text">${esc(snippet)}</div>
+        <button class="quote-cancel" onclick="cancelQuote('${placeId}')" title="Cancel reply">×</button>
+      </div>`;
+    previewEl.style.display = 'block';
+  }
+  document.getElementById('ci-' + placeId)?.focus();
+}
+
+function cancelQuote(placeId) {
+  if (_pendingQuote && _pendingQuote.placeId !== placeId) return;
+  _pendingQuote = null;
+  const previewEl = document.getElementById('quote-preview-' + placeId);
+  if (previewEl) { previewEl.innerHTML = ''; previewEl.style.display = 'none'; }
 }
 
 function startEditComment(recId, commentKey) {
@@ -318,6 +355,7 @@ async function saveCommentEdit(recId, commentKey, btn) {
     showToast('❌ Could not save edit.');
   }
   btn.disabled = false;
+  if (!error) await loadPlaces(); // explicit refresh — realtime may not be enabled
 }
 
 async function deleteComment(recId, commentKey) {
@@ -330,7 +368,9 @@ async function deleteComment(recId, commentKey) {
   if (error) {
     console.error(error);
     showToast('❌ Could not delete comment.');
+    return;
   }
+  await loadPlaces(); // explicit refresh — realtime may not be enabled
 }
 
 // ── Emoji Reactions ──────────────────────────────
@@ -347,10 +387,10 @@ async function toggleReaction(recId, commentKey, emoji) {
   //   - User has a DIFFERENT emoji on this comment → UPSERT to the new emoji
   //   - User has no reaction yet                   → INSERT
   //
-  // We read current state from allRecs (already fetched) instead of round-
-  // tripping to the DB.  Realtime will re-render after the write lands.
-  const rec     = allRecs[recId];
-  const comment = rec && rec.comments && rec.comments[commentKey];
+  // We read current state from allPlaces (already fetched) instead of round-
+  // tripping to the DB.  Comments are an array now — find by uuid.
+  const place   = allPlaces[recId];
+  const comment = place && place.comments.find(c => c.id === commentKey);
   const myName  = currentUser.display_name;
 
   // Find what emoji (if any) this user currently has on this comment.
@@ -379,14 +419,16 @@ async function toggleReaction(recId, commentKey, emoji) {
   if (error) {
     console.error(error);
     showToast('❌ Could not save reaction.');
+    return;
   }
+  await loadPlaces(); // explicit refresh — realtime may not be enabled on these tables
 }
 
 // Show a popup listing who has reacted, grouped by emoji
 function showReactionViewers(btn, recId, commentKey) {
   document.querySelectorAll('.reaction-viewers-popup').forEach(p => p.remove());
-  const rec = allRecs[recId];
-  const comment = rec && rec.comments && rec.comments[commentKey];
+  const place = allPlaces[recId];
+  const comment = place && place.comments.find(c => c.id === commentKey);
   const reactions = comment ? (comment.reactions || {}) : {};
 
   const popup = document.createElement('div');
@@ -530,40 +572,6 @@ function updateSubmitBtn() {
   }
 }
 
-// ── Attach experience toggle ──
-function setAttachExperience(type) {
-  const isBeen = type === 'been';
-  document.getElementById('atc-been').classList.toggle('active', isBeen);
-  document.getElementById('atc-try').classList.toggle('active', !isBeen);
-  if (isBeen) {
-    document.getElementById('attach-rating-section').style.display = 'block';
-    attachStatus = null;
-    document.getElementById('abtn-go-now').classList.remove('active');
-    document.getElementById('abtn-hard-pass').classList.remove('active');
-    // Submit enabled only once an overall star rating is selected
-    document.getElementById('attach-submit-btn').disabled = (attachStars === 0);
-  } else {
-    attachStatus = 'want-to-go';
-    document.getElementById('attach-rating-section').style.display = 'none';
-    document.getElementById('attach-submit-btn').disabled = false;
-  }
-}
-
-// ── Attach Go Now / Hard Pass toggle (optional) ──
-function setAttachGoNowOrHardPass(status) {
-  // Toggle: clicking the active button clears the selection
-  if (attachStatus === status) {
-    attachStatus = null;
-    document.getElementById('abtn-go-now').classList.remove('active');
-    document.getElementById('abtn-hard-pass').classList.remove('active');
-  } else {
-    attachStatus = status;
-    document.getElementById('abtn-go-now').classList.toggle('active',    status === 'been-recommend');
-    document.getElementById('abtn-hard-pass').classList.toggle('active', status === 'been-skip');
-  }
-  // Save enablement is driven by star rating, not status
-}
-
 // ══════════════════════════════════════════════════
 
 //  FORM CONTROLS
@@ -601,8 +609,11 @@ function clearForm() {
   document.getElementById('f-price').value   = '';
   setStars(0);
   setPlaceType('restaurant');
+  setPlaceFieldsLocked(false);
   addType          = null;
   editingId        = null;
+  editingPlaceId   = null;
+  addingToPlaceId  = null;
   beenStatusChosen = false;
   // Reset experience toggle
   document.getElementById('exp-been').classList.remove('active');

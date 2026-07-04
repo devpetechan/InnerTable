@@ -1627,6 +1627,144 @@ a.tag:hover { color: var(--color-primary); border-color: var(--color-primary); b
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   IT-035 — PLACE CARDS: takes stack, aggregate row, quote blocks
+═══════════════════════════════════════════════════════════════ */
+.aggregate-row {
+  margin-top: var(--sp-2);
+  font-size: .8rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.takes-stack {
+  margin-top: var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.take-row {
+  display: flex;
+  gap: 10px;
+  padding: var(--sp-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.take-meta   { flex: 1; font-size: .85rem; min-width: 0; }
+.take-author { font-weight: 600; }
+.take-date   { margin-left: 6px; font-size: .72rem; color: var(--color-text-muted); }
+
+.take-status-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.take-status-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: .72rem;
+  font-weight: 600;
+}
+.take-status-chip.recommended { background: var(--color-success-tint);   color: var(--color-success); }
+.take-status-chip.hard-pass   { background: var(--color-danger-tint);    color: var(--color-danger); }
+.take-status-chip.want-to-try { background: var(--color-secondary-tint); color: var(--color-secondary-hover); }
+
+.take-stars { color: var(--color-star); font-size: .85rem; }
+
+.take-note {
+  margin-top: 4px;
+  font-size: .82rem;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+}
+
+.take-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.add-your-take-cta {
+  margin-top: 10px;
+  padding: 10px;
+  background: var(--color-primary-tint);
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+/* Quote replies inside comments (rendered from Phase 3; written in Phase 5) */
+.comment-quote {
+  border-left: 3px solid var(--color-border);
+  padding-left: 10px;
+  margin-bottom: 6px;
+  font-size: .82rem;
+  color: var(--color-text-muted);
+}
+.comment-quote-author { font-weight: 600; }
+
+/* ── IT-035 Phase 5: mentions + quote-reply composer ── */
+
+/* @-mention chips inside rendered comment text */
+.mention {
+  background: var(--color-primary-tint);
+  color: var(--color-primary);
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* Autocomplete dropdown (single shared element, positioned by JS) */
+.mention-dropdown {
+  position: absolute;
+  display: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  list-style: none;
+  padding: 4px 0;
+  margin: 0;
+  min-width: 140px;
+  max-width: 220px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
+  z-index: 1000;
+}
+.mention-dropdown li {
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: .85rem;
+}
+.mention-dropdown li:hover { background: var(--color-primary-tint); }
+
+/* "Replying to…" preview above the comment input */
+.quote-preview {
+  position: relative;
+  background: var(--color-primary-tint);
+  border-left: 3px solid var(--color-primary);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 6px 28px 6px 10px;
+  margin-bottom: 8px;
+  font-size: .82rem;
+}
+.quote-preview-text { color: var(--color-text-muted); }
+.quote-cancel {
+  position: absolute;
+  top: 2px;
+  right: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+}
+.quote-cancel:hover { color: var(--color-text); }
+
+/* ═══════════════════════════════════════════════════════════════
    DESKTOP — min 640px
 ═══════════════════════════════════════════════════════════════ */
 @media (min-width: 640px) {
