@@ -621,7 +621,7 @@
       "reproSteps": "",
       "affectedFiles": "supabase/migrations/0004_places.sql, scripts/backfill-places.sql",
       "tags": [],
-      "updatedAt": "2026-04-25T16:03:02.161Z",
+      "updatedAt": "2026-07-04T13:06:53.614Z",
       "releaseId": "REL-10",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
@@ -639,7 +639,7 @@
       "reproSteps": "",
       "affectedFiles": "supabase/migrations/0008_entries.sql, scripts/backfill-entries.sql",
       "tags": [],
-      "updatedAt": "2026-04-25T16:49:18.980Z",
+      "updatedAt": "2026-07-04T13:06:53.614Z",
       "releaseId": "REL-10",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
@@ -657,7 +657,7 @@
       "reproSteps": "",
       "affectedFiles": "supabase/migrations/0009_comments.sql, scripts/backfill-comments.sql",
       "tags": [],
-      "updatedAt": "2026-04-27T12:03:41.443Z",
+      "updatedAt": "2026-07-04T13:06:53.614Z",
       "releaseId": "REL-10",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
@@ -675,7 +675,7 @@
       "reproSteps": "",
       "affectedFiles": "src/js/ui-render.js, src/js/places-service.js, src/js/app.js, src/js/map.js, index.html, src/styles/main.css",
       "tags": [],
-      "updatedAt": "2026-07-04T11:19:55.751Z",
+      "updatedAt": "2026-07-04T13:06:53.614Z",
       "releaseId": "REL-10",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
@@ -693,7 +693,7 @@
       "reproSteps": "",
       "affectedFiles": "src/js/places-service.js, src/js/app.js, src/js/ui-events.js, index.html",
       "tags": [],
-      "updatedAt": "2026-07-04T11:20:42.784Z",
+      "updatedAt": "2026-07-04T13:06:53.614Z",
       "releaseId": "REL-10",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
@@ -706,12 +706,12 @@
       "priority": "P2",
       "area": "Other",
       "effort": "S",
-      "status": "in-progress",
+      "status": "done",
       "acceptanceCriteria": "- recommendations renamed to recommendations_legacy (phase 1).\n- Redundant place + per-user columns dropped from recommendations_legacy, leaving only id, author_id, place_id, created_at, updated_at (phase 2).\n- recommendations_legacy table dropped after the safety-net window (phase 3).\n- No runtime references to the legacy table or its dropped columns anywhere in src/js or scripts/.\n- Stale 'IT-037 (drop legacy columns)' comment in 0007_places.sql cleaned up.\n- allRecs variable optionally renamed to allEntries project-wide.",
       "reproSteps": "",
       "affectedFiles": "supabase/migrations/ (three new migrations: rename, drop columns, drop table), src/js/ (variable rename), supabase/migrations/0007_places.sql (comment cleanup)",
       "tags": [],
-      "updatedAt": "2026-07-04T11:44:09.449Z",
+      "updatedAt": "2026-07-04T13:06:53.614Z",
       "releaseId": "REL-10",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
@@ -1053,7 +1053,7 @@
       "reproSteps": "",
       "affectedFiles": "supabase/migrations/0018_place_aggregates.sql, supabase/functions/refresh_google_aggregates/index.ts",
       "tags": [],
-      "updatedAt": "2026-07-04T13:06:44.275Z",
+      "updatedAt": "2026-07-04T13:06:53.614Z",
       "releaseId": "REL-10",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
@@ -1720,8 +1720,9 @@
       "name": "Relational Data Model",
       "targetDate": "",
       "goals": "Normalize the schema: places, entries, comments, reactions as first-class tables. Refactor UI to 'one place, many takes'.",
-      "status": "active",
-      "createdAt": "2026-04-17T22:38:56.634051Z"
+      "status": "released",
+      "createdAt": "2026-04-17T22:38:56.634051Z",
+      "releasedAt": "2026-07-04T13:06:53.614Z"
     },
     {
       "id": "REL-11",
