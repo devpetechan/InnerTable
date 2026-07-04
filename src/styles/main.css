@@ -1780,3 +1780,8 @@ a.tag:hover { color: var(--color-primary); border-color: var(--color-primary); b
   color: var(--color-text-secondary);
   white-space: nowrap;
 }
+
+.google-agg .google-g {
+  vertical-align: -1px;
+  margin-right: 1px;
+}
