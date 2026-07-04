@@ -61,6 +61,10 @@ async function fetchAllPlaces() {
   const { data: reactionRows } = await supabaseClient
     .from('comment_reactions').select('*');
 
+  // 5b. External aggregates cache (IT-056) — Google ratings, read from our
+  //     own table, never the live Google API.
+  await loadExternalAggregates();
+
   // 6. Build the result skeleton, keyed by place uuid
   const result = {};
   for (const p of places || []) {
@@ -76,7 +80,9 @@ async function fetchAllPlaces() {
       placeType:     p.place_type || 'restaurant',
       takes:         [],
       comments:      [],
-      aggregate:     { avgRating: 0, ratingsCount: 0, recommends: [], hardPasses: [], wantsToGo: [], triedBy: [] }
+      aggregate:     { avgRating: 0, ratingsCount: 0, recommends: [], hardPasses: [], wantsToGo: [], triedBy: [] },
+      // Google's aggregate from our cache table (null until first refresh).
+      external:      getExternalAggregate(p.id)
     };
   }
 
@@ -164,6 +170,11 @@ function parseMentions(text) {
 // Fetches all data and sets up the Realtime subscription.
 async function loadPlaces() {
   allPlaces = await fetchAllPlaces();
+
+  // IT-056: refresh any missing/expired Google ratings in the background.
+  // Deliberately not awaited — cards render immediately from the cache and
+  // re-render once fresh data lands.
+  refreshExternalAggregates(allPlaces);
 
   // Re-render if the list is currently visible
   if (document.getElementById('list-map-section').style.display !== 'none') {

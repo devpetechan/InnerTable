@@ -124,10 +124,18 @@ function aggregateRowHTML(place) {
   if (agg.ratingsCount > 0) {
     bits.push(`★ ${agg.avgRating.toFixed(1)} (${agg.ratingsCount} rating${agg.ratingsCount !== 1 ? 's' : ''})`);
   }
+  // IT-056: Google's aggregate (from our cache table) — the fallback signal
+  // when the friend circle is sparse.
+  if (place.external?.rating) {
+    const count = place.external.ratingCount
+      ? ` (${place.external.ratingCount.toLocaleString()})` : '';
+    bits.push(`<span class="google-agg" title="Google rating, cached">Ⓖ ${place.external.rating.toFixed(1)}${count}</span>`);
+  }
   if (agg.recommends.length) bits.push(`✅ Recommended by ${agg.recommends.map(esc).join(', ')}`);
   if (agg.hardPasses.length) bits.push(`🚫 Hard pass from ${agg.hardPasses.map(esc).join(', ')}`);
   if (agg.wantsToGo.length)  bits.push(`📌 ${agg.wantsToGo.map(esc).join(', ')} want${agg.wantsToGo.length === 1 ? 's' : ''} to go`);
   if (!bits.length) return '';
+  // (bits with HTML are pre-escaped above; author names go through esc())
   return `<div class="aggregate-row">${bits.join(' · ')}</div>`;
 }
 

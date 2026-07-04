@@ -1773,3 +1773,10 @@ a.tag:hover { color: var(--color-primary); border-color: var(--color-primary); b
   .modal { border-radius: var(--radius-2xl); max-height: 85vh; }
   #welcome-screen { background: linear-gradient(160deg, var(--color-bg) 0%, #EFF6FF 100%); }
 }
+
+/* IT-056 — Google aggregate rating chip in the aggregate row */
+.google-agg {
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
