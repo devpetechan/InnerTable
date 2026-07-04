@@ -189,6 +189,17 @@ function takeRowHTML(place, t) {
 //  Write path (submitComment) is rewired in Phase 5; edit/delete/reactions
 //  already operate on comment uuids and keep working.
 // ══════════════════════════════════════════════════
+// Render comment text with @-mentions wrapped in styled chips.
+// Matching is case-insensitive against known display names (stored text is
+// untouched — see IT-035 plan, resolved decision #2). Unknown @names render
+// as plain text so a stray email address doesn't turn into a chip.
+function renderCommentText(text) {
+  const known = new Set(Object.values(_userIdToName).filter(Boolean).map(n => n.toLowerCase()));
+  return esc(text).replace(/@([a-zA-Z0-9_-]+)/g, (full, name) =>
+    known.has(name.toLowerCase()) ? `<span class="mention" title="@${name}">@${name}</span>` : full
+  );
+}
+
 function commentsSectionHTML(place) {
   const id = place.id;
   const commentsList = place.comments.length ? `<div class="comments-list">${place.comments.map(c => {
@@ -199,10 +210,11 @@ function commentsSectionHTML(place) {
     const ci = (c.author || '?').slice(0, 2).toUpperCase();
     const cd = c.ts ? new Date(c.ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
     const isMyComment = c.authorId === currentUser.id;
-    const editActions = isMyComment ? `<div class="comment-edit-actions">
+    const editActions = `<div class="comment-edit-actions">
+      <button class="comment-action-btn" onclick="startQuoteReply('${id}','${c.id}')">Reply</button>${isMyComment ? `
       <button class="comment-action-btn" onclick="startEditComment('${id}','${c.id}')">Edit</button>
-      <button class="comment-action-btn danger" onclick="deleteComment('${id}','${c.id}')">Delete</button>
-    </div>` : '';
+      <button class="comment-action-btn danger" onclick="deleteComment('${id}','${c.id}')">Delete</button>` : ''}
+    </div>`;
     // Reaction pills — click to view who reacted
     const reactionPills = Object.entries(c.reactions || {}).map(([emoji, users]) => {
       const decodedEmoji = decodeURIComponent(emoji);
@@ -224,7 +236,7 @@ function commentsSectionHTML(place) {
         <span class="comment-author">${esc(c.author)}</span><span class="comment-date">${cd}</span>
         <div id="cv-${id}-${c.id}">
           ${quotedHtml}
-          <span class="comment-text">${esc(c.text)}</span>
+          <span class="comment-text">${renderCommentText(c.text)}</span>
           ${editActions}
         </div>
         <div class="comment-edit-form" id="cef-${id}-${c.id}" style="display:none">
@@ -244,7 +256,8 @@ function commentsSectionHTML(place) {
   return `<div class="card-comments">
     ${commentsList}
     <div class="comment-form" id="cf-${id}">
-      <textarea class="comment-input" id="ci-${id}" placeholder="Add a comment…" rows="2" maxlength="300"></textarea>
+      <div class="quote-preview-holder" id="quote-preview-${id}" style="display:none"></div>
+      <textarea class="comment-input" id="ci-${id}" placeholder="Add a comment… (@ to mention)" rows="2" maxlength="300"></textarea>
       <div class="comment-actions">
         <button class="comment-submit" onclick="submitComment('${id}',this)">Post</button>
         <button class="comment-cancel" onclick="toggleCommentForm('${id}')">Cancel</button>

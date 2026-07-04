@@ -256,34 +256,80 @@ function toggleCommentForm(id) {
   if (opening) document.getElementById('ci-' + id).focus();
 }
 
-async function submitComment(id, btn) {
-  const input = document.getElementById('ci-' + id);
+async function submitComment(placeId, btn) {
+  const input = document.getElementById('ci-' + placeId);
   const text  = input.value.trim();
   if (!text) { input.focus(); return; }
   btn.disabled = true;
 
-  // v0.3: comments are keyed to entries, not recommendations.  Each rec was
-  // backfilled into exactly one entry; recIdToEntryId() looks that up.  If
-  // no entry exists yet (legacy rec without a place_id), we surface an error
-  // instead of silently dropping the comment.
-  const entryId = recIdToEntryId(id);
-  if (!entryId) {
-    console.error('[submitComment] no entry exists for rec', id);
-    showToast('❌ Cannot post comment — this place is missing data. Please refresh.');
+  // IT-035 (migration 0010): comments are keyed straight to places — one
+  // shared thread per restaurant, regardless of whose take you're reading.
+  const row = {
+    place_id:  placeId,
+    author_id: currentUser.id,
+    text
+  };
+
+  // Quote reply: snapshot the original's author + text at write time.  A
+  // snapshot (rather than a parent_id join) survives the original being
+  // edited or deleted — quotes are a record of what was said at the time.
+  if (_pendingQuote && _pendingQuote.placeId === placeId) {
+    row.quoted_comment_id = _pendingQuote.commentId;
+    row.quoted_author     = _pendingQuote.author;
+    row.quoted_text       = _pendingQuote.text;
+  }
+
+  const { error } = await supabaseClient.from('comments').insert(row);
+  if (error) {
+    console.error(error);
+    showToast('❌ Could not post comment.');
     btn.disabled = false;
     return;
   }
 
-  const { error } = await supabaseClient.from('comments').insert({
-    entry_id:  entryId,
-    author_id: currentUser.id,
-    text
-  });
-  if (error) {
-    console.error(error);
-    showToast('❌ Could not post comment.');
-  }
+  input.value = '';
+  cancelQuote(placeId);
   btn.disabled = false;
+  // Refresh explicitly — don't rely on realtime (see workspace/phase-2-4-test-results.md:
+  // the realtime publication may not include the new tables).
+  await loadPlaces();
+}
+
+// ── Quote replies ─────────────────────────────────
+// _pendingQuote holds the comment being replied to until the reply is posted.
+// Keyed by placeId so an abandoned reply on one card can't leak into another.
+let _pendingQuote = null;
+
+function startQuoteReply(placeId, commentId) {
+  const place = allPlaces[placeId];
+  const c = place && place.comments.find(c => c.id === commentId);
+  if (!c || c.deleted) return;
+
+  _pendingQuote = { placeId, commentId: c.id, author: c.author, text: c.text };
+
+  // Make sure the comment form is open, then render the preview above it
+  const form = document.getElementById('cf-' + placeId);
+  if (form && form.style.display !== 'block') toggleCommentForm(placeId);
+
+  const previewEl = document.getElementById('quote-preview-' + placeId);
+  if (previewEl) {
+    const snippet = c.text.length > 140 ? c.text.slice(0, 140) + '…' : c.text;
+    previewEl.innerHTML = `
+      <div class="quote-preview">
+        <strong>Replying to ${esc(c.author)}:</strong>
+        <div class="quote-preview-text">${esc(snippet)}</div>
+        <button class="quote-cancel" onclick="cancelQuote('${placeId}')" title="Cancel reply">×</button>
+      </div>`;
+    previewEl.style.display = 'block';
+  }
+  document.getElementById('ci-' + placeId)?.focus();
+}
+
+function cancelQuote(placeId) {
+  if (_pendingQuote && _pendingQuote.placeId !== placeId) return;
+  _pendingQuote = null;
+  const previewEl = document.getElementById('quote-preview-' + placeId);
+  if (previewEl) { previewEl.innerHTML = ''; previewEl.style.display = 'none'; }
 }
 
 function startEditComment(recId, commentKey) {
@@ -309,6 +355,7 @@ async function saveCommentEdit(recId, commentKey, btn) {
     showToast('❌ Could not save edit.');
   }
   btn.disabled = false;
+  if (!error) await loadPlaces(); // explicit refresh — realtime may not be enabled
 }
 
 async function deleteComment(recId, commentKey) {
@@ -321,7 +368,9 @@ async function deleteComment(recId, commentKey) {
   if (error) {
     console.error(error);
     showToast('❌ Could not delete comment.');
+    return;
   }
+  await loadPlaces(); // explicit refresh — realtime may not be enabled
 }
 
 // ── Emoji Reactions ──────────────────────────────
@@ -338,10 +387,10 @@ async function toggleReaction(recId, commentKey, emoji) {
   //   - User has a DIFFERENT emoji on this comment → UPSERT to the new emoji
   //   - User has no reaction yet                   → INSERT
   //
-  // We read current state from allRecs (already fetched) instead of round-
-  // tripping to the DB.  Realtime will re-render after the write lands.
-  const rec     = allRecs[recId];
-  const comment = rec && rec.comments && rec.comments[commentKey];
+  // We read current state from allPlaces (already fetched) instead of round-
+  // tripping to the DB.  Comments are an array now — find by uuid.
+  const place   = allPlaces[recId];
+  const comment = place && place.comments.find(c => c.id === commentKey);
   const myName  = currentUser.display_name;
 
   // Find what emoji (if any) this user currently has on this comment.
@@ -370,14 +419,16 @@ async function toggleReaction(recId, commentKey, emoji) {
   if (error) {
     console.error(error);
     showToast('❌ Could not save reaction.');
+    return;
   }
+  await loadPlaces(); // explicit refresh — realtime may not be enabled on these tables
 }
 
 // Show a popup listing who has reacted, grouped by emoji
 function showReactionViewers(btn, recId, commentKey) {
   document.querySelectorAll('.reaction-viewers-popup').forEach(p => p.remove());
-  const rec = allRecs[recId];
-  const comment = rec && rec.comments && rec.comments[commentKey];
+  const place = allPlaces[recId];
+  const comment = place && place.comments.find(c => c.id === commentKey);
   const reactions = comment ? (comment.reactions || {}) : {};
 
   const popup = document.createElement('div');

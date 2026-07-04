@@ -109,4 +109,70 @@ document.addEventListener('DOMContentLoaded', function () {
   document.querySelector('#place-detail-panel .btn-close')
     .addEventListener('click', closeDetailPanel);
 
+  // ── @-mention autocomplete (IT-035 Phase 5) ───────
+  // Comment textareas are re-created on every render, so we use one
+  // DELEGATED listener plus a single shared dropdown element, instead of
+  // attaching per-textarea. Works in cards and the map detail panel alike.
+  initMentionAutocomplete();
+
 });
+
+function initMentionAutocomplete() {
+  const dropdown = document.createElement('ul');
+  dropdown.className = 'mention-dropdown';
+  document.body.appendChild(dropdown);
+
+  let activeTextarea = null;
+
+  const hide = () => { dropdown.style.display = 'none'; activeTextarea = null; };
+
+  // Typing in any comment textarea → maybe show candidates
+  document.addEventListener('input', (e) => {
+    const ta = e.target.closest('textarea.comment-input');
+    if (!ta) return;
+
+    const before = ta.value.slice(0, ta.selectionStart);
+    const match  = before.match(/@([a-zA-Z0-9_-]*)$/);
+    if (!match) { hide(); return; }
+
+    const partial = match[1].toLowerCase();
+    const candidates = Object.values(_userIdToName)
+      .filter(Boolean)
+      .filter(n => n.toLowerCase().startsWith(partial))
+      .slice(0, 5);
+    if (!candidates.length) { hide(); return; }
+
+    dropdown.innerHTML = candidates
+      .map(n => `<li data-name="${esc(n)}">${esc(n)}</li>`).join('');
+
+    // Anchor the dropdown just below the textarea
+    const r = ta.getBoundingClientRect();
+    dropdown.style.left    = (r.left + window.scrollX) + 'px';
+    dropdown.style.top     = (r.bottom + window.scrollY + 2) + 'px';
+    dropdown.style.display = 'block';
+    activeTextarea = ta;
+  });
+
+  // Click a candidate → replace the partial @name and refocus
+  dropdown.addEventListener('mousedown', (e) => {
+    e.preventDefault(); // keep the textarea focused
+    const li = e.target.closest('li');
+    if (!li || !activeTextarea) return;
+    const ta = activeTextarea;
+    const cursor = ta.selectionStart;
+    const before = ta.value.slice(0, cursor).replace(/@[a-zA-Z0-9_-]*$/, '@' + li.dataset.name + ' ');
+    ta.value = before + ta.value.slice(cursor);
+    ta.setSelectionRange(before.length, before.length);
+    ta.focus();
+    hide();
+  });
+
+  // Dismiss on blur, Escape, or scroll
+  document.addEventListener('focusout', (e) => {
+    if (e.target === activeTextarea) setTimeout(hide, 150);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') hide();
+  });
+  document.addEventListener('scroll', hide, true);
+}

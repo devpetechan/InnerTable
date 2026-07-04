@@ -1708,6 +1708,62 @@ a.tag:hover { color: var(--color-primary); border-color: var(--color-primary); b
 }
 .comment-quote-author { font-weight: 600; }
 
+/* ── IT-035 Phase 5: mentions + quote-reply composer ── */
+
+/* @-mention chips inside rendered comment text */
+.mention {
+  background: var(--color-primary-tint);
+  color: var(--color-primary);
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* Autocomplete dropdown (single shared element, positioned by JS) */
+.mention-dropdown {
+  position: absolute;
+  display: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  list-style: none;
+  padding: 4px 0;
+  margin: 0;
+  min-width: 140px;
+  max-width: 220px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
+  z-index: 1000;
+}
+.mention-dropdown li {
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: .85rem;
+}
+.mention-dropdown li:hover { background: var(--color-primary-tint); }
+
+/* "Replying to…" preview above the comment input */
+.quote-preview {
+  position: relative;
+  background: var(--color-primary-tint);
+  border-left: 3px solid var(--color-primary);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 6px 28px 6px 10px;
+  margin-bottom: 8px;
+  font-size: .82rem;
+}
+.quote-preview-text { color: var(--color-text-muted); }
+.quote-cancel {
+  position: absolute;
+  top: 2px;
+  right: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+}
+.quote-cancel:hover { color: var(--color-text); }
+
 /* ═══════════════════════════════════════════════════════════════
    DESKTOP — min 640px
 ═══════════════════════════════════════════════════════════════ */
