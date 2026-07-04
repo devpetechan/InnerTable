@@ -18,8 +18,7 @@
 
 
 // ── Global state ─────────────────────────────────
-// allPlaces replaces the legacy allRecs (still declared in app.js until the
-// Phase 3/4 rewrites remove the last readers of it).
+// allPlaces is the single client-side cache of place data (replaced the legacy allRecs).
 let allPlaces = {};
 
 

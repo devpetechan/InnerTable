@@ -15,7 +15,6 @@ let selectedStars      = 0;
 let addType            = null;   // 'want-to-go' | 'been-recommend' | 'been-skip' (also accepts legacy 'try'/'been')
 let placeType          = 'restaurant';
 let editingId          = null;
-let allRecs            = {};
 let factorRatings      = { quality: 0, service: 0, value: 0, ambiance: 0 };
 let selectedPlaceLat   = null;
 let selectedPlaceLng   = null;
