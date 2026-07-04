@@ -107,9 +107,9 @@ CREATE INDEX IF NOT EXISTS places_lower_name_idx
 -- -----------------------------------------------------------------------------
 -- 5. ALTER recommendations: add place_id foreign key
 --    Nullable initially so the backfill (scripts/backfill-places.sql) can
---    populate it incrementally.  Will be tightened to NOT NULL in a later
---    migration once IT-033 (entries table) replaces this table and IT-037
---    (drop legacy columns) ships.
+--    populate it incrementally.  (Historical note: the NOT NULL tightening
+--    never became necessary — IT-033 replaced this table with entries, and
+--    IT-037 renamed, stripped, and dropped it in migrations 0012–0014.)
 -- -----------------------------------------------------------------------------
 ALTER TABLE public.recommendations
   ADD COLUMN IF NOT EXISTS place_id uuid REFERENCES public.places (id) ON DELETE RESTRICT;
