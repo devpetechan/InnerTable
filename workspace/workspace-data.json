@@ -1542,6 +1542,24 @@
       "updatedAt": "2026-05-04T00:00:00.000Z",
       "releaseId": "REL-11",
       "createdAt": "2026-05-04T00:00:00.000Z"
+    },
+    {
+      "id": "1783164784195",
+      "itemId": "IT-083",
+      "type": "bug",
+      "title": "Add Your Take - cuisine, price",
+      "description": "When using \"add your take\", the card has cuisine and price range drop downs.  Currently these are not functional.",
+      "priority": "P2",
+      "area": "Database",
+      "effort": "M",
+      "status": "backlog",
+      "acceptanceCriteria": "If a place does not yet have information as it's only been entered once as a \"Want to try\" location, the first user to mark it as \"I've Been\" should be able to provide all info as if they are entering the card themselves (except for basic info like name and location).",
+      "reproSteps": "1. Click \"Add your take\" to a card that another user has created as \"want to try\"\n2. Click \"I've Been\"\n3. \"Cuisine\" and \"Price Range\" fields are blank and there's no ability to update",
+      "affectedFiles": "",
+      "tags": [],
+      "updatedAt": "2026-07-04T11:33:04.195Z",
+      "releaseId": null,
+      "createdAt": "2026-07-04T11:33:04.196Z"
     }
   ],
   "releases": [
@@ -1779,6 +1797,6 @@
       "releasedAt": "2026-04-19T23:24:57.983Z"
     }
   ],
-  "nextItemId": 83,
+  "nextItemId": 84,
   "nextReleaseId": 19
 }
