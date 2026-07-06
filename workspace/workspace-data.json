@@ -1560,6 +1560,128 @@
       "updatedAt": "2026-07-04T11:33:04.195Z",
       "releaseId": null,
       "createdAt": "2026-07-04T11:33:04.196Z"
+    },
+    {
+      "id": "1783378155213",
+      "itemId": "IT-084",
+      "type": "enhancement",
+      "title": "[v0.3.1] Apply locked design tokens to global stylesheet",
+      "description": "CONTEXT: design/CLAUDE.md locks the 'Quiet Utility' design system distilled from the design/*.dc.html mockups, but src/styles/main.css still uses the old ad hoc palette/spacing.\n\nGOAL: Add the token set to main.css (as CSS custom properties): Hanken Grotesk as the UI font (+ monospace micro-labels, uppercase, letter-spacing .14em), paper/canvas/ink color palette, clay accent (#C1552E), status chip colors (Want to Try / Recommends / Hard Pass), avatar color palette, star rating styling, category tag pill style, card radius/shadow/spacing scale. Add the Hanken Grotesk Google Fonts link to index.html.\n\nThis is the foundation ticket — IT-085/086/087 build on these tokens instead of hardcoding values.",
+      "priority": "P1",
+      "area": "UI",
+      "effort": "M",
+      "status": "backlog",
+      "acceptanceCriteria": "- CSS custom properties exist for every token documented in design/CLAUDE.md.\n- No new ad hoc hex colors introduced for surfaces covered by the design system.\n- Hanken Grotesk loads and renders as the primary UI font; monospace micro-label style available as a utility class.",
+      "reproSteps": "",
+      "affectedFiles": "src/styles/main.css, index.html",
+      "tags": [
+        "redesign"
+      ],
+      "updatedAt": "2026-07-06T23:00:00.000Z",
+      "releaseId": "REL-19",
+      "createdAt": "2026-07-06T23:00:00.000Z"
+    },
+    {
+      "id": "1783378155214",
+      "itemId": "IT-085",
+      "type": "enhancement",
+      "title": "[v0.3.1] Rebuild place card to \"4b Richer / top take\" layout",
+      "description": "CONTEXT: design/place-card.dc.html explores 3 directions; 4b was chosen (see design/CLAUDE.md) and folded into The List.\n\nGOAL: Rebuild the card renderer to match 4b's row structure:\n1. Name + meta dot-string, status chip top-right (Recommended / Want to Try / Hard Pass, or neutral 'Mixed').\n2. Signal row: recommender avatar stack + one-line summary (e.g. 'Sam, Ana +3 recommend') on left, friend-group star rating on right — degrade to muted 'Google ★ x.x' when nobody in the circle has been.\n3. Hairline, then ONE top take: 28px avatar + name + rating (or Hard Pass mini-chip) + one-line note; want-to-try-only cards show 'Nobody's been yet — be the first to try it.'\n4. Footer: '+ Add your take' (or filled 'I've been — add a take' when nobody has) + comments affordance.\n\nBuilds on IT-084's tokens.",
+      "priority": "P1",
+      "area": "UI",
+      "effort": "L",
+      "status": "backlog",
+      "acceptanceCriteria": "- Card markup matches the 4b states (strong recommend / want-to-try-only / mixed-or-hard-pass).\n- Avatar stack renders correctly for 1-N takes.\n- Rating falls back to Google aggregate (from IT-056's cache table) when no friend has a take.\n- Footer CTA text/state changes correctly based on whether the current user already has a take on this place.",
+      "reproSteps": "",
+      "affectedFiles": "src/js/ui-render.js, src/styles/main.css, index.html",
+      "tags": [
+        "redesign"
+      ],
+      "updatedAt": "2026-07-06T23:00:00.000Z",
+      "releaseId": "REL-19",
+      "createdAt": "2026-07-06T23:00:00.000Z"
+    },
+    {
+      "id": "1783378155215",
+      "itemId": "IT-086",
+      "type": "enhancement",
+      "title": "[v0.3.1] Rebuild list/header to \"2a + Map toggle\" layout",
+      "description": "CONTEXT: design/the-list.dc.html — chosen layout is 2a base + Map toggle (see design/CLAUDE.md).\n\nGOAL: Header = wordmark + avatar → full-width segmented status control [All | Want to Try | Recommended] → controls row: [List | Map] segmented toggle (left) + 'Filter & sort' outline pill (right, stub — sheet not yet designed). Persistent clay pill FAB 'Add a place' centered bottom.\n\nWire the segmented controls to the existing filter/view-mode logic in ui-events.js rather than introducing a new state model.",
+      "priority": "P1",
+      "area": "UI",
+      "effort": "M",
+      "status": "backlog",
+      "acceptanceCriteria": "- Segmented status control and List/Map toggle are functional and drive the existing filter/map logic.\n- Map view (map.js) continues to work unchanged behind the new toggle.\n- FAB opens the add flow (IT-087).\n- 'Filter & sort' pill is present but can be a no-op / logged stub — the sheet itself is an explicit follow-up, not in scope here.",
+      "reproSteps": "",
+      "affectedFiles": "index.html, src/js/ui-render.js, src/js/ui-events.js, src/styles/main.css, src/js/map.js",
+      "tags": [
+        "redesign"
+      ],
+      "updatedAt": "2026-07-06T23:00:00.000Z",
+      "releaseId": "REL-19",
+      "createdAt": "2026-07-06T23:00:00.000Z"
+    },
+    {
+      "id": "1783378155216",
+      "itemId": "IT-087",
+      "type": "enhancement",
+      "title": "[v0.3.1] Rebuild add/edit flow as guided multi-step (\"6b\")",
+      "description": "CONTEXT: design/add-flow.dc.html — chosen direction 6b 'Guided multi-step' (see design/CLAUDE.md).\n\nGOAL: Rebuild the add modal as steps, triggered from the FAB (new place) or 'Add your take' (place pre-filled, skips step 1):\n1. Place — autocomplete input (name + address suggestions).\n2. Intent — 'Have you been?' with two intent cards: Want to try / I've been. Want-to-try expands an optional note and completes in 2 steps ('Save to Want to Try'). I've been continues to step 3.\n3. Review (I've-been only) — 5-star rating, Recommend/Hard-pass segmented verdict, optional note, dashed disclosure 'Add cuisine, price & detailed ratings (optional)' expanding to cuisine, price segmented $/$$/$$$/$$$$, and 4 sub-ratings (Food quality/Service/Value/Ambiance).\n\nHeader = Cancel/back + progress dots + spacer; sticky bottom primary button. Writes continue to go through the existing places-service upsert/entry logic (IT-036) — this ticket is UI/flow only.",
+      "priority": "P1",
+      "area": "UI",
+      "effort": "XL",
+      "status": "backlog",
+      "acceptanceCriteria": "- Step structure matches design/add-flow.dc.html (Place → Intent → [Review]).\n- Want-to-try completes in 2 steps; I've-been requires step 3.\n- Optional disclosure expands cuisine/price/sub-ratings without being required.\n- Underlying writes still go through places-service upsert + entry insert/update unchanged from IT-036.\n- 'Add your take' entry point correctly skips step 1 with the place pre-filled.",
+      "reproSteps": "",
+      "affectedFiles": "index.html, src/js/ui-events.js, src/js/places-service.js, src/styles/main.css",
+      "tags": [
+        "redesign"
+      ],
+      "updatedAt": "2026-07-06T23:00:00.000Z",
+      "releaseId": "REL-19",
+      "createdAt": "2026-07-06T23:00:00.000Z"
+    },
+    {
+      "id": "1783378155217",
+      "itemId": "IT-088",
+      "type": "task",
+      "title": "[v0.3.1] Cross-browser QA pass on redesigned UI",
+      "description": "Manual QA of the redesigned Place Card, List, and Add Flow in Chrome + Safari, plus a mobile-viewport check (the design system is mobile-first). Confirm no regressions in map pins, realtime updates, and comment threads carried over from IT-035/IT-036. Follow the same manual QA pattern as IT-035 Phase 7 (see workspace/phase-2-4-test-results.md for the prior format).",
+      "priority": "P2",
+      "area": "Other",
+      "effort": "S",
+      "status": "backlog",
+      "acceptanceCriteria": "- Redesigned card/list/add-flow verified in Chrome and Safari, desktop + mobile viewport.\n- No regressions in map pin dedup, realtime cross-window updates, or comment threads.",
+      "reproSteps": "",
+      "affectedFiles": "",
+      "tags": [
+        "redesign",
+        "qa"
+      ],
+      "updatedAt": "2026-07-06T23:00:00.000Z",
+      "releaseId": "REL-19",
+      "createdAt": "2026-07-06T23:00:00.000Z"
+    },
+    {
+      "id": "1783378155218",
+      "itemId": "IT-089",
+      "type": "enhancement",
+      "title": "Design 'Filter & sort' sheet",
+      "description": "design/CLAUDE.md flags this explicitly: the Filter & sort pill in The List opens a sheet that is 'not yet designed.' Needs its own design pass (likely another Claude design-mode session) before it can be built. Not in scope for REL-19 — the pill ships as a stub in IT-086.",
+      "priority": "P3",
+      "area": "UI",
+      "effort": null,
+      "status": "backlog",
+      "acceptanceCriteria": "",
+      "reproSteps": "",
+      "affectedFiles": "",
+      "tags": [
+        "redesign",
+        "design-needed"
+      ],
+      "updatedAt": "2026-07-06T23:00:00.000Z",
+      "releaseId": null,
+      "createdAt": "2026-07-06T23:00:00.000Z"
     }
   ],
   "releases": [
@@ -1725,6 +1847,15 @@
       "releasedAt": "2026-07-04T13:06:53.614Z"
     },
     {
+      "id": "REL-19",
+      "version": "0.3.1",
+      "name": "Visual Redesign — \"Quiet Utility\" Design System",
+      "targetDate": "",
+      "goals": "Translate the locked design system (design/CLAUDE.md, design/*.dc.html — Design System Directions, Place Card, The List, Add Flow) into the live app: new design tokens, redesigned place card, redesigned list/header, and a guided multi-step add flow. Pure front-end reskin of already-shipped v0.3 functionality — no schema or data changes. Ships before REL-11 (Friend Circles) so v0.4 work builds on the new design system rather than needing a second pass.",
+      "status": "planning",
+      "createdAt": "2026-07-06T23:00:00.000Z"
+    },
+    {
       "id": "REL-11",
       "version": "0.4.0",
       "name": "Friend Circles (Ego-Network)",
@@ -1798,6 +1929,6 @@
       "releasedAt": "2026-04-19T23:24:57.983Z"
     }
   ],
-  "nextItemId": 84,
-  "nextReleaseId": 19
+  "nextItemId": 90,
+  "nextReleaseId": 20
 }
