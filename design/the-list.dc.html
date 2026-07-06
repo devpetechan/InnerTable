@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<meta name="design_doc_mode" content="canvas">
+<style>
+  html,body{margin:0;background:#E4E0D8;font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+  ::-webkit-scrollbar{width:0;height:0;}
+</style>
+</helmet>
+
+<section style="padding:56px 48px 90px;box-sizing:border-box;min-width:960px;">
+
+  <div style="margin:0 0 40px;max-width:900px;">
+    <div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9A9186;margin-bottom:14px;">InnerTable · Turn 5 · The List (with the 4b card)</div>
+    <h1 style="font-family:'Hanken Grotesk';font-weight:800;font-size:34px;line-height:1.1;color:#2B2521;margin:0 0 12px;letter-spacing:-0.02em;">The List, running the top-take card</h1>
+    <p style="font-size:16px;line-height:1.55;color:#6E655B;margin:0;max-width:660px;">2a layout + Map toggle, now with the chosen <b style="color:#2B2521;">4b</b> card as the repeating unit — signal, one surfaced take, and an Add-your-take / comments footer. Want-to-try places stay short (no take yet). Reference the live screen as <b style="color:#2B2521;">5a</b>; empty state is <a href="#5b" style="color:#C1552E;text-decoration:none;font-weight:600;">5b</a>.</p>
+  </div>
+
+  <div style="display:flex;gap:34px;align-items:flex-start;flex-wrap:wrap;">
+
+    <!-- ================= 5a — THE LIST ================= -->
+    <div id="5a" style="width:412px;">
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:7px;"><span style="background:#C1552E;color:#fff;font-weight:700;font-size:12px;padding:3px 9px;border-radius:7px;">5a</span><span style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#9A9186;">The List · List view</span></div>
+        <p style="font-size:13px;line-height:1.45;color:#6E655B;margin:0;">Status segments · List/Map toggle · Filter &amp; sort · 4b cards · floating Add.</p>
+      </div>
+
+      <div style="width:412px;background:#211c17;border-radius:48px;padding:11px;box-shadow:0 1px 2px rgba(40,30,20,.06),0 26px 64px rgba(40,30,20,.16);">
+        <div style="position:relative;width:390px;height:800px;background:#FCFBFA;border-radius:38px;overflow:hidden;display:flex;flex-direction:column;">
+          <div style="position:absolute;top:11px;left:50%;transform:translateX(-50%);width:110px;height:30px;background:#211c17;border-radius:16px;z-index:30;"></div>
+          <div style="height:50px;flex:none;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 6px;">
+            <span style="font-weight:600;font-size:13px;color:#292420;">9:41</span>
+            <span style="display:flex;gap:6px;align-items:center;"><span style="display:flex;gap:2px;align-items:flex-end;"><span style="width:3px;height:5px;background:#292420;border-radius:1px;"></span><span style="width:3px;height:7px;background:#292420;border-radius:1px;"></span><span style="width:3px;height:9px;background:#292420;border-radius:1px;"></span><span style="width:3px;height:11px;background:#292420;border-radius:1px;"></span></span><span style="width:23px;height:12px;border:1px solid #292420;border-radius:3px;padding:1.5px;display:flex;"><span style="flex:1;background:#292420;border-radius:1px;"></span></span></span>
+          </div>
+
+          <div style="flex:none;padding:4px 20px 14px;background:#FCFBFA;border-bottom:1px solid #EFEAE2;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div style="font-weight:800;font-size:20px;color:#292420;letter-spacing:-0.02em;">Inner Table</div>
+              <span style="width:32px;height:32px;border-radius:50%;background:#C1552E;color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;">MK</span>
+            </div>
+            <div style="display:flex;background:#F1EDE6;border-radius:11px;padding:3px;margin-top:15px;">
+              <button style="flex:1;border:none;background:#FFFFFF;color:#292420;font-family:inherit;font-weight:700;font-size:12.5px;padding:8px 4px;border-radius:8px;box-shadow:0 1px 2px rgba(40,30,20,.06);cursor:pointer;">All</button>
+              <button style="flex:1;border:none;background:transparent;color:#8A817A;font-family:inherit;font-weight:600;font-size:12.5px;padding:8px 4px;border-radius:8px;cursor:pointer;">Want to Try</button>
+              <button style="flex:1;border:none;background:transparent;color:#8A817A;font-family:inherit;font-weight:600;font-size:12.5px;padding:8px 4px;border-radius:8px;cursor:pointer;">Recommended</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;">
+              <div style="display:flex;background:#F1EDE6;border-radius:9px;padding:3px;">
+                <span style="display:inline-flex;align-items:center;gap:6px;background:#fff;color:#292420;font-weight:700;font-size:12px;padding:6px 13px;border-radius:7px;box-shadow:0 1px 2px rgba(40,30,20,.06);"><span style="display:flex;flex-direction:column;gap:2px;"><span style="width:11px;height:1.6px;background:#292420;border-radius:1px;"></span><span style="width:11px;height:1.6px;background:#292420;border-radius:1px;"></span><span style="width:11px;height:1.6px;background:#292420;border-radius:1px;"></span></span>List</span>
+                <span style="display:inline-flex;align-items:center;gap:6px;color:#8A817A;font-weight:600;font-size:12px;padding:6px 13px;"><span style="width:9px;height:9px;border:1.6px solid #8A817A;border-radius:50% 50% 50% 2px;box-sizing:border-box;transform:rotate(-45deg);"></span>Map</span>
+              </div>
+              <button style="display:inline-flex;align-items:center;gap:9px;border:1px solid #E0DAD2;background:#fff;color:#5F574F;font-family:inherit;font-weight:600;font-size:12.5px;padding:7px 13px;border-radius:9px;cursor:pointer;"><span style="display:flex;flex-direction:column;gap:2.5px;align-items:flex-start;"><span style="width:13px;height:1.6px;background:#8A817A;border-radius:1px;"></span><span style="width:9px;height:1.6px;background:#8A817A;border-radius:1px;"></span><span style="width:5px;height:1.6px;background:#8A817A;border-radius:1px;"></span></span>Filter &amp; sort</button>
+            </div>
+          </div>
+
+          <div style="flex:1;overflow-y:auto;padding:14px 20px 120px;display:flex;flex-direction:column;gap:12px;">
+            <sc-for list="{{ places }}" as="place" hint-placeholder-count="5">
+              <div style="background:#FFFFFF;border:1px solid #E7E1D9;border-radius:16px;padding:16px;box-shadow:0 1px 2px rgba(40,30,20,.04);">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+                  <div style="min-width:0;">
+                    <div style="font-weight:700;font-size:17px;color:#292420;letter-spacing:-0.01em;">{{ place.name }}</div>
+                    <div style="font-size:12.5px;color:#8A817A;margin-top:3px;">{{ place.metaLine }}</div>
+                  </div>
+                  <sc-if value="{{ place.isTry }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;gap:5px;background:#EDF1F5;color:#3D5A78;font-weight:600;font-size:11.5px;padding:4px 9px;border-radius:7px;white-space:nowrap;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#4B6B8A;"></span>Want to Try</span></sc-if>
+                  <sc-if value="{{ place.isRec }}" hint-placeholder-val="{{ true }}"><span style="display:inline-flex;align-items:center;gap:5px;background:#EAF1EA;color:#3F6A44;font-weight:600;font-size:11.5px;padding:4px 9px;border-radius:7px;white-space:nowrap;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#5C7A4F;"></span>Recommended</span></sc-if>
+                  <sc-if value="{{ place.isPass }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;gap:5px;background:#F5EBE8;color:#9E4234;font-weight:600;font-size:11.5px;padding:4px 9px;border-radius:7px;white-space:nowrap;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#B14A3C;"></span>Hard Pass</span></sc-if>
+                </div>
+
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px;">
+                  <div style="display:flex;align-items:center;gap:9px;min-width:0;">
+                    <div style="display:flex;padding-left:8px;">
+                      <sc-for list="{{ place.avatars }}" as="av" hint-placeholder-count="3"><span style="width:26px;height:26px;border-radius:50%;color:#fff;font-weight:700;font-size:10.5px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;background:{{ av.c }};">{{ av.i }}</span></sc-for>
+                    </div>
+                    <span style="font-size:12.5px;color:#5F574F;">{{ place.signalText }}</span>
+                  </div>
+                  <sc-if value="{{ place.hasRating }}" hint-placeholder-val="{{ true }}"><span style="color:#C1552E;font-weight:700;font-size:15px;white-space:nowrap;">★ {{ place.rating }}</span></sc-if>
+                  <sc-if value="{{ place.isTry }}" hint-placeholder-val="{{ false }}"><span style="color:#A79E93;font-weight:600;font-size:12px;white-space:nowrap;">Google ★ {{ place.googleRating }}</span></sc-if>
+                </div>
+
+                <sc-if value="{{ place.hasTake }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;gap:10px;margin-top:13px;border-top:1px solid #F1EDE6;padding-top:13px;">
+                    <span style="width:28px;height:28px;border-radius:50%;color:#fff;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;flex:none;background:{{ place.topColor }};">{{ place.topInitials }}</span>
+                    <div style="min-width:0;">
+                      <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-weight:700;font-size:13.5px;color:#292420;">{{ place.topAuthor }}</span>
+                        <sc-if value="{{ place.topHasRating }}" hint-placeholder-val="{{ true }}"><span style="color:#C1552E;font-weight:600;font-size:12px;">★ {{ place.topRating }}</span></sc-if>
+                        <sc-if value="{{ place.topIsPass }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;gap:4px;background:#F5EBE8;color:#9E4234;font-weight:600;font-size:10.5px;padding:2px 7px;border-radius:6px;"><span style="width:4px;height:4px;border-radius:50%;background:#B14A3C;"></span>Hard Pass</span></sc-if>
+                      </div>
+                      <div style="font-size:13px;line-height:1.5;color:#5F574F;margin-top:2px;">“{{ place.note }}”</div>
+                    </div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ place.isTry }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin-top:13px;border-top:1px solid #F1EDE6;padding-top:13px;font-size:13px;color:#8A817A;">Nobody’s been yet — be the first to try it.</div>
+                </sc-if>
+
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;">
+                  <sc-if value="{{ place.hasTake }}" hint-placeholder-val="{{ true }}"><button style="border:1px solid #C1552E;background:#fff;color:#C1552E;font-family:inherit;font-weight:700;font-size:12.5px;padding:8px 14px;border-radius:9px;cursor:pointer;">+ Add your take</button></sc-if>
+                  <sc-if value="{{ place.isTry }}" hint-placeholder-val="{{ false }}"><button style="border:none;background:#C1552E;color:#fff;font-family:inherit;font-weight:700;font-size:12.5px;padding:9px 15px;border-radius:9px;cursor:pointer;">I’ve been — add a take</button></sc-if>
+                  <span style="display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#8A817A;cursor:pointer;"><span style="width:14px;height:11px;border:1.6px solid #B8AFA4;border-radius:4px;display:inline-block;"></span>{{ place.comments }} comments <span style="color:#B8AFA4;font-size:15px;line-height:0;">›</span></span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <button style="position:absolute;bottom:26px;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:8px;border:none;background:#C1552E;color:#fff;font-family:inherit;font-weight:700;font-size:15px;padding:14px 22px;border-radius:999px;box-shadow:0 8px 22px rgba(193,85,46,.36);z-index:20;cursor:pointer;"><span style="font-size:20px;line-height:0;margin-top:-1px;">+</span>Add a place</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= 5b — EMPTY STATE ================= -->
+    <div id="5b" style="width:412px;">
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:7px;"><span style="background:#292420;color:#fff;font-weight:700;font-size:12px;padding:3px 9px;border-radius:7px;">5b</span><span style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#9A9186;">Empty state · first run</span></div>
+        <p style="font-size:13px;line-height:1.45;color:#6E655B;margin:0;">Brand-new user, nothing saved. Teaches the three-verb model and gives one clear action.</p>
+      </div>
+
+      <div style="width:412px;background:#211c17;border-radius:48px;padding:11px;box-shadow:0 1px 2px rgba(40,30,20,.06),0 26px 64px rgba(40,30,20,.16);">
+        <div style="position:relative;width:390px;height:800px;background:#FCFBFA;border-radius:38px;overflow:hidden;display:flex;flex-direction:column;">
+          <div style="position:absolute;top:11px;left:50%;transform:translateX(-50%);width:110px;height:30px;background:#211c17;border-radius:16px;z-index:30;"></div>
+          <div style="height:50px;flex:none;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 6px;">
+            <span style="font-weight:600;font-size:13px;color:#292420;">9:41</span>
+            <span style="display:flex;gap:6px;align-items:center;"><span style="display:flex;gap:2px;align-items:flex-end;"><span style="width:3px;height:5px;background:#292420;border-radius:1px;"></span><span style="width:3px;height:7px;background:#292420;border-radius:1px;"></span><span style="width:3px;height:9px;background:#292420;border-radius:1px;"></span><span style="width:3px;height:11px;background:#292420;border-radius:1px;"></span></span><span style="width:23px;height:12px;border:1px solid #292420;border-radius:3px;padding:1.5px;display:flex;"><span style="flex:1;background:#292420;border-radius:1px;"></span></span></span>
+          </div>
+
+          <div style="flex:none;padding:4px 20px 14px;background:#FCFBFA;border-bottom:1px solid #EFEAE2;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div style="font-weight:800;font-size:20px;color:#292420;letter-spacing:-0.02em;">Inner Table</div>
+              <span style="width:32px;height:32px;border-radius:50%;background:#C1552E;color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;">MK</span>
+            </div>
+          </div>
+
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 40px 60px;">
+            <div style="width:96px;height:96px;border-radius:50%;border:2px solid #E7E1D9;display:flex;align-items:center;justify-content:center;margin-bottom:26px;">
+              <div style="width:58px;height:58px;border-radius:50%;border:2px solid #EAE4DC;display:flex;align-items:center;justify-content:center;">
+                <div style="width:11px;height:11px;border-radius:50%;background:#C1552E;"></div>
+              </div>
+            </div>
+            <h2 style="font-weight:800;font-size:23px;color:#292420;letter-spacing:-0.02em;margin:0 0 10px;">Your table is empty</h2>
+            <p style="font-size:14.5px;line-height:1.55;color:#8A817A;margin:0 0 26px;max-width:270px;">This is your group’s shared list. Save the first place — somewhere you love, or a spot you’ve been meaning to try.</p>
+            <button style="display:inline-flex;align-items:center;gap:8px;border:none;background:#C1552E;color:#fff;font-family:inherit;font-weight:700;font-size:15px;padding:14px 24px;border-radius:999px;box-shadow:0 8px 22px rgba(193,85,46,.32);cursor:pointer;"><span style="font-size:20px;line-height:0;margin-top:-1px;">+</span>Add the first place</button>
+
+            <div style="margin-top:44px;width:100%;border-top:1px solid #EFEAE2;padding-top:24px;">
+              <div style="font-family:ui-monospace,Menlo,monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:14px;">How the group marks places</div>
+              <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;">
+                <span style="display:inline-flex;align-items:center;gap:5px;background:#EDF1F5;color:#3D5A78;font-weight:600;font-size:12px;padding:5px 11px;border-radius:7px;"><span style="width:5px;height:5px;border-radius:50%;background:#4B6B8A;"></span>Want to Try</span>
+                <span style="display:inline-flex;align-items:center;gap:5px;background:#EAF1EA;color:#3F6A44;font-weight:600;font-size:12px;padding:5px 11px;border-radius:7px;"><span style="width:5px;height:5px;border-radius:50%;background:#5C7A4F;"></span>Recommends</span>
+                <span style="display:inline-flex;align-items:center;gap:5px;background:#F5EBE8;color:#9E4234;font-weight:600;font-size:12px;padding:5px 11px;border-radius:7px;"><span style="width:5px;height:5px;border-radius:50%;background:#B14A3C;"></span>Hard Pass</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const raw = [
+      {name:'Casa Enrique', metaLine:'Restaurant · Mexican · $$ · Long Island City', kind:'rec', signalText:'Sam, Ana +3 recommend', rating:'4.7', comments:'4', avatars:[{i:'SM',c:'#9A6B3F'},{i:'AR',c:'#5C7A4F'},{i:'PT',c:'#7A5C8A'}], topAuthor:'Sam', topInitials:'SM', topColor:'#9A6B3F', topRating:'5.0', note:'Best mole in the city — worth the L train. Get the enchiladas.'},
+      {name:'Attaboy', metaLine:'Bar · Cocktails · $$$ · Lower East Side', kind:'try', signalText:'4 friends want to try', googleRating:'4.5', comments:'2', avatars:[{i:'AR',c:'#5C7A4F'},{i:'SL',c:'#9A6B3F'},{i:'MK',c:'#C1552E'}]},
+      {name:'Lucia Pizza', metaLine:'Restaurant · Italian · $$ · Fort Greene', kind:'rec', signalText:'Jordan, Ana +1 recommend', rating:'4.2', comments:'3', avatars:[{i:'JD',c:'#4B6B8A'},{i:'AR',c:'#5C7A4F'},{i:'SL',c:'#9A6B3F'}], topAuthor:'Jordan', topInitials:'JD', topColor:'#4B6B8A', topRating:'4.5', note:'Get the clam pie and a Negroni. Go early — no reservations.'},
+      {name:"Kiki's", metaLine:'Restaurant · Greek · $$ · Lower East Side', kind:'pass', signalText:'2 friends passed', rating:'2.4', comments:'7', avatars:[{i:'SM',c:'#9A6B3F'},{i:'PT',c:'#7A5C8A'}], topAuthor:'Sam', topInitials:'SM', topColor:'#9A6B3F', topIsPass:true, note:'90-minute wait and the food was mid. Skip it.'},
+      {name:'Balthazar', metaLine:'Restaurant · French · $$$ · SoHo', kind:'rec', signalText:'Priya, Jordan +2 recommend', rating:'4.5', comments:'5', avatars:[{i:'PT',c:'#7A5C8A'},{i:'JD',c:'#4B6B8A'},{i:'MK',c:'#C1552E'}], topAuthor:'Priya', topInitials:'PT', topColor:'#7A5C8A', topRating:'4.5', note:'Classic French bistro that never misses. Sit at the bar for oysters.'},
+      {name:'Bemelmans Bar', metaLine:'Bar · Cocktails · $$$$ · Upper East Side', kind:'try', signalText:'3 friends want to try', googleRating:'4.4', comments:'1', avatars:[{i:'JD',c:'#4B6B8A'},{i:'PT',c:'#7A5C8A'},{i:'SM',c:'#9A6B3F'}]},
+      {name:'The Long Island Bar', metaLine:'Bar · Cocktails · $$ · Cobble Hill', kind:'rec', signalText:'Jordan +1 recommend', rating:'4.3', comments:'2', avatars:[{i:'JD',c:'#4B6B8A'},{i:'MK',c:'#C1552E'}], topAuthor:'Jordan', topInitials:'JD', topColor:'#4B6B8A', topRating:'4.3', note:'Great martinis, retro room, never a wait.'},
+      {name:'Clover Club', metaLine:'Bar · Cocktails · $$ · Carroll Gardens', kind:'rec', signalText:'Mika, Ana +1 recommend', rating:'4.4', comments:'3', avatars:[{i:'MK',c:'#C1552E'},{i:'AR',c:'#5C7A4F'},{i:'SL',c:'#9A6B3F'}], topAuthor:'Mika', topInitials:'MK', topColor:'#C1552E', topRating:'4.6', note:'Best cocktail bar in the borough. Punch bowls for groups.'},
+      {name:'Superiority Burger', metaLine:'Restaurant · Vegetarian · $ · East Village', kind:'try', signalText:'2 friends want to try', googleRating:'4.6', comments:'0', avatars:[{i:'PT',c:'#7A5C8A'},{i:'SL',c:'#9A6B3F'}]},
+      {name:'Le Crocodile', metaLine:'Restaurant · French · $$$ · Williamsburg', kind:'rec', signalText:'Priya, Ana +1 recommend', rating:'4.1', comments:'2', avatars:[{i:'PT',c:'#7A5C8A'},{i:'AR',c:'#5C7A4F'},{i:'JD',c:'#4B6B8A'}], topAuthor:'Priya', topInitials:'PT', topColor:'#7A5C8A', topRating:'4.0', note:'Lovely room. The burger at lunch is the move.'},
+    ];
+    const places = raw.map(p => ({
+      ...p,
+      isTry: p.kind === 'try',
+      isRec: p.kind === 'rec',
+      isPass: p.kind === 'pass',
+      hasTake: p.kind !== 'try',
+      hasRating: p.kind !== 'try',
+      topIsPass: !!p.topIsPass,
+      topHasRating: p.kind !== 'try' && !p.topIsPass,
+    }));
+    return { places };
+  }
+}
+</script>
+</body>
+</html>

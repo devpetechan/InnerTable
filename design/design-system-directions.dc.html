@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spectral:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<meta name="design_doc_mode" content="canvas">
+<style>
+  html,body{margin:0;background:#E4E0D8;font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+</style>
+</helmet>
+
+<section style="padding:56px 48px 80px;box-sizing:border-box;min-width:1360px;">
+
+  <div style="max-width:1300px;margin:0 0 40px;">
+    <div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9A9186;margin-bottom:14px;">InnerTable · Turn 1 · Design system</div>
+    <h1 style="font-family:'Hanken Grotesk';font-weight:800;font-size:34px;line-height:1.1;color:#2B2521;margin:0 0 12px;letter-spacing:-0.02em;">Three directions for the shared table</h1>
+    <p style="font-size:16px;line-height:1.55;color:#6E655B;margin:0;max-width:620px;">Same components — avatars, status chips, rating, category tags, and a sample place card — rendered in each system so you can compare on one neutral ground. Ranged clean-and-minimal → warm-and-editorial. Reference them in chat as <b style="color:#2B2521;">1a</b>, <b style="color:#2B2521;">1b</b>, <b style="color:#2B2521;">1c</b>.</p>
+  </div>
+
+  <div style="display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap;">
+
+    <!-- ============ 1a — CLEAN & MINIMAL ============ -->
+    <div id="1a" style="flex:0 0 400px;background:#FCFBFA;border:1px solid #E4DED5;border-radius:18px;padding:28px 26px 30px;box-shadow:0 1px 2px rgba(40,30,20,.04),0 10px 30px rgba(40,30,20,.05);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+        <span style="background:#C1552E;color:#fff;font-weight:700;font-size:12px;letter-spacing:.02em;padding:3px 9px;border-radius:7px;">1a</span>
+        <span style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;">Clean &amp; minimal</span>
+      </div>
+      <h2 style="font-family:'Hanken Grotesk';font-weight:800;font-size:23px;color:#292420;margin:0 0 4px;letter-spacing:-0.02em;">Quiet Utility</h2>
+      <p style="font-size:13.5px;line-height:1.5;color:#8A817A;margin:0 0 6px;">One accent, tinted status pills, generous whitespace. Reads like a well-kept list. <span style="color:#5F574F;">Hanken Grotesk throughout.</span></p>
+
+      <!-- color -->
+      <div style="border-top:1px solid #EFEAE2;margin-top:22px;padding-top:20px;">
+        <div style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:14px;">Palette</div>
+        <div style="display:flex;gap:8px;">
+          <div style="flex:1;"><div style="height:44px;border-radius:9px;background:#FCFBF9;border:1px solid #E7E1D9;"></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px;color:#A79E93;margin-top:6px;">Paper</div></div>
+          <div style="flex:1;"><div style="height:44px;border-radius:9px;background:#292420;"></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px;color:#A79E93;margin-top:6px;">Ink</div></div>
+          <div style="flex:1;"><div style="height:44px;border-radius:9px;background:#C1552E;"></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px;color:#A79E93;margin-top:6px;">Clay</div></div>
+          <div style="flex:1;"><div style="height:44px;border-radius:9px;background:#8A817A;"></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px;color:#A79E93;margin-top:6px;">Mute</div></div>
+          <div style="flex:1;"><div style="height:44px;border-radius:9px;background:#F1EDE6;border:1px solid #E7E1D9;"></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px;color:#A79E93;margin-top:6px;">Fill</div></div>
+        </div>
+      </div>
+
+      <!-- type -->
+      <div style="border-top:1px solid #EFEAE2;margin-top:22px;padding-top:20px;">
+        <div style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:14px;">Type scale</div>
+        <div style="font-family:'Hanken Grotesk';font-weight:800;font-size:28px;letter-spacing:-0.02em;color:#292420;line-height:1.1;">Lucia Pizza</div>
+        <div style="font-family:'Hanken Grotesk';font-weight:600;font-size:18px;color:#292420;margin-top:8px;">Wood-fired, tiny room</div>
+        <div style="font-size:14.5px;line-height:1.5;color:#5F574F;margin-top:8px;">Body copy for notes and comments sits at a comfortable reading size.</div>
+        <div style="font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:#A79E93;margin-top:8px;">3 friends · updated Tue</div>
+      </div>
+
+      <!-- avatars -->
+      <div style="border-top:1px solid #EFEAE2;margin-top:22px;padding-top:20px;">
+        <div style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:14px;">Friend avatars</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="width:34px;height:34px;border-radius:50%;background:#C1552E;color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;">MK</span>
+          <span style="width:34px;height:34px;border-radius:50%;background:#4B6B8A;color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;">JD</span>
+          <span style="width:34px;height:34px;border-radius:50%;background:#5C7A4F;color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;">AR</span>
+          <span style="width:34px;height:34px;border-radius:50%;background:#9A6B3F;color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;">SL</span>
+          <span style="width:34px;height:34px;border-radius:50%;background:#7A5C8A;color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;">TP</span>
+        </div>
+      </div>
+
+      <!-- status -->
+      <div style="border-top:1px solid #EFEAE2;margin-top:22px;padding-top:20px;">
+        <div style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:14px;">Status chips</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <span style="display:inline-flex;align-items:center;gap:6px;background:#EDF1F5;color:#3D5A78;font-weight:600;font-size:12.5px;padding:5px 11px;border-radius:7px;"><span style="width:6px;height:6px;border-radius:50%;background:#4B6B8A;"></span>Want to Try</span>
+          <span style="display:inline-flex;align-items:center;gap:6px;background:#EAF1EA;color:#3F6A44;font-weight:600;font-size:12.5px;padding:5px 11px;border-radius:7px;"><span style="width:6px;height:6px;border-radius:50%;background:#5C7A4F;"></span>Recommends</span>
+          <span style="display:inline-flex;align-items:center;gap:6px;background:#F5EBE8;color:#9E4234;font-weight:600;font-size:12.5px;padding:5px 11px;border-radius:7px;"><span style="width:6px;height:6px;border-radius:50%;background:#B14A3C;"></span>Hard Pass</span>
+        </div>
+      </div>
+
+      <!-- rating + tags -->
+      <div style="border-top:1px solid #EFEAE2;margin-top:22px;padding-top:20px;">
+        <div style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:14px;">Rating &amp; tags</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+          <span style="font-size:15px;color:#C1552E;letter-spacing:1px;">★★★★<span style="color:#D8D2CA;">★</span></span>
+          <span style="font-weight:700;font-size:14px;color:#292420;">4.2</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;">
+          <span style="font-size:12px;color:#6B635C;border:1px solid #E0DAD2;padding:4px 10px;border-radius:7px;">Restaurant</span>
+          <span style="font-size:12px;color:#6B635C;border:1px solid #E0DAD2;padding:4px 10px;border-radius:7px;">Italian</span>
+          <span style="font-size:12px;color:#6B635C;border:1px solid #E0DAD2;padding:4px 10px;border-radius:7px;">$$</span>
+          <span style="font-size:12px;color:#6B635C;border:1px solid #E0DAD2;padding:4px 10px;border-radius:7px;">Fort Greene</span>
+        </div>
+      </div>
+
+      <!-- sample card -->
+      <div style="border-top:1px solid #EFEAE2;margin-top:22px;padding-top:20px;">
+        <div style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:14px;">Place card</div>
+        <div style="background:#FFFFFF;border:1px solid #E7E1D9;border-radius:12px;padding:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+            <div>
+              <div style="font-family:'Hanken Grotesk';font-weight:700;font-size:17px;color:#292420;letter-spacing:-0.01em;">Lucia Pizza</div>
+              <div style="font-size:12.5px;color:#8A817A;margin-top:3px;">Restaurant · Italian · $$ · Fort Greene</div>
+            </div>
+            <span style="display:inline-flex;align-items:center;gap:5px;background:#EAF1EA;color:#3F6A44;font-weight:600;font-size:11.5px;padding:4px 9px;border-radius:7px;white-space:nowrap;"><span style="width:5px;height:5px;border-radius:50%;background:#5C7A4F;"></span>Recommends</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:9px;margin-top:14px;">
+            <div style="display:flex;">
+              <span style="width:26px;height:26px;border-radius:50%;background:#4B6B8A;color:#fff;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;">JD</span>
+              <span style="width:26px;height:26px;border-radius:50%;background:#5C7A4F;color:#fff;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;margin-left:-8px;">AR</span>
+              <span style="width:26px;height:26px;border-radius:50%;background:#9A6B3F;color:#fff;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;margin-left:-8px;">SL</span>
+            </div>
+            <span style="font-size:12.5px;color:#6E655B;">Jordan &amp; 2 others · <span style="color:#C1552E;font-weight:600;">★ 4.2</span></span>
+          </div>
+          <div style="font-size:13.5px;line-height:1.5;color:#5F574F;margin-top:12px;border-top:1px solid #F1EDE6;padding-top:12px;">“Get the clam pie and a Negroni. Go early, no reservations.”</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 1b — WARM MODERN (middle) ============ -->
+    <div id="1b" style="flex:0 0 400px;background:#FCFBFA;border:1px solid #E4DED5;border-radius:18px;padding:28px 26px 30px;box-shadow:0 1px 2px rgba(40,30,20,.04),0 10px 30px rgba(40,30,20,.05);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+        <span style="background:#D0603A;color:#fff;font-weight:700;font-size:12px;letter-spacing:.02em;padding:3px 9px;border-radius:9px;">1b</span>
+        <span style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;">Warm modern</span>
+      </div>
+      <h2 style="font-family:'Bricolage Grotesque';font-weight:800;font-size:24px;color:#2C2622;margin:0 0 4px;letter-spacing:-0.01em;">Friendly Clay</h2>
+      <p style="font-size:13.5px;line-height:1.5;color:#8A817A;margin:0 0 6px;">Rounded, warm, dot-led pills and a characterful display face. <span style="color:#5F574F;">Bricolage Grotesque + Hanken Grotesk.</span></p>
+
+      <div style="border-top:1px solid #EFEAE2;margin-top:22px;padding-top:20px;">
+        <div style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:14px;">Palette</div>
+        <div style="display:flex;gap:8px;">
+          <div style="flex:1;"><div style="height:44px;border-radius:11px;background:#FBF6F0;border:1px solid #EBE2D7;"></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px;color:#A79E93;margin-top:6px;">Paper</div></div>
+          <div style="flex:1;"><div style="height:44px;border-radius:11px;background:#2C2622;"></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px;color:#A79E93;margin-top:6px;">Ink</div></div>
+          <div style="flex:1;"><div style="height:44px;border-radius:11px;background:#D0603A;"></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px;color:#A79E93;margin-top:6px;">Coral</div></div>
+          <div style="flex:1;"><div style="height:44px;border-radius:11px;background:#E0A33C;"></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px;color:#A79E93;margin-top:6px;">Honey</div></div>
+          <div style="flex:1;"><div style="height:44px;border-radius:11px;background:#5A8C55;"></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px;color:#A79E93;margin-top:6px;">Sage</div></div>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid #EFEAE2;margin-top:22px;padding-top:20px;">
+        <div style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:14px;">Type scale</div>
+        <div style="font-family:'Bricolage Grotesque';font-weight:800;font-size:28px;letter-spacing:-0.01em;color:#2C2622;line-height:1.05;">Lucia Pizza</div>
+        <div style="font-family:'Bricolage Grotesque';font-weight:600;font-size:18px;color:#2C2622;margin-top:8px;">Wood-fired, tiny room</div>
+        <div style="font-size:14.5px;line-height:1.5;color:#5F574F;margin-top:8px;">Body copy for notes and comments sits at a comfortable reading size.</div>
+        <div style="font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:#A79E93;margin-top:8px;">3 friends · updated Tue</div>
+      </div>
+
+      <div style="border-top:1px solid #EFEAE2;margin-top:22px;padding-top:20px;">
+        <div style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:14px;">Friend avatars</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="width:34px;height:34px;border-radius:11px;background:#D0603A;color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;">MK</span>
+          <span style="width:34px;height:34px;border-radius:11px;background:#3E7EA6;color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;">JD</span>
+          <span style="width:34px;height:34px;border-radius:11px;background:#5A8C55;color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;">AR</span>
+          <span style="width:34px;height:34px;border-radius:11px;background:#E0A33C;color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;">SL</span>
+          <span style="width:34px;height:34px;border-radius:11px;background:#8A6BA6;color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;">TP</span>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid #EFEAE2;margin-top:22px;padding-top:20px;">
+        <div style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:14px;">Status chips</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <span style="display:inline-flex;align-items:center;gap:6px;background:#FBEFD6;color:#95681A;font-weight:600;font-size:12.5px;padding:6px 12px;border-radius:999px;"><span style="width:7px;height:7px;border-radius:50%;background:#E0A33C;"></span>Want to Try</span>
+          <span style="display:inline-flex;align-items:center;gap:6px;background:#E7F1E2;color:#3F7A3C;font-weight:600;font-size:12.5px;padding:6px 12px;border-radius:999px;"><span style="width:7px;height:7px;border-radius:50%;background:#5A8C55;"></span>Recommends</span>
+          <span style="display:inline-flex;align-items:center;gap:6px;background:#F8E4DF;color:#B23E28;font-weight:600;font-size:12.5px;padding:6px 12px;border-radius:999px;"><span style="width:7px;height:7px;border-radius:50%;background:#C05141;"></span>Hard Pass</span>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid #EFEAE2;margin-top:22px;padding-top:20px;">
+        <div style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:14px;">Rating &amp; tags</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+          <span style="font-size:16px;color:#E0A33C;letter-spacing:1px;">★★★★<span style="color:#E7DECF;">★</span></span>
+          <span style="font-weight:700;font-size:14px;color:#2C2622;">4.2</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;">
+          <span style="font-size:12px;color:#6E645B;background:#F1EAE2;padding:5px 12px;border-radius:999px;">Restaurant</span>
+          <span style="font-size:12px;color:#6E645B;background:#F1EAE2;padding:5px 12px;border-radius:999px;">Italian</span>
+          <span style="font-size:12px;color:#6E645B;background:#F1EAE2;padding:5px 12px;border-radius:999px;">$$</span>
+          <span style="font-size:12px;color:#6E645B;background:#F1EAE2;padding:5px 12px;border-radius:999px;">Fort Greene</span>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid #EFEAE2;margin-top:22px;padding-top:20px;">
+        <div style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:14px;">Place card</div>
+        <div style="background:#FBF6F0;border:1px solid #EBE2D7;border-radius:16px;padding:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+            <div>
+              <div style="font-family:'Bricolage Grotesque';font-weight:700;font-size:18px;color:#2C2622;">Lucia Pizza</div>
+              <div style="font-size:12.5px;color:#948A80;margin-top:3px;">Restaurant · Italian · $$ · Fort Greene</div>
+            </div>
+            <span style="display:inline-flex;align-items:center;gap:5px;background:#E7F1E2;color:#3F7A3C;font-weight:600;font-size:11.5px;padding:5px 10px;border-radius:999px;white-space:nowrap;"><span style="width:6px;height:6px;border-radius:50%;background:#5A8C55;"></span>Recommends</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:9px;margin-top:14px;">
+            <div style="display:flex;">
+              <span style="width:26px;height:26px;border-radius:8px;background:#3E7EA6;color:#fff;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;border:2px solid #FBF6F0;">JD</span>
+              <span style="width:26px;height:26px;border-radius:8px;background:#5A8C55;color:#fff;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;border:2px solid #FBF6F0;margin-left:-8px;">AR</span>
+              <span style="width:26px;height:26px;border-radius:8px;background:#E0A33C;color:#fff;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;border:2px solid #FBF6F0;margin-left:-8px;">SL</span>
+            </div>
+            <span style="font-size:12.5px;color:#6E655B;">Jordan &amp; 2 others · <span style="color:#C77A16;font-weight:600;">★ 4.2</span></span>
+          </div>
+          <div style="font-size:13.5px;line-height:1.5;color:#5F574F;margin-top:12px;border-top:1px solid #EBE2D7;padding-top:12px;">“Get the clam pie and a Negroni. Go early, no reservations.”</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 1c — WARM & EDITORIAL ============ -->
+    <div id="1c" style="flex:0 0 400px;background:#FCFBFA;border:1px solid #E4DED5;border-radius:18px;padding:28px 26px 30px;box-shadow:0 1px 2px rgba(40,30,20,.04),0 10px 30px rgba(40,30,20,.05);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+        <span style="background:#A23B2C;color:#F7F0E4;font-weight:700;font-size:12px;letter-spacing:.02em;padding:3px 9px;border-radius:4px;">1c</span>
+        <span style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;">Warm &amp; editorial</span>
+      </div>
+      <h2 style="font-family:'Spectral';font-weight:600;font-size:26px;color:#33291E;margin:0 0 4px;letter-spacing:-0.01em;">The Little Book</h2>
+      <p style="font-size:13.5px;line-height:1.5;color:#8A7B66;margin:0 0 6px;">Cream paper, serif display, verdicts weighted by ink. Feels like a curated notebook. <span style="color:#5F574F;">Spectral + Hanken Grotesk.</span></p>
+
+      <div style="border-top:1px solid #EFEAE2;margin-top:22px;padding-top:20px;">
+        <div style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:14px;">Palette</div>
+        <div style="display:flex;gap:8px;">
+          <div style="flex:1;"><div style="height:44px;border-radius:6px;background:#F7F0E4;border:1px solid #E6DAC3;"></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px;color:#A79E93;margin-top:6px;">Cream</div></div>
+          <div style="flex:1;"><div style="height:44px;border-radius:6px;background:#33291E;"></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px;color:#A79E93;margin-top:6px;">Espr.</div></div>
+          <div style="flex:1;"><div style="height:44px;border-radius:6px;background:#BC4B2B;"></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px;color:#A79E93;margin-top:6px;">Terra</div></div>
+          <div style="flex:1;"><div style="height:44px;border-radius:6px;background:#3E5F3A;"></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px;color:#A79E93;margin-top:6px;">Olive</div></div>
+          <div style="flex:1;"><div style="height:44px;border-radius:6px;background:#C88A2E;"></div><div style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px;color:#A79E93;margin-top:6px;">Gold</div></div>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid #EFEAE2;margin-top:22px;padding-top:20px;">
+        <div style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:14px;">Type scale</div>
+        <div style="font-family:'Spectral';font-weight:600;font-size:29px;color:#33291E;line-height:1.05;">Lucia Pizza</div>
+        <div style="font-family:'Spectral';font-weight:400;font-style:italic;font-size:18px;color:#6B5D45;margin-top:8px;">Wood-fired, tiny room</div>
+        <div style="font-size:14.5px;line-height:1.5;color:#5F574F;margin-top:8px;">Body copy for notes and comments stays in a clean sans for legibility.</div>
+        <div style="font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:#A79E93;margin-top:8px;">3 friends · updated Tue</div>
+      </div>
+
+      <div style="border-top:1px solid #EFEAE2;margin-top:22px;padding-top:20px;">
+        <div style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:14px;">Friend avatars</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="width:34px;height:34px;border-radius:50%;background:#BC4B2B;color:#F7F0E4;font-family:'Spectral';font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;">MK</span>
+          <span style="width:34px;height:34px;border-radius:50%;background:#3E5F3A;color:#F7F0E4;font-family:'Spectral';font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;">JD</span>
+          <span style="width:34px;height:34px;border-radius:50%;background:#7C6A3A;color:#F7F0E4;font-family:'Spectral';font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;">AR</span>
+          <span style="width:34px;height:34px;border-radius:50%;background:#8A5A3A;color:#F7F0E4;font-family:'Spectral';font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;">SL</span>
+          <span style="width:34px;height:34px;border-radius:50%;background:#6B4C6A;color:#F7F0E4;font-family:'Spectral';font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;">TP</span>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid #EFEAE2;margin-top:22px;padding-top:20px;">
+        <div style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:14px;">Status chips</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+          <span style="display:inline-flex;align-items:center;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:#6B5D45;border:1px solid #C3B291;padding:5px 11px;border-radius:4px;">Want to Try</span>
+          <span style="display:inline-flex;align-items:center;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:#F7F0E4;background:#3E5F3A;padding:6px 11px;border-radius:4px;">Recommends</span>
+          <span style="display:inline-flex;align-items:center;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:#F7F0E4;background:#A23B2C;padding:6px 11px;border-radius:4px;">Hard Pass</span>
+        </div>
+        <div style="font-size:11.5px;color:#A79E93;margin-top:10px;line-height:1.4;">Wishes stay quiet (outline); verdicts you’ve earned carry solid ink.</div>
+      </div>
+
+      <div style="border-top:1px solid #EFEAE2;margin-top:22px;padding-top:20px;">
+        <div style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:14px;">Rating &amp; tags</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+          <span style="font-size:16px;color:#C88A2E;letter-spacing:2px;">★★★★<span style="color:#E4D6B8;">★</span></span>
+          <span style="font-family:'Spectral';font-weight:600;font-size:16px;color:#33291E;">4.2</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;">
+          <span style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:#6B5D45;border:1px solid #C3B291;padding:3px 8px;border-radius:3px;">Restaurant</span>
+          <span style="font-family:'Spectral';font-style:italic;font-size:14px;color:#6B5D45;">Italian · $$ · Fort Greene</span>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid #EFEAE2;margin-top:22px;padding-top:20px;">
+        <div style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:14px;">Place card</div>
+        <div style="background:#F7F0E4;border:1px solid #E6DAC3;border-radius:8px;padding:17px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+            <div>
+              <div style="font-family:'Spectral';font-weight:600;font-size:20px;color:#33291E;line-height:1.1;">Lucia Pizza</div>
+              <div style="font-family:'Spectral';font-style:italic;font-size:13px;color:#8A7B66;margin-top:2px;">Italian · $$ · Fort Greene</div>
+            </div>
+            <span style="display:inline-flex;align-items:center;font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:#F7F0E4;background:#3E5F3A;padding:5px 9px;border-radius:4px;white-space:nowrap;">Recommends</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:9px;margin-top:14px;">
+            <div style="display:flex;">
+              <span style="width:26px;height:26px;border-radius:50%;background:#3E5F3A;color:#F7F0E4;font-family:'Spectral';font-weight:600;font-size:11px;display:flex;align-items:center;justify-content:center;border:2px solid #F7F0E4;">JD</span>
+              <span style="width:26px;height:26px;border-radius:50%;background:#7C6A3A;color:#F7F0E4;font-family:'Spectral';font-weight:600;font-size:11px;display:flex;align-items:center;justify-content:center;border:2px solid #F7F0E4;margin-left:-8px;">AR</span>
+              <span style="width:26px;height:26px;border-radius:50%;background:#8A5A3A;color:#F7F0E4;font-family:'Spectral';font-weight:600;font-size:11px;display:flex;align-items:center;justify-content:center;border:2px solid #F7F0E4;margin-left:-8px;">SL</span>
+            </div>
+            <span style="font-size:12.5px;color:#6B5D45;">Jordan &amp; 2 others · <span style="color:#B37A18;font-weight:600;">★ 4.2</span></span>
+          </div>
+          <div style="font-family:'Spectral';font-size:14.5px;font-style:italic;line-height:1.5;color:#5A4E3C;margin-top:12px;border-top:1px solid #E6DAC3;padding-top:12px;">“Get the clam pie and a Negroni. Go early, no reservations.”</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+</body>
+</html>
