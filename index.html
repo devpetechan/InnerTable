@@ -3,7 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>InnerTable 🍽️</title>
+  <title>InnerTable</title>
+
+  <!-- Hanken Grotesk — the UI font for the "Quiet Utility" design system (IT-084) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Supabase (UMD bundle — exposes window.supabase globally)
        Pinned version: an unpinned @2 auto-upgrades under us (the CDN serves
@@ -17,8 +22,8 @@
 <!-- ═══════════════ WELCOME ═══════════════ -->
 <div id="welcome-screen">
   <div class="welcome-card">
-    <div class="logo">🍽️</div>
-    <h1>InnerTable</h1>
+    <div class="table-mark"></div>
+    <h1>Inner Table</h1>
     <p>Your group's shared restaurant bible.<br>Save places to try, and share what you've loved — or didn't.</p>
     <div class="input-group">
       <button id="google-signin-btn" class="btn-primary">Sign in with Google</button>
@@ -31,11 +36,11 @@
 <div id="app">
   <header>
     <div class="header-inner">
-      <div class="header-logo" title="Home"><span>🍽️</span>InnerTable</div>
-      <div class="user-chip" title="Sign out">
+      <div class="header-logo" title="Home">Inner Table</div>
+      <button class="user-chip" title="Sign out">
         <div class="avatar" id="header-avatar">?</div>
-        <span id="header-name">You</span>
-      </div>
+        <span id="header-name" class="sr-only">You</span>
+      </button>
     </div>
   </header>
 
@@ -44,33 +49,29 @@
     <!-- ── HOME SECTION ── -->
     <div id="home-section">
       <div class="home-hero">
-        <div class="home-hero-icon">🍽️</div>
+        <div class="table-mark" style="margin:0 auto 20px;"></div>
         <h2>Welcome to my Inner Table.</h2>
         <p>The Inner Table is a curated list of food and drink spots that your trusted inner circle of friends like or want to try. Add to the Inner Table list — but don't add crap places! Your friends will hate you.</p>
         <div class="home-ctas">
           <button class="home-cta-btn">
-            <span class="home-cta-icon">🗂</span>
             <span class="home-cta-text">
               <strong>View All</strong>
               <span>See every place on the list</span>
             </span>
           </button>
           <button class="home-cta-btn">
-            <span class="home-cta-icon">🍽</span>
             <span class="home-cta-text">
               <strong>View Restaurants</strong>
               <span>Browse the full restaurant list</span>
             </span>
           </button>
           <button class="home-cta-btn">
-            <span class="home-cta-icon">🍸</span>
             <span class="home-cta-text">
               <strong>View Bars</strong>
               <span>See bars and cocktail spots</span>
             </span>
           </button>
           <button class="home-cta-btn primary">
-            <span class="home-cta-icon">➕</span>
             <span class="home-cta-text">
               <strong>Add a New Place</strong>
               <span>Share a spot with the group</span>
@@ -80,26 +81,31 @@
       </div>
     </div>
 
-    <!-- ── LIST + MAP SECTION ── -->
+    <!-- ── LIST + MAP SECTION (IT-086 · "2a + Map toggle") ── -->
     <div id="list-map-section">
 
-      <!-- Status view tabs -->
+      <!-- Full-width segmented status control -->
       <div class="view-tabs" role="tablist" aria-label="Filter by status">
-        <button class="view-tab active" data-view="all" role="tab" aria-selected="true">🗂 All</button>
-        <button class="view-tab"        data-view="try" role="tab" aria-selected="false">📌 Want to Try</button>
-        <button class="view-tab"        data-view="recommended" role="tab" aria-selected="false">✅ Recommended</button>
+        <button class="view-tab active" data-view="all" role="tab" aria-selected="true">All</button>
+        <button class="view-tab"        data-view="try" role="tab" aria-selected="false">Want to Try</button>
+        <button class="view-tab"        data-view="recommended" role="tab" aria-selected="false">Recommended</button>
       </div>
 
-      <!-- List | Map toggle -->
+      <!-- Controls row: List | Map toggle + Filter & sort pill -->
       <div class="display-mode-row">
         <div class="display-mode-toggle">
-          <button class="display-mode-btn active" id="mode-list">☰ List</button>
-          <button class="display-mode-btn"        id="mode-map">🗺 Map</button>
+          <button class="display-mode-btn active" id="mode-list">List</button>
+          <button class="display-mode-btn"        id="mode-map">Map</button>
         </div>
+        <button class="filter-sort-btn" id="filter-sort-btn" aria-expanded="false" aria-controls="filters-row">
+          <span class="filter-sort-icon"><span></span><span></span><span></span></span>
+          Filter &amp; sort
+        </button>
       </div>
 
-      <!-- Filters collapsed into a single row on mobile -->
-      <div class="filters-row">
+      <!-- Filter chips — collapsed behind the Filter & sort pill
+           (the designed sheet is a follow-up; this keeps existing logic reachable) -->
+      <div class="filters-row" id="filters-row">
         <div class="filter-bar" id="friend-filter-bar" role="group" aria-label="Filter by author">
           <span class="filter-label">By</span>
           <div class="filter-chip active" data-filter="all">Everyone</div>
@@ -109,18 +115,18 @@
         <div class="filter-bar" id="type-filter-bar" role="group" aria-label="Filter by type">
           <span class="filter-label">Type</span>
           <div class="filter-chip active" data-type="all">All</div>
-          <div class="filter-chip"        data-type="restaurant">🍽 Restaurants</div>
-          <div class="filter-chip"        data-type="bar">🍸 Bars</div>
+          <div class="filter-chip"        data-type="restaurant">Restaurants</div>
+          <div class="filter-chip"        data-type="bar">Bars</div>
         </div>
 
         <div class="filter-bar" id="sort-filter-bar" role="group" aria-label="Sort order">
           <span class="filter-label">Sort</span>
-          <div class="filter-chip active" data-sort="date">📅 Date</div>
-          <div class="filter-chip"        data-sort="rating">⭐ Rating</div>
+          <div class="filter-chip active" data-sort="date">Date</div>
+          <div class="filter-chip"        data-sort="rating">Rating</div>
         </div>
       </div>
 
-<div class="section-title" id="count-title">
+      <div class="section-title" id="count-title">
         Places <span class="count-badge" id="rec-count">0</span>
       </div>
 
@@ -138,175 +144,175 @@
     </div>
   </main>
 
-  <button class="fab" id="add-place-fab" style="display:none"><span>+</span> Add Place</button>
+  <button class="fab" id="add-place-fab" style="display:none"><span>+</span>Add a place</button>
 </div>
 
-<!-- ═══════════════ MODAL ═══════════════ -->
+<!-- ═══════════════ ADD/EDIT FLOW (IT-087 · "6b Guided multi-step") ═══════════════ -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="modal-title">Add a Place</div>
-      <button class="btn-close">✕</button>
+
+    <!-- Header: Cancel / back + progress dots + spacer -->
+    <div class="flow-header">
+      <button class="flow-cancel" id="flow-back-btn">Cancel</button>
+      <div class="flow-dots" id="flow-dots" aria-hidden="true"></div>
+      <span class="flow-header-spacer"></span>
     </div>
 
-    <!-- Form (shown directly on open) -->
-    <div id="form-step">
-      <div class="step-title" id="form-step-title" style="display:none"></div>
+    <div class="flow-body" id="flow-body">
 
-      <!-- Name with Places autocomplete -->
-      <div class="form-group">
-        <label class="form-label" for="f-name">Name <span class="required-star">*</span></label>
-        <div class="autocomplete-wrap">
-          <input class="form-input" id="f-name" type="text" placeholder="Start typing a name…" maxlength="100" autocomplete="off" aria-required="true" />
+      <!-- STEP 1 — PLACE -->
+      <div class="flow-step" id="step-place">
+        <div class="flow-prompt">What's the place?</div>
+
+        <div class="flow-block">
+          <div class="autocomplete-wrap">
+            <input class="form-input" id="f-name" type="text" placeholder="Search restaurants &amp; bars…" maxlength="100" autocomplete="off" aria-required="true" />
+          </div>
+          <div class="flow-hint">Search any restaurant or bar — we'll grab the address.</div>
         </div>
-        <span class="form-hint">Search powered by Google Places, or type any name.</span>
-      </div>
 
-      <!-- Location (auto-filled by Places) -->
-      <div class="form-group">
-        <label class="form-label" for="f-location">Location / Neighborhood</label>
-        <input class="form-input" id="f-location" type="text" placeholder="e.g. Mission District, SF" maxlength="100" />
-      </div>
-
-      <!-- Bar / Restaurant toggle -->
-      <div class="form-group">
-        <label class="form-label">Type</label>
-        <div class="toggle-group">
-          <button class="toggle-btn active rest-active" id="tog-restaurant">🍽 Restaurant</button>
-          <button class="toggle-btn" id="tog-bar">🍸 Bar</button>
+        <div class="flow-block">
+          <label class="flow-label" for="f-location">Location / neighborhood <span class="optional">(optional)</span></label>
+          <input class="form-input" id="f-location" type="text" placeholder="e.g. Mission District, SF" maxlength="100" />
         </div>
-      </div>
 
-      <!-- Experience toggle: I've Been / Want to Try -->
-      <div class="form-group">
-        <label class="form-label">Your Experience <span class="required-star">*</span></label>
-        <div class="rec-toggle">
-          <button class="rec-btn yes" id="exp-been">🍴 I've Been</button>
-          <button class="rec-btn no"  id="exp-try">📌 Want to Try</button>
+        <div class="flow-block">
+          <label class="flow-label">Type</label>
+          <div class="seg-group">
+            <button class="seg-btn active" id="tog-restaurant">Restaurant</button>
+            <button class="seg-btn" id="tog-bar">Bar</button>
+          </div>
         </div>
       </div>
 
-      <!-- BEEN-HERE fields -->
-      <div id="been-fields" style="display:none">
-        <div class="section-context" id="been-context">Rate your experience and help friends decide.</div>
+      <!-- STEP 2 — INTENT -->
+      <div class="flow-step" id="step-intent">
+        <div class="place-minicard">
+          <div class="place-minicard-info">
+            <span class="pin-icon"></span>
+            <div>
+              <div class="place-minicard-name" id="minicard-name"></div>
+              <div class="place-minicard-meta" id="minicard-meta"></div>
+            </div>
+          </div>
+          <button class="minicard-edit" id="minicard-edit">Edit</button>
+        </div>
 
-        <!-- Overall Rating -->
-        <div class="form-group">
-          <label class="form-label">Overall Rating</label>
+        <div class="flow-subprompt">Have you been?</div>
+
+        <div class="intent-card" id="intent-try" role="button" tabindex="0">
+          <div class="intent-card-head">
+            <span class="intent-icon try"><span class="pin-icon"></span></span>
+            <div class="intent-card-text">
+              <div class="intent-card-title">Want to try</div>
+              <div class="intent-card-desc">Just saving it for later.</div>
+            </div>
+            <span class="intent-check">✓</span>
+            <span class="intent-chev">›</span>
+          </div>
+          <div class="intent-expand">
+            <label class="flow-label" for="f-try-note">Note <span class="optional">(optional)</span></label>
+            <textarea class="form-textarea" id="f-try-note" placeholder="Why it looks good, who told you about it…" maxlength="400"></textarea>
+            <label class="flow-label" for="f-url">Link / review URL <span class="optional">(optional)</span></label>
+            <input class="form-input" id="f-url" type="url" placeholder="https://…" />
+          </div>
+        </div>
+
+        <div class="intent-card" id="intent-been" role="button" tabindex="0">
+          <div class="intent-card-head">
+            <span class="intent-icon been">★</span>
+            <div class="intent-card-text">
+              <div class="intent-card-title">I've been</div>
+              <div class="intent-card-desc">Share a rating &amp; a take.</div>
+            </div>
+            <span class="intent-check">✓</span>
+            <span class="intent-chev">›</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3 — REVIEW (I've-been only) -->
+      <div class="flow-step" id="step-review">
+        <div class="review-place"><span class="pin-icon"></span><span id="review-place-name"></span></div>
+
+        <div class="flow-block">
+          <label class="flow-label">Your rating</label>
           <div class="star-picker" id="star-picker">
-            <span>☆</span><span>☆</span>
-            <span>☆</span><span>☆</span>
-            <span>☆</span>
+            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
           </div>
         </div>
 
-        <!-- Recommendation -->
-        <div class="form-group">
-          <label class="form-label">Recommendation <span class="form-label-optional">(optional)</span></label>
-          <div class="rec-toggle">
-            <button class="rec-btn yes" id="btn-go-now">✅ Go Now!</button>
-            <button class="rec-btn no"  id="btn-hard-pass">🚫 Hard Pass</button>
+        <div class="flow-block">
+          <label class="flow-label">Your call</label>
+          <div class="verdict-seg">
+            <button class="verdict-btn yes" id="btn-go-now"><span class="chip-dot"></span>Recommend</button>
+            <button class="verdict-btn no"  id="btn-hard-pass"><span class="chip-dot"></span>Hard pass</button>
           </div>
         </div>
 
-        <!-- Cuisine + Price -->
-        <div class="form-row" id="been-details-row">
-          <div class="form-group">
-            <label class="form-label">Cuisine</label>
-            <select class="form-select" id="f-cuisine">
-              <option value="">— pick one —</option>
+        <div class="flow-block">
+          <label class="flow-label" for="f-notes">Note <span class="optional">(optional)</span></label>
+          <textarea class="form-textarea" id="f-notes" placeholder="What should they order?" maxlength="400"></textarea>
+        </div>
+
+        <button class="details-disclosure" id="details-disclosure" aria-expanded="false" aria-controls="details-fields">
+          <span>Add cuisine, price &amp; detailed ratings <span class="optional">(optional)</span></span>
+          <span class="disc-arrow" id="disc-arrow">▸</span>
+        </button>
+
+        <div id="details-fields">
+          <div class="flow-block">
+            <label class="flow-label" for="f-cuisine">Cuisine <span class="optional">(optional)</span></label>
+            <input class="form-input" id="f-cuisine" list="cuisine-list" placeholder="e.g. Italian" maxlength="60" />
+            <datalist id="cuisine-list">
               <option>American</option><option>Italian</option><option>Mexican</option>
               <option>Japanese</option><option>Chinese</option><option>Thai</option>
               <option>Indian</option><option>Mediterranean</option><option>French</option>
               <option>Korean</option><option>Vietnamese</option><option>Middle Eastern</option>
               <option>Seafood</option><option>Brunch</option><option>Pizza</option>
               <option>Cocktail Bar</option><option>Wine Bar</option><option>Craft Beer</option>
-              <option>Other</option>
-            </select>
+            </datalist>
           </div>
-          <div class="form-group">
-            <label class="form-label">Price Range</label>
-            <select class="form-select" id="f-price">
-              <option value="">— pick one —</option>
-              <option value="$">$ — Cheap eats</option>
-              <option value="$$">$$ — Mid-range</option>
-              <option value="$$$">$$$ — Splurge</option>
-              <option value="$$$$">$$$$ — Fancy</option>
-            </select>
-          </div>
-        </div>
 
-        <!-- Detailed Ratings -->
-        <div class="factor-ratings-section" id="factor-ratings-group">
-          <label class="form-label factor-ratings-title">Detailed Ratings <span class="form-label-optional">(optional)</span></label>
-          <div class="factor-ratings-grid">
-            <div class="factor-item">
-              <div class="factor-label">Quality</div>
-              <div class="factor-star-picker" id="fp-quality">
-                <span>☆</span>
-                <span>☆</span>
-                <span>☆</span>
-                <span>☆</span>
-                <span>☆</span>
-              </div>
+          <div class="flow-block">
+            <label class="flow-label">Price <span class="optional">(optional)</span></label>
+            <div class="seg-group" id="price-seg">
+              <button class="seg-btn" data-price="$">$</button>
+              <button class="seg-btn" data-price="$$">$$</button>
+              <button class="seg-btn" data-price="$$$">$$$</button>
+              <button class="seg-btn" data-price="$$$$">$$$$</button>
             </div>
-            <div class="factor-item">
-              <div class="factor-label">Service</div>
-              <div class="factor-star-picker" id="fp-service">
-                <span>☆</span>
-                <span>☆</span>
-                <span>☆</span>
-                <span>☆</span>
-                <span>☆</span>
-              </div>
+            <input type="hidden" id="f-price" value="" />
+          </div>
+
+          <div class="flow-block">
+            <label class="flow-label">Detailed ratings <span class="optional">(optional)</span></label>
+            <div class="subrating-row">
+              <span class="subrating-label">Food quality</span>
+              <div class="factor-star-picker" id="fp-quality"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
             </div>
-            <div class="factor-item">
-              <div class="factor-label">Value</div>
-              <div class="factor-star-picker" id="fp-value">
-                <span>☆</span>
-                <span>☆</span>
-                <span>☆</span>
-                <span>☆</span>
-                <span>☆</span>
-              </div>
+            <div class="subrating-row">
+              <span class="subrating-label">Service</span>
+              <div class="factor-star-picker" id="fp-service"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
             </div>
-            <div class="factor-item">
-              <div class="factor-label">Ambiance</div>
-              <div class="factor-star-picker" id="fp-ambiance">
-                <span>☆</span>
-                <span>☆</span>
-                <span>☆</span>
-                <span>☆</span>
-                <span>☆</span>
-              </div>
+            <div class="subrating-row">
+              <span class="subrating-label">Value</span>
+              <div class="factor-star-picker" id="fp-value"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+            </div>
+            <div class="subrating-row">
+              <span class="subrating-label">Ambiance</span>
+              <div class="factor-star-picker" id="fp-ambiance"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
             </div>
           </div>
-          <div class="factor-hint" id="factor-hint">Adding factor ratings helps your friends find great matches!</div>
-        </div>
-
-        <div class="form-group" id="been-notes-group">
-          <label class="form-label">Your take</label>
-          <textarea class="form-textarea" id="f-notes" placeholder="What to order? Best for groups? Vibe?" maxlength="400"></textarea>
         </div>
       </div>
 
-      <!-- WANT-TO-TRY fields -->
-      <div id="try-fields" style="display:none">
-        <div class="section-context">Save this spot for later — add a note or link so you remember why.</div>
-        <div class="form-group">
-          <label class="form-label">Note <span class="form-label-optional">(optional)</span></label>
-          <textarea class="form-textarea" id="f-try-note" placeholder="Why it looks good, who told you about it…" maxlength="400"></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Link / Review URL <span class="form-label-optional">(optional)</span></label>
-          <input class="form-input" id="f-url" type="url" placeholder="https://…" />
-        </div>
-      </div>
+    </div>
 
-      <div class="submit-wrap">
-        <button class="btn-submit" id="submit-btn" disabled>Save</button>
-        <p class="submit-hint" id="submit-hint" aria-live="polite">Fill in a name and choose your experience to save.</p>
-      </div>
+    <!-- Sticky footer primary -->
+    <div class="flow-footer">
+      <button class="btn-submit" id="submit-btn" disabled>Next</button>
+      <p class="submit-hint" id="submit-hint" aria-live="polite"></p>
     </div>
 
   </div>

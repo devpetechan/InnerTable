@@ -298,8 +298,8 @@ async function submitEntry() {
     placeId = await _resolvePlaceId(placeRow);
   } catch (err) {
     console.error('[submitEntry] place resolution failed:', err);
-    showToast('❌ Could not save the place.');
-    btn.disabled = false; btn.textContent = 'Save';
+    showToast('Could not save the place.');
+    btn.disabled = false; updateSubmitBtn();
     return;
   }
 
@@ -329,17 +329,17 @@ async function submitEntry() {
     .from('entries').upsert(entryRow, { onConflict: 'user_id,place_id' });
   if (entryErr) {
     console.error('[submitEntry] entry write failed:', entryErr);
-    showToast('❌ Could not save your entry.');
-    btn.disabled = false; btn.textContent = 'Save';
+    showToast('Could not save your entry.');
+    btn.disabled = false; updateSubmitBtn();
     return;
   }
 
-  const toastMsg = isTryType ? '📌 Saved to your list!'
-    : addType === 'been-skip' ? '🚫 Hard Pass noted!'
-    : '🎉 Review saved!';
+  const toastMsg = isTryType ? 'Saved to Want to Try.'
+    : addType === 'been-skip' ? 'Hard Pass noted.'
+    : 'Your take is on the table.';
   showToast(toastMsg);
   closeModal();
-  btn.disabled = false; btn.textContent = 'Save';
+  btn.disabled = false;
   // Realtime triggers the re-fetch + re-render.
 }
 
@@ -351,7 +351,7 @@ async function submitEntry() {
 async function deleteEntry(entryId) {
   if (!confirm('Delete your take on this place? This cannot be undone.')) return;
   const { error } = await supabaseClient.from('entries').delete().eq('id', entryId);
-  if (error) { console.error(error); showToast('❌ Could not delete.'); return; }
-  showToast('🗑 Your take was deleted.');
+  if (error) { console.error(error); showToast('Could not delete.'); return; }
+  showToast('Your take was deleted.');
 }
 

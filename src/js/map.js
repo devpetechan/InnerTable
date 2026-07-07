@@ -18,7 +18,6 @@ window.gm_authFailure = function() {
   const mapEl = document.getElementById('map-view');
   if (mapEl) {
     mapEl.innerHTML = `<div class="map-empty" style="flex-direction:column;gap:8px;">
-      <div style="font-size:2rem;">🗺️</div>
       <strong style="color:var(--text);">Maps JavaScript API not enabled</strong>
       <p style="font-size:.82rem;max-width:320px;line-height:1.5;">Go to <strong>Google Cloud Console → APIs &amp; Services → Library</strong>, search for <strong>"Maps JavaScript API"</strong>, and click Enable.</p>
     </div>`;
@@ -36,7 +35,7 @@ function initGoogleAPIs() {
 function initMap() {
   if (!googleMapsReady) {
     document.getElementById('map-view').innerHTML =
-      '<div class="map-empty">🗺 Map loading…<br><small>If this persists, check your API key.</small></div>';
+      '<div class="map-empty">Map loading…<br><small>If this persists, check your API key.</small></div>';
     return;
   }
   const mapEl = document.getElementById('map-view');
@@ -128,7 +127,7 @@ function renderMapMarkers() {
 
   withCoords.forEach(p => {
     const pos      = { lat: p.lat, lng: p.lng };
-    const pinColor = p.placeType === 'bar' ? '#4a6b7c' : '#c0522a';
+    const pinColor = p.placeType === 'bar' ? '#4B6B8A' : '#C1552E'; // design tokens: try-blue / clay
 
     const pinEl = document.createElement('div');
     pinEl.style.cssText = `width:16px;height:16px;border-radius:50%;background:${pinColor};border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);cursor:pointer;`;
@@ -219,7 +218,7 @@ async function initAutocomplete() {
                 1: '$', 2: '$$', 3: '$$$', 4: '$$$$'
               };
               const p = priceMap[place.priceLevel];
-              if (p) document.getElementById('f-price').value = p;
+              if (p) setPrice(p); // keeps the price segmented control in sync
             }
             // Capture coordinates for map view
             if (place.location) {

@@ -1,5 +1,5 @@
 // ══════════════════════════════════════════════════
-//  APP — state, navigation, view/filter, modal, form controls
+//  APP — state, navigation, view/filter, add-flow, form controls
 // ══════════════════════════════════════════════════
 
 // ══════════════════════════════════════════════════
@@ -19,13 +19,18 @@ let factorRatings      = { quality: 0, service: 0, value: 0, ambiance: 0 };
 let selectedPlaceLat   = null;
 let selectedPlaceLng   = null;
 let selectedPlaceId    = null;   // Google Place ID of the place picked via autocomplete
-let beenStatusChosen   = false;  // true once user explicitly clicks Go Now or Hard Pass in been-fields
+let beenStatusChosen   = false;  // true once user explicitly clicks Recommend or Hard pass in step 3
 let editingPlaceId     = null;   // place uuid of the entry being edited (place fields locked)
 let addingToPlaceId    = null;   // place uuid when adding a take to an existing place (CTA)
 let mapInstance        = null;
 let mapMarkers         = [];
 let googleMapsReady    = false;
 const pendingUserRatings = {}; // { [id]: { overall, quality, service, value, ambiance } }
+
+// ── Add-flow state (IT-087 "6b Guided multi-step") ──
+let flowStep          = 1;     // 1 = Place · 2 = Intent · 3 = Review
+let skipPlaceStep     = false; // true when the place is pre-filled (add-take / edit)
+let placeFieldsLocked = false; // place metadata can't change after creation
 
 const COLORS   = ['c0','c1','c2','c3','c4'];
 const colorMap = {};
@@ -132,37 +137,45 @@ function setDisplayMode(mode) {
 
   const listContainer  = document.getElementById('cards-container');
   const mapContainer   = document.getElementById('map-container');
-  const friendBar      = document.getElementById('friend-filter-bar');
   const countTitle     = document.getElementById('count-title');
 
   if (mode === 'list') {
     listContainer.style.display = '';
     mapContainer.style.display  = 'none';
-    friendBar.style.display     = '';
     countTitle.style.display    = '';
     renderCards();
   } else {
     listContainer.style.display = 'none';
     mapContainer.style.display  = 'block';
-    friendBar.style.display     = '';
     countTitle.style.display    = 'none';
     initMap();
   }
 }
 
-// ══════════════════════════════════════════════════
+// Filter & sort pill — reveals/hides the filter chip rows (IT-086 stub;
+// the designed bottom sheet is an explicit follow-up ticket).
+function toggleFilterSort() {
+  const row = document.getElementById('filters-row');
+  const btn = document.getElementById('filter-sort-btn');
+  const open = !row.classList.contains('open');
+  row.classList.toggle('open', open);
+  btn.classList.toggle('open', open);
+  btn.setAttribute('aria-expanded', String(open));
+}
 
-//  MODAL
+// ══════════════════════════════════════════════════
+//  ADD/EDIT FLOW (IT-087 "6b Guided multi-step")
+//  Step 1 Place → Step 2 Intent → Step 3 Review (I've-been only).
+//  Want-to-try completes at step 2. Writes still go through
+//  places-service submitEntry() unchanged (IT-036).
 // ══════════════════════════════════════════════════
 function openModal() {
   // Fresh add only — editing goes through editEntry(), and adding a take to
   // an existing place goes through addTakeForPlace().
   clearForm();
   document.getElementById('modal-overlay').classList.add('open');
-  document.getElementById('form-step').style.display = 'block';
-  document.getElementById('modal-title').textContent = 'Add a Place';
-  document.getElementById('form-step-title').style.display = 'none';
-  document.querySelector('.modal').scrollTop = 0;
+  goToStep(1);
+  setTimeout(() => document.getElementById('f-name').focus(), 50);
 }
 
 function closeModal() {
@@ -172,15 +185,138 @@ function closeModal() {
 
 function closeModalOnBg(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
 
+function goToStep(n) {
+  flowStep = n;
+  document.getElementById('step-place').style.display  = n === 1 ? 'block' : 'none';
+  document.getElementById('step-intent').style.display = n === 2 ? 'block' : 'none';
+  document.getElementById('step-review').style.display = n === 3 ? 'block' : 'none';
+
+  if (n === 2) _fillMinicard();
+  if (n === 3) {
+    document.getElementById('review-place-name').textContent =
+      document.getElementById('f-name').value.trim();
+  }
+
+  updateFlowUI();
+  document.getElementById('flow-body').scrollTop = 0;
+}
+
+// Step 2 confirmed-place mini-card
+function _fillMinicard() {
+  const name     = document.getElementById('f-name').value.trim();
+  const location = document.getElementById('f-location').value.trim();
+  const typeLabel = placeType === 'bar' ? 'Bar' : 'Restaurant';
+  document.getElementById('minicard-name').textContent = name;
+  document.getElementById('minicard-meta').textContent =
+    location ? `${typeLabel} · ${location}` : typeLabel;
+  // Place metadata is locked after creation — no Edit hop back to step 1.
+  document.getElementById('minicard-edit').style.display = placeFieldsLocked ? 'none' : '';
+}
+
+// Intent selection (step 2)
+function setIntent(kind) {
+  const tryCard  = document.getElementById('intent-try');
+  const beenCard = document.getElementById('intent-been');
+
+  if (kind === 'try') {
+    addType = 'want-to-go';
+    beenStatusChosen = false;
+    tryCard.classList.add('selected');
+    beenCard.classList.remove('selected');
+    updateFlowUI();
+  } else {
+    // Keep an explicitly chosen verdict when hopping back and forth
+    if (!beenStatusChosen) addType = 'been-recommend';
+    beenCard.classList.add('selected');
+    tryCard.classList.remove('selected');
+    goToStep(3);
+  }
+}
+
+// Header back / cancel button
+function flowBack() {
+  if (flowStep === 3) {
+    goToStep(2);
+  } else if (flowStep === 2 && !skipPlaceStep) {
+    goToStep(1);
+  } else {
+    closeModal();
+  }
+}
+
+// Sticky footer primary button — behavior depends on the step
+function flowPrimaryAction() {
+  if (flowStep === 1) {
+    if (!document.getElementById('f-name').value.trim()) {
+      shake(document.getElementById('f-name'));
+      return;
+    }
+    goToStep(2);
+  } else if (flowStep === 2) {
+    if (addType === 'want-to-go' || addType === 'try') {
+      submitEntry();           // Want-to-try path completes in 2 steps
+    } else if (addType) {
+      goToStep(3);             // I've been → review
+    }
+  } else {
+    submitEntry();
+  }
+}
+
+// Sync header (cancel/back + dots) and footer (label + enabled + hint)
+function updateFlowUI() {
+  const backBtn = document.getElementById('flow-back-btn');
+  const dots    = document.getElementById('flow-dots');
+  const btn     = document.getElementById('submit-btn');
+  const hint    = document.getElementById('submit-hint');
+  if (!btn) return;
+
+  // Header: Cancel on the first reachable step, ‹ otherwise
+  const isFirstStep = flowStep === 1 || (flowStep === 2 && skipPlaceStep);
+  backBtn.textContent = isFirstStep ? 'Cancel' : '‹';
+  backBtn.classList.toggle('back', !isFirstStep);
+
+  // Progress dots: 2 until the review step exists, then 3 (per Add Flow.dc.html)
+  const total = flowStep === 3 ? 3 : 2;
+  dots.innerHTML = Array.from({ length: total }, (_, i) =>
+    `<span${i === flowStep - 1 ? ' class="active"' : ''}></span>`).join('');
+
+  // Footer
+  const hasName = document.getElementById('f-name').value.trim().length > 0;
+  const isTry   = addType === 'want-to-go' || addType === 'try';
+  let label = 'Next', disabled = false, hintText = '';
+
+  if (flowStep === 1) {
+    disabled = !hasName;
+    if (disabled) hintText = 'Enter a place name to continue.';
+  } else if (flowStep === 2) {
+    if (isTry)         { label = 'Save to Want to Try'; }
+    else if (addType)  { label = 'Next'; }
+    else               { disabled = true; hintText = 'Have you been? Pick one to continue.'; }
+  } else {
+    label = editingId ? 'Save take' : 'Share take';
+  }
+
+  btn.textContent = label;
+  btn.disabled = disabled;
+  hint.textContent = hintText;
+  hint.classList.toggle('hidden', !hintText);
+}
+
+// Kept as the shared name places-service error paths call after a failed save.
+function updateSubmitBtn() { updateFlowUI(); }
+
 // Lock/unlock the fields that belong to the place row (not the user's take).
 // Place metadata can't be edited after creation (IT-035 resolved decision #1),
 // so these are disabled whenever the place already exists.
 function setPlaceFieldsLocked(locked) {
-  ['f-name', 'f-location', 'f-cuisine', 'f-price'].forEach(id => {
+  placeFieldsLocked = locked;
+  ['f-name', 'f-location', 'f-cuisine'].forEach(id => {
     document.getElementById(id).disabled = locked;
   });
   document.getElementById('tog-restaurant').disabled = locked;
   document.getElementById('tog-bar').disabled        = locked;
+  document.querySelectorAll('#price-seg .seg-btn').forEach(b => { b.disabled = locked; });
 }
 
 // Prefill the place fields of the modal from an allPlaces entry and lock them.
@@ -188,27 +324,28 @@ function _prefillPlaceFields(place) {
   document.getElementById('f-name').value     = place.name     || '';
   document.getElementById('f-location').value = place.location || '';
   document.getElementById('f-cuisine').value  = place.cuisine  || '';
-  document.getElementById('f-price').value    = place.price    || '';
+  setPrice(place.price || '');
   setPlaceType(place.placeType || 'restaurant');
   setPlaceFieldsLocked(true);
 }
 
 // "Add your take" CTA on a place card where the current user has no entry yet.
+// Place is pre-filled → the flow starts at step 2 (skips Place).
 function addTakeForPlace(placeId) {
   const place = allPlaces[placeId];
   if (!place) return;
-  openModal();
+  clearForm();
   addingToPlaceId = placeId;
-  document.getElementById('modal-title').textContent = 'Add Your Take';
+  skipPlaceStep   = true;
   _prefillPlaceFields(place);
-  updateSubmitBtn();
+  document.getElementById('modal-overlay').classList.add('open');
+  goToStep(2);
 }
 
 function upgradeToTried(entryId) {
   editEntry(entryId);
   if (!editingId) return; // entry not found
-  document.getElementById('modal-title').textContent = 'Mark as Tried';
-  setBeenOrTry('been');
+  setIntent('been');
 }
 
 function editEntry(entryId) {
@@ -223,29 +360,32 @@ function editEntry(entryId) {
   clearForm();
   editingId      = entryId;
   editingPlaceId = place.id;
-  document.getElementById('modal-overlay').classList.add('open');
-  document.getElementById('modal-title').textContent = 'Edit Your Take';
-  document.getElementById('form-step').style.display = 'block';
-  document.getElementById('form-step-title').style.display = 'none';
-
+  skipPlaceStep  = true;
   _prefillPlaceFields(place);
+  document.getElementById('modal-overlay').classList.add('open');
 
   if (take.status === 'want-to-go') {
-    setBeenOrTry('try');
     document.getElementById('f-try-note').value = take.tryNote || '';
     document.getElementById('f-url').value      = take.url     || '';
+    goToStep(2);
+    setIntent('try');
   } else {
-    setBeenOrTry('been');
-    setGoNowOrHardPass(take.status); // marks Go Now / Hard Pass active
+    if (take.status === 'been-skip' || take.status === 'been-recommend') {
+      setGoNowOrHardPass(take.status); // marks Recommend / Hard pass active
+    }
     if (take.rating > 0) setStars(take.rating);
+    let hasFactors = false;
     ['quality','service','value','ambiance'].forEach(f => {
-      if (take.factorRatings && take.factorRatings[f]) setFactorStar(f, take.factorRatings[f]);
+      if (take.factorRatings && take.factorRatings[f]) {
+        setFactorStar(f, take.factorRatings[f]);
+        hasFactors = true;
+      }
     });
+    if (hasFactors) setDetailsOpen(true);
     document.getElementById('f-notes').value = take.notes || '';
+    document.getElementById('intent-been').classList.add('selected');
+    goToStep(3);
   }
-
-  updateSubmitBtn();
-  document.querySelector('.modal').scrollTop = 0;
 }
 
 function toggleCommentForm(id) {
@@ -281,7 +421,7 @@ async function submitComment(placeId, btn) {
   const { error } = await supabaseClient.from('comments').insert(row);
   if (error) {
     console.error(error);
-    showToast('❌ Could not post comment.');
+    showToast('Could not post comment.');
     btn.disabled = false;
     return;
   }
@@ -351,7 +491,7 @@ async function saveCommentEdit(recId, commentKey, btn) {
     .update({ text }).eq('id', commentKey);
   if (error) {
     console.error(error);
-    showToast('❌ Could not save edit.');
+    showToast('Could not save edit.');
   }
   btn.disabled = false;
   if (!error) await loadPlaces(); // explicit refresh — realtime may not be enabled
@@ -366,7 +506,7 @@ async function deleteComment(recId, commentKey) {
     .eq('id', commentKey);
   if (error) {
     console.error(error);
-    showToast('❌ Could not delete comment.');
+    showToast('Could not delete comment.');
     return;
   }
   await loadPlaces(); // explicit refresh — realtime may not be enabled
@@ -417,7 +557,7 @@ async function toggleReaction(recId, commentKey, emoji) {
 
   if (error) {
     console.error(error);
-    showToast('❌ Could not save reaction.');
+    showToast('Could not save reaction.');
     return;
   }
   await loadPlaces(); // explicit refresh — realtime may not be enabled on these tables
@@ -493,40 +633,10 @@ function showReactionPicker(btn, recId, commentKey) {
   }, 0);
 }
 
-function selectAddType(type) {
-  addType = type;
-
-  const isTry  = (type === 'try'  || type === 'want-to-go');
-  const isBeen = (type === 'been' || type === 'been-recommend' || type === 'been-skip');
-
-  document.getElementById('try-fields').style.display  = isTry  ? 'block' : 'none';
-  document.getElementById('been-fields').style.display = isBeen ? 'block' : 'none';
-
-  document.querySelector('.modal').scrollTop = 0;
-}
-
-// ── Experience toggle (I've Been / Want to Try) ──
-function setBeenOrTry(type) {
-  const isBeen = type === 'been';
-  document.getElementById('exp-been').classList.toggle('active', isBeen);
-  document.getElementById('exp-try').classList.toggle('active', !isBeen);
-
-  if (isBeen) {
-    // Show been-fields but don't enable Save yet — need Go Now or Hard Pass
-    selectAddType('been-recommend'); // sets addType + shows been-fields
-    // beenStatusChosen stays false until Go Now/Hard Pass is explicitly clicked
-    beenStatusChosen = false;
-  } else {
-    selectAddType('want-to-go');
-    beenStatusChosen = false;
-  }
-  updateSubmitBtn();
-}
-
-// ── Go Now / Hard Pass toggle (inside been-fields) ──
+// ── Verdict segmented control — Recommend / Hard pass (step 3) ──
 function setGoNowOrHardPass(status) {
   // Toggle off only when this button was already explicitly active.
-  // Without the beenStatusChosen guard, clicking Go Now when addType is
+  // Without the beenStatusChosen guard, clicking Recommend when addType is
   // already 'been-recommend' (the neutral been state) would incorrectly
   // fire the de-select branch instead of selecting the button.
   if (addType === status && beenStatusChosen) {
@@ -540,35 +650,7 @@ function setGoNowOrHardPass(status) {
     document.getElementById('btn-go-now').classList.toggle('active',    status === 'been-recommend');
     document.getElementById('btn-hard-pass').classList.toggle('active', status === 'been-skip');
   }
-  updateSubmitBtn();
-}
-
-// ── Submit button enable/disable logic ──
-function updateSubmitBtn() {
-  const nameEl = document.getElementById('f-name');
-  const btn    = document.getElementById('submit-btn');
-  const hint   = document.getElementById('submit-hint');
-  if (!btn) return;
-  const hasName = nameEl && nameEl.value.trim().length > 0;
-  const isTry   = addType === 'want-to-go' || addType === 'try';
-  const isBeen  = addType === 'been-recommend' || addType === 'been-skip' || addType === 'been';
-
-  let disabled = true;
-  let hintText = '';
-
-  if (!addType) {
-    hintText = 'Fill in a name and choose your experience to save.';
-  } else if (!hasName) {
-    hintText = 'Enter a place name to continue.';
-  } else if (isTry || isBeen) {
-    disabled = false;
-  }
-
-  btn.disabled = disabled;
-  if (hint) {
-    hint.textContent = hintText;
-    hint.classList.toggle('hidden', !disabled);
-  }
+  updateFlowUI();
 }
 
 // ══════════════════════════════════════════════════
@@ -577,61 +659,82 @@ function updateSubmitBtn() {
 // ══════════════════════════════════════════════════
 function setPlaceType(t) {
   placeType = t;
-  document.getElementById('tog-restaurant').classList.toggle('active',      t === 'restaurant');
-  document.getElementById('tog-restaurant').classList.toggle('rest-active', t === 'restaurant');
-  document.getElementById('tog-bar').classList.toggle('active',    t === 'bar');
-  document.getElementById('tog-bar').classList.toggle('bar-active', t === 'bar');
+  document.getElementById('tog-restaurant').classList.toggle('active', t === 'restaurant');
+  document.getElementById('tog-bar').classList.toggle('active', t === 'bar');
 }
 
-function setRecommend(val) {
-  // Skip-it removed; ratings always shown
+// Price segmented control ($ / $$ / $$$ / $$$$) — writes the hidden #f-price
+// input that places-service reads. Clicking the active one clears it.
+function setPrice(p) {
+  const current = document.getElementById('f-price').value;
+  const next = (p && p !== current) ? p : '';
+  document.getElementById('f-price').value = next;
+  document.querySelectorAll('#price-seg .seg-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.price === next);
+  });
+}
+
+// Dashed disclosure — cuisine, price & detailed ratings (step 3, optional)
+function setDetailsOpen(open) {
+  document.getElementById('details-fields').classList.toggle('open', open);
+  document.getElementById('details-disclosure').classList.toggle('open', open);
+  document.getElementById('details-disclosure').setAttribute('aria-expanded', String(open));
+  document.getElementById('disc-arrow').textContent = open ? '▾' : '▸';
+}
+
+function toggleDetails() {
+  setDetailsOpen(!document.getElementById('details-fields').classList.contains('open'));
 }
 
 function setStars(n) {
   selectedStars = n;
-  document.querySelectorAll('#star-picker span').forEach((s,i) => { s.textContent = i < n ? '★' : '☆'; });
+  document.querySelectorAll('#star-picker span').forEach((s, i) => {
+    s.classList.toggle('filled', i < n);
+  });
 }
 
 function setFactorStar(factor, n) {
   factorRatings[factor] = n;
-  document.querySelectorAll(`#fp-${factor} span`).forEach((s,i) => { s.textContent = i < n ? '★' : '☆'; });
-  // Hide hint once user starts rating
-  document.getElementById('factor-hint').style.display = 'none';
+  document.querySelectorAll(`#fp-${factor} span`).forEach((s, i) => {
+    s.classList.toggle('filled', i < n);
+  });
 }
 
 function clearForm() {
-  ['f-name','f-location','f-try-note','f-url','f-notes'].forEach(id => {
+  ['f-name','f-location','f-cuisine','f-try-note','f-url','f-notes'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
-  document.getElementById('f-cuisine').value = '';
-  document.getElementById('f-price').value   = '';
+  setPrice('');
   setStars(0);
   setPlaceType('restaurant');
   setPlaceFieldsLocked(false);
+  flowStep = 1;
+  document.getElementById('step-place').style.display  = 'block';
+  document.getElementById('step-intent').style.display = 'none';
+  document.getElementById('step-review').style.display = 'none';
   addType          = null;
   editingId        = null;
   editingPlaceId   = null;
   addingToPlaceId  = null;
   beenStatusChosen = false;
-  // Reset experience toggle
-  document.getElementById('exp-been').classList.remove('active');
-  document.getElementById('exp-try').classList.remove('active');
-  document.getElementById('been-fields').style.display = 'none';
-  document.getElementById('try-fields').style.display  = 'none';
-  // Reset Go Now / Hard Pass buttons
+  skipPlaceStep    = false;
+  // Reset intent cards
+  document.getElementById('intent-try').classList.remove('selected');
+  document.getElementById('intent-been').classList.remove('selected');
+  // Reset verdict buttons
   document.getElementById('btn-go-now').classList.remove('active');
   document.getElementById('btn-hard-pass').classList.remove('active');
-  // Reset factor ratings
+  // Reset factor ratings + collapse the details disclosure
   factorRatings = { quality: 0, service: 0, value: 0, ambiance: 0 };
   ['quality','service','value','ambiance'].forEach(f => {
-    document.querySelectorAll(`#fp-${f} span`).forEach(s => { s.textContent = '☆'; });
+    document.querySelectorAll(`#fp-${f} span`).forEach(s => s.classList.remove('filled'));
   });
-  document.getElementById('factor-hint').style.display = 'none';
+  setDetailsOpen(false);
   selectedPlaceLat = null;
   selectedPlaceLng = null;
   selectedPlaceId  = null;
-  updateSubmitBtn();
+  updateFlowUI();
 }
 
 // ══════════════════════════════════════════════════

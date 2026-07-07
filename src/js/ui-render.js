@@ -1,4 +1,4 @@
-//  RENDER CARDS (IT-035: one card per place, takes stacked inside)
+//  RENDER CARDS (IT-085: "4b Richer / top take" card, one per place)
 // ══════════════════════════════════════════════════
 
 // The multicolour Google "G" mark, inlined as SVG so it needs no image
@@ -33,13 +33,7 @@ function renderCards() {
   document.getElementById('rec-count').textContent = places.length;
 
   if (!places.length) {
-    let emptyMsg = 'Nothing here yet — be the first to add a spot!';
-    if (currentView === 'try') emptyMsg = 'No "want to try" places yet. Add one from the + button!';
-    else if (currentView === 'recommended') emptyMsg = 'No recommended places yet. Visit somewhere and rate it!';
-    else if (currentFilter === 'mine') emptyMsg = "You haven't added any places yet. Tap + Add Place to get started.";
-    else if (currentTypeFilter === 'restaurant') emptyMsg = 'No restaurants match these filters.';
-    else if (currentTypeFilter === 'bar') emptyMsg = 'No bars match these filters.';
-    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🍜</div><p>${emptyMsg}</p></div>`;
+    container.innerHTML = emptyStateHTML();
     return;
   }
 
@@ -66,40 +60,204 @@ function updateFriendFilters() {
   // IT-002: Only "Everyone" and "Just Mine" filters are shown; no per-user chips.
 }
 
+// Empty state — "5b" from design/the-list.dc.html, message tuned to filters.
+function emptyStateHTML() {
+  let heading = 'Your table is empty';
+  let msg = 'This is your group\u2019s shared list. Save the first place \u2014 somewhere you love, or a spot you\u2019ve been meaning to try.';
+  if (currentView === 'try')              { heading = 'Nothing to try yet';     msg = 'No \u201cwant to try\u201d places match. Save one from the button below.'; }
+  else if (currentView === 'recommended') { heading = 'No recommendations yet'; msg = 'Nobody\u2019s recommended a place here yet. Visit somewhere and rate it.'; }
+  else if (currentFilter === 'mine')      { heading = 'Nothing of yours yet';   msg = 'You haven\u2019t added any places yet. Add one to get started.'; }
+  else if (currentTypeFilter === 'restaurant') { heading = 'No restaurants here'; msg = 'No restaurants match these filters.'; }
+  else if (currentTypeFilter === 'bar')        { heading = 'No bars here';        msg = 'No bars match these filters.'; }
+
+  return `<div class="empty-state">
+    <div class="table-mark"></div>
+    <h3>${heading}</h3>
+    <p>${msg}</p>
+    <div class="empty-legend">
+      <span class="micro-label">How the group marks places</span>
+      <div class="empty-legend-chips">
+        <span class="chip chip-try"><span class="chip-dot"></span>Want to Try</span>
+        <span class="chip chip-rec"><span class="chip-dot"></span>Recommends</span>
+        <span class="chip chip-pass"><span class="chip-dot"></span>Hard Pass</span>
+      </div>
+    </div>
+  </div>`;
+}
+
 
 // ══════════════════════════════════════════════════
-//  PLACE CARD
-//  placeCardBodyHTML is shared between the list card and the detail panel.
+//  PLACE CARD — "4b Richer / top take" (IT-085)
+//  Rows: name+chip · signal · hairline+top take · footer.
+//  Everything below the signal expands into the Place Detail panel;
+//  placeCardBodyHTML (below) is the detail-panel body.
 // ══════════════════════════════════════════════════
-function placeCardHTML(place) {
-  return `
-    <div class="rec-card">
-      <div class="card-top">
-        <div class="card-name">${esc(place.name)}</div>
-        ${aggregateStarsHTML(place)}
+
+// Overall place status → chip.  Any hard pass alongside a recommend = Mixed.
+function placeStatus(place) {
+  const { recommends, hardPasses, wantsToGo } = place.aggregate;
+  if (recommends.length && hardPasses.length) return 'mixed';
+  if (recommends.length)                      return 'rec';
+  if (hardPasses.length)                      return 'pass';
+  if (wantsToGo.length)                       return 'try';
+  return null;
+}
+
+function statusChipHTML(status) {
+  if (status === 'rec')   return `<span class="chip chip-rec"><span class="chip-dot"></span>Recommended</span>`;
+  if (status === 'try')   return `<span class="chip chip-try"><span class="chip-dot"></span>Want to Try</span>`;
+  if (status === 'pass')  return `<span class="chip chip-pass"><span class="chip-dot"></span>Hard Pass</span>`;
+  if (status === 'mixed') return `<span class="chip chip-mixed">Mixed</span>`;
+  return '';
+}
+
+// Muted dot-string: Restaurant · cuisine · price · neighborhood
+function placeMetaLine(place) {
+  return [
+    place.placeType === 'bar' ? 'Bar' : 'Restaurant',
+    place.cuisine,
+    place.price,
+    place.location
+  ].filter(Boolean).map(esc).join(' · ');
+}
+
+// Avatar stack (26px, paper border, -8px overlap) for up to `max` authors.
+function avatarStackHTML(names, max = 3) {
+  return `<div class="avatar-stack">${names.slice(0, max).map(n =>
+    `<span class="stack-avatar ${getUserColor(n)}">${esc((n || '?').slice(0, 2).toUpperCase())}</span>`
+  ).join('')}</div>`;
+}
+
+// The 1-second read: who's behind this place, in one line.
+function signalHTML(place, status) {
+  const { recommends, hardPasses, wantsToGo } = place.aggregate;
+  let names = [], text = '';
+
+  if (status === 'rec') {
+    names = recommends;
+    const shown = recommends.slice(0, 2).map(esc).join(', ');
+    const extra = recommends.length - 2;
+    text = `${shown} <span class="signal-muted">${extra > 0 ? `+${extra} ` : ''}recommend</span>`;
+  } else if (status === 'mixed') {
+    names = [...recommends, ...hardPasses];
+    text = `${recommends.length} recommend · <span class="pass-text">${hardPasses.length} passed</span>`;
+  } else if (status === 'pass') {
+    names = hardPasses;
+    text = `<span class="pass-text">${hardPasses.length} passed</span>`;
+  } else if (status === 'try') {
+    names = wantsToGo;
+    text = wantsToGo.length === 1
+      ? `${esc(wantsToGo[0])} wants to try`
+      : `${wantsToGo.length} friends want to try`;
+  } else {
+    return '';
+  }
+
+  // Friend-group rating in clay; degrade to muted Google aggregate when
+  // nobody in the circle has been (IT-056 cache table).
+  let rating = '';
+  if (place.aggregate.avgRating > 0) {
+    rating = `<span class="pc-rating" title="${place.aggregate.ratingsCount} rating${place.aggregate.ratingsCount !== 1 ? 's' : ''}">★ ${place.aggregate.avgRating.toFixed(1)}</span>`;
+  } else if (place.external?.rating) {
+    rating = `<span class="pc-rating google" title="Google rating, cached">Google ★ ${place.external.rating.toFixed(1)}</span>`;
+  }
+
+  return `<div class="pc-signal">
+    <div class="pc-signal-left">
+      ${avatarStackHTML(names)}
+      <span class="pc-signal-text">${text}</span>
+    </div>
+    ${rating}
+  </div>`;
+}
+
+// Pick the ONE take worth surfacing: prefer been-takes with a note,
+// then higher rating, then most recent.
+function topTake(place) {
+  const beenTakes = place.takes.filter(t => t.status !== 'want-to-go');
+  if (!beenTakes.length) return null;
+  return [...beenTakes].sort((a, b) =>
+    (!!b.notes - !!a.notes) || ((b.rating || 0) - (a.rating || 0)) || ((b.ts || 0) - (a.ts || 0))
+  )[0];
+}
+
+function topTakeHTML(place) {
+  const take = topTake(place);
+  if (!take) {
+    return `<div class="pc-toptake pc-nobody">Nobody\u2019s been yet \u2014 be the first to try it.</div>`;
+  }
+
+  const verdict = take.status === 'been-skip'
+    ? `<span class="minichip-pass"><span class="chip-dot"></span>Hard Pass</span>`
+    : (take.rating > 0 ? `<span class="pc-take-star">★ ${take.rating.toFixed(1)}</span>` : '');
+
+  const note = take.notes ? `<div class="pc-take-note">\u201c${esc(take.notes)}\u201d</div>` : '';
+
+  return `<div class="pc-toptake" onclick="openPlaceDetail('${place.id}')">
+    <span class="take-avatar ${getUserColor(take.author)}">${esc((take.author || '?').slice(0, 2).toUpperCase())}</span>
+    <div class="pc-take-body">
+      <div class="pc-take-head">
+        <span class="pc-take-author">${esc(take.author)}</span>
+        ${verdict}
       </div>
-      ${placeCardBodyHTML(place)}
+      ${note}
+    </div>
+  </div>`;
+}
+
+function cardFooterHTML(place) {
+  const myTake     = place.takes.find(t => t.userId === currentUser.id);
+  const nobodyBeen = !place.takes.some(t => t.status !== 'want-to-go');
+
+  let cta;
+  if (myTake) {
+    cta = `<button class="pc-cta outline" onclick="editEntry('${myTake.entryId}')">Edit your take</button>`;
+  } else if (nobodyBeen) {
+    cta = `<button class="pc-cta filled" onclick="addTakeForPlace('${place.id}')">I\u2019ve been \u2014 add a take</button>`;
+  } else {
+    cta = `<button class="pc-cta outline" onclick="addTakeForPlace('${place.id}')">+ Add your take</button>`;
+  }
+
+  const count = place.comments.filter(c => !c.deleted).length;
+  const label = count ? `${count} comment${count !== 1 ? 's' : ''}` : 'Comment';
+
+  return `<div class="pc-footer">
+    ${cta}
+    <button class="pc-comments" onclick="openPlaceDetail('${place.id}')">
+      <span class="bubble"></span>${label} <span class="chev">›</span>
+    </button>
+  </div>`;
+}
+
+function placeCardHTML(place) {
+  const status = placeStatus(place);
+  return `
+    <div class="place-card">
+      <div class="pc-top">
+        <div class="pc-title" onclick="openPlaceDetail('${place.id}')">
+          <div class="pc-name">${esc(place.name)}</div>
+          <div class="pc-meta">${placeMetaLine(place)}</div>
+        </div>
+        ${statusChipHTML(status)}
+      </div>
+      ${signalHTML(place, status)}
+      ${topTakeHTML(place)}
+      ${cardFooterHTML(place)}
     </div>`;
 }
 
-function aggregateStarsHTML(place) {
-  const { avgRating, ratingsCount } = place.aggregate;
-  if (avgRating <= 0) return '';
-  const stars = '★'.repeat(Math.round(avgRating)) + '☆'.repeat(5 - Math.round(avgRating));
-  return `<div class="stars" title="${avgRating.toFixed(1)} avg (${ratingsCount} rating${ratingsCount !== 1 ? 's' : ''})">${stars}</div>`;
-}
 
+// ══════════════════════════════════════════════════
+//  PLACE DETAIL BODY
+//  Full takes stack + shared comment thread, rendered into the detail panel.
+// ══════════════════════════════════════════════════
 function placeCardBodyHTML(place) {
-  const typeTag = place.placeType === 'bar'
-    ? `<span class="tag type-bar">🍸 Bar</span>`
-    : `<span class="tag type-restaurant">🍽 Restaurant</span>`;
-
   const meta = `
     <div class="card-meta">
-      ${typeTag}
-      ${place.cuisine  ? `<span class="tag cuisine">${esc(place.cuisine)}</span>` : ''}
-      ${place.price    ? `<span class="tag price">${esc(place.price)}</span>`     : ''}
-      ${place.location ? `<a class="tag" href="${buildMapsUrl({ placeId: place.googlePlaceId, name: place.name, location: place.location })}" target="_blank" rel="noopener" style="text-decoration:none;">📍 ${esc(place.location)}</a>` : ''}
+      <span class="tag">${place.placeType === 'bar' ? 'Bar' : 'Restaurant'}</span>
+      ${place.cuisine  ? `<span class="tag">${esc(place.cuisine)}</span>` : ''}
+      ${place.price    ? `<span class="tag">${esc(place.price)}</span>`   : ''}
+      ${place.location ? `<a class="tag" href="${buildMapsUrl({ placeId: place.googlePlaceId, name: place.name, location: place.location })}" target="_blank" rel="noopener">${esc(place.location)} ↗</a>` : ''}
     </div>`;
 
   const takesStack = place.takes.length
@@ -107,11 +265,11 @@ function placeCardBodyHTML(place) {
     : '';
 
   // "Add your take" CTA — only when the current user has no take here.
-  // Opens the modal prefilled with this place (place fields locked).
+  // Opens the add flow prefilled with this place (place fields locked).
   const hasMyTake = place.takes.some(t => t.userId === currentUser.id);
   const addTakeCta = hasMyTake ? '' : `
     <div class="add-your-take-cta">
-      <button class="card-btn primary-action" onclick="addTakeForPlace('${place.id}')">➕ Add your take</button>
+      <button class="pc-cta outline" onclick="addTakeForPlace('${place.id}')">+ Add your take</button>
     </div>`;
 
   return `
@@ -126,7 +284,7 @@ function aggregateRowHTML(place) {
   const agg = place.aggregate;
   const bits = [];
   if (agg.ratingsCount > 0) {
-    bits.push(`★ ${agg.avgRating.toFixed(1)} (${agg.ratingsCount} rating${agg.ratingsCount !== 1 ? 's' : ''})`);
+    bits.push(`<span class="agg-star">★ ${agg.avgRating.toFixed(1)}</span> (${agg.ratingsCount} rating${agg.ratingsCount !== 1 ? 's' : ''})`);
   }
   // IT-056: Google's aggregate (from our cache table) — the fallback signal
   // when the friend circle is sparse.
@@ -135,9 +293,9 @@ function aggregateRowHTML(place) {
       ? ` (${place.external.ratingCount.toLocaleString()})` : '';
     bits.push(`<span class="google-agg" title="Google rating, cached">${GOOGLE_G_SVG} ${place.external.rating.toFixed(1)}${count}</span>`);
   }
-  if (agg.recommends.length) bits.push(`✅ Recommended by ${agg.recommends.map(esc).join(', ')}`);
-  if (agg.hardPasses.length) bits.push(`🚫 Hard pass from ${agg.hardPasses.map(esc).join(', ')}`);
-  if (agg.wantsToGo.length)  bits.push(`📌 ${agg.wantsToGo.map(esc).join(', ')} want${agg.wantsToGo.length === 1 ? 's' : ''} to go`);
+  if (agg.recommends.length) bits.push(`Recommended by ${agg.recommends.map(esc).join(', ')}`);
+  if (agg.hardPasses.length) bits.push(`Hard pass from ${agg.hardPasses.map(esc).join(', ')}`);
+  if (agg.wantsToGo.length)  bits.push(`${agg.wantsToGo.map(esc).join(', ')} want${agg.wantsToGo.length === 1 ? 's' : ''} to go`);
   if (!bits.length) return '';
   // (bits with HTML are pre-escaped above; author names go through esc())
   return `<div class="aggregate-row">${bits.join(' · ')}</div>`;
@@ -150,9 +308,9 @@ function takeRowHTML(place, t) {
   const date     = t.ts ? new Date(t.ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
 
   const chipMap = {
-    'been-recommend': `<span class="take-status-chip recommended">✅ Recommends</span>`,
-    'been-skip':      `<span class="take-status-chip hard-pass">🚫 Hard Pass</span>`,
-    'want-to-go':     `<span class="take-status-chip want-to-try">📌 Want to Try</span>`
+    'been-recommend': `<span class="take-status-chip recommended">Recommends</span>`,
+    'been-skip':      `<span class="take-status-chip hard-pass">Hard Pass</span>`,
+    'want-to-go':     `<span class="take-status-chip want-to-try">Want to Try</span>`
   };
   const chip = chipMap[t.status] || '';
 
@@ -171,14 +329,13 @@ function takeRowHTML(place, t) {
     : (t.notes   ? `<div class="take-note">${esc(t.notes)}</div>`   : '');
 
   const url = (t.status === 'want-to-go' && t.url)
-    ? `<div class="card-url"><a href="${esc(t.url)}" target="_blank" rel="noopener">🔗 See review</a></div>`
+    ? `<div class="card-url"><a href="${esc(t.url)}" target="_blank" rel="noopener">See review ↗</a></div>`
     : '';
 
-  // Edit/Delete call app.js handlers by entry id — rewired in Phase 4.
   const actions = isMine ? `
     <div class="take-actions">
-      <button class="card-btn" onclick="editEntry('${t.entryId}')">✏️ Edit</button>
-      <button class="card-btn danger" onclick="deleteEntry('${t.entryId}')">🗑 Delete</button>
+      <button class="card-btn" onclick="editEntry('${t.entryId}')">Edit</button>
+      <button class="card-btn danger" onclick="deleteEntry('${t.entryId}')">Delete</button>
     </div>` : '';
 
   return `
@@ -198,8 +355,6 @@ function takeRowHTML(place, t) {
 
 // ══════════════════════════════════════════════════
 //  COMMENTS (one shared thread per place)
-//  Write path (submitComment) is rewired in Phase 5; edit/delete/reactions
-//  already operate on comment uuids and keep working.
 // ══════════════════════════════════════════════════
 // Render comment text with @-mentions wrapped in styled chips.
 // Matching is case-insensitive against known display names (stored text is
@@ -236,7 +391,7 @@ function commentsSectionHTML(place) {
       return `<button class="reaction-pill${mine ? ' mine' : ''}" onclick="showReactionViewers(this,'${id}','${c.id}')" title="Click to see who reacted">${decodedEmoji} <span class="reaction-count">${voters.length}</span></button>`;
     }).join('');
     const reactionsHtml = `<div class="comment-reactions">${reactionPills}<button class="reaction-add-btn" onclick="showReactionPicker(this,'${id}','${c.id}')" title="Add a reaction">＋ 😊</button></div>`;
-    // Quote block (comment is a reply) — full styling lands in Phase 5
+    // Quote block (comment is a reply)
     const quotedHtml = c.quotedCommentId ? `
       <div class="comment-quote">
         <div class="comment-quote-author">${esc(c.quotedAuthor || '')}</div>
@@ -264,7 +419,7 @@ function commentsSectionHTML(place) {
   }).join('')}</div>` : '';
 
   const visibleCount = place.comments.filter(c => !c.deleted).length;
-  const commentLabel = visibleCount ? `💬 ${visibleCount} comment${visibleCount !== 1 ? 's' : ''}` : '💬 Comment';
+  const commentLabel = visibleCount ? `${visibleCount} comment${visibleCount !== 1 ? 's' : ''}` : 'Add a comment';
   return `<div class="card-comments">
     ${commentsList}
     <div class="comment-form" id="cf-${id}">
@@ -281,8 +436,7 @@ function commentsSectionHTML(place) {
 
 
 // ══════════════════════════════════════════════════
-//  PLACE DETAIL PANEL (from map)
-//  Same body as the list card, rendered into the side panel.
+//  PLACE DETAIL PANEL (from cards + map)
 // ══════════════════════════════════════════════════
 function openPlaceDetail(id) {
   const place = allPlaces[id];

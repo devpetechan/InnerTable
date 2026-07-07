@@ -2,7 +2,7 @@
 //  UI EVENTS
 //  All static event listeners for index.html elements.
 //  Dynamically generated card/comment handlers remain
-//  in app.js until Step 4 modularisation.
+//  inline (onclick) in ui-render.js.
 // ══════════════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -21,18 +21,23 @@ document.addEventListener('DOMContentLoaded', function () {
   homeBtns[2].addEventListener('click', () => navigateToList('bar'));
   homeBtns[3].addEventListener('click', openModal);
 
-  // ── View tabs (event delegation — data-view attr) ─
+  // ── Segmented status control (event delegation — data-view attr) ─
   document.querySelector('.view-tabs')
     .addEventListener('click', e => {
       const tab = e.target.closest('.view-tab');
       if (tab) setView(tab.dataset.view, tab);
     });
 
-  // ── Display mode toggle ───────────────────────────
+  // ── List | Map toggle ─────────────────────────────
   document.getElementById('mode-list')
     .addEventListener('click', () => setDisplayMode('list'));
   document.getElementById('mode-map')
     .addEventListener('click', () => setDisplayMode('map'));
+
+  // ── Filter & sort pill (IT-086 — reveals the chip rows; the designed
+  //    sheet is an explicit follow-up ticket) ────────
+  document.getElementById('filter-sort-btn')
+    .addEventListener('click', toggleFilterSort);
 
   // ── Friend filter chips (event delegation) ────────
   document.getElementById('friend-filter-bar')
@@ -59,48 +64,84 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('add-place-fab')
     .addEventListener('click', openModal);
 
-  // ── Add/Edit modal ────────────────────────────────
+  // ══════════════════════════════════════════════════
+  //  ADD/EDIT FLOW (IT-087 "6b Guided multi-step")
+  // ══════════════════════════════════════════════════
   document.getElementById('modal-overlay')
     .addEventListener('click', closeModalOnBg);
 
-  document.querySelector('#modal-overlay .btn-close')
-    .addEventListener('click', closeModal);
+  // Header: Cancel (first step) / ‹ back (later steps)
+  document.getElementById('flow-back-btn')
+    .addEventListener('click', flowBack);
 
-  // Name input — enable/disable submit button
+  // Sticky footer primary — Next / Save to Want to Try / Share take
+  document.getElementById('submit-btn')
+    .addEventListener('click', flowPrimaryAction);
+
+  // ── Step 1 · Place ────────────────────────────────
   document.getElementById('f-name')
-    .addEventListener('input', updateSubmitBtn);
+    .addEventListener('input', updateFlowUI);
+  document.getElementById('f-name')
+    .addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); flowPrimaryAction(); }
+    });
 
-  // Place type toggle
   document.getElementById('tog-restaurant')
     .addEventListener('click', () => setPlaceType('restaurant'));
   document.getElementById('tog-bar')
     .addEventListener('click', () => setPlaceType('bar'));
 
-  // Experience toggle (I've Been / Want to Try)
-  document.getElementById('exp-been')
-    .addEventListener('click', () => setBeenOrTry('been'));
-  document.getElementById('exp-try')
-    .addEventListener('click', () => setBeenOrTry('try'));
+  // ── Step 2 · Intent ───────────────────────────────
+  // Mini-card Edit → back to step 1 (hidden when the place is locked)
+  document.getElementById('minicard-edit')
+    .addEventListener('click', () => goToStep(1));
 
-  // Overall star picker
+  // Intent cards.  Clicks inside the expanded note fields of the
+  // want-to-try card must not re-fire selection.
+  document.getElementById('intent-try')
+    .addEventListener('click', e => {
+      if (e.target.closest('input, textarea, label')) return;
+      setIntent('try');
+    });
+  document.getElementById('intent-try')
+    .addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        setIntent('try');
+      }
+    });
+  document.getElementById('intent-been')
+    .addEventListener('click', () => setIntent('been'));
+  document.getElementById('intent-been')
+    .addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        setIntent('been');
+      }
+    });
+
+  // ── Step 3 · Review ───────────────────────────────
   document.querySelectorAll('#star-picker span')
     .forEach((span, i) => span.addEventListener('click', () => setStars(i + 1)));
 
-  // Go Now / Hard Pass
   document.getElementById('btn-go-now')
     .addEventListener('click', () => setGoNowOrHardPass('been-recommend'));
   document.getElementById('btn-hard-pass')
     .addEventListener('click', () => setGoNowOrHardPass('been-skip'));
 
-  // Factor star pickers
+  // Dashed disclosure — cuisine, price & detailed ratings
+  document.getElementById('details-disclosure')
+    .addEventListener('click', toggleDetails);
+
+  // Price segmented control
+  document.querySelectorAll('#price-seg .seg-btn')
+    .forEach(btn => btn.addEventListener('click', () => setPrice(btn.dataset.price)));
+
+  // Sub-rating star pickers
   ['quality', 'service', 'value', 'ambiance'].forEach(factor => {
     document.querySelectorAll(`#fp-${factor} span`)
       .forEach((span, i) => span.addEventListener('click', () => setFactorStar(factor, i + 1)));
   });
-
-  // Main submit button
-  document.getElementById('submit-btn')
-    .addEventListener('click', submitEntry);
 
   // ── Place detail panel ────────────────────────────
   document.getElementById('place-detail-overlay')
