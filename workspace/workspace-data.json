@@ -1545,9 +1545,9 @@
     },
     {
       "id": "1783164784195",
-      "itemId": "IT-083",
+      "itemId": "IT-101",
       "type": "bug",
-      "title": "Add Your Take - cuisine, price",
+      "title": "[v0.3.2] Add Your Take - cuisine, price",
       "description": "When using \"add your take\", the card has cuisine and price range drop downs.  Currently these are not functional.",
       "priority": "P2",
       "area": "Database",
@@ -1557,8 +1557,8 @@
       "reproSteps": "1. Click \"Add your take\" to a card that another user has created as \"want to try\"\n2. Click \"I've Been\"\n3. \"Cuisine\" and \"Price Range\" fields are blank and there's no ability to update",
       "affectedFiles": "",
       "tags": [],
-      "updatedAt": "2026-07-04T11:33:04.195Z",
-      "releaseId": null,
+      "updatedAt": "2026-07-08T00:00:00.000Z",
+      "releaseId": "REL-20",
       "createdAt": "2026-07-04T11:33:04.196Z"
     },
     {
@@ -1682,6 +1682,242 @@
       "updatedAt": "2026-07-06T23:00:00.000Z",
       "releaseId": null,
       "createdAt": "2026-07-06T23:00:00.000Z"
+    },
+    {
+      "id": "1783538961173",
+      "itemId": "IT-090",
+      "type": "bug",
+      "title": "[v0.3.2] Inputs <16px trigger iOS Safari focus-zoom",
+      "description": "On iOS Safari, focusing any text field whose font-size is below 16px force-zooms the whole page. The redesign's form fields are ~15px (.form-input/.form-select/.form-textarea at .94rem) and the comment box is .83rem, so tapping the place-search, note, or comment fields zooms the viewport every time — a jarring, repeated annoyance in the add flow and detail panel.",
+      "priority": "P1",
+      "area": "UI",
+      "effort": "S",
+      "status": "backlog",
+      "acceptanceCriteria": "On iPhone Safari, focusing any input/textarea does NOT auto-zoom the page. All focusable form controls render at >=16px font-size (visual sizing can be preserved via other means if needed).",
+      "reproSteps": "1. Open on iPhone Safari. 2. Tap 'Add a place' > tap the search field, or open a place > tap the comment box. 3. Observe the page zooms in on focus.",
+      "affectedFiles": "src/styles/main.css (.form-input, .form-select, .form-textarea, .comment-input)",
+      "tags": [
+        "redesign",
+        "ios",
+        "mobile"
+      ],
+      "updatedAt": "2026-07-08T00:00:00.000Z",
+      "releaseId": "REL-20",
+      "createdAt": "2026-07-08T00:00:00.000Z"
+    },
+    {
+      "id": "1783538961174",
+      "itemId": "IT-091",
+      "type": "bug",
+      "title": "[v0.3.2] Handle iOS safe-area insets (home indicator overlap)",
+      "description": "index.html sets viewport-fit=cover but no CSS uses env(safe-area-inset-*). The centered FAB (bottom:26px), the sticky add-flow footer, and the toast can sit under the home indicator / bottom safe area on notched iPhones, so primary actions ('Save to list', 'Post your take', the + FAB) are partially obscured.",
+      "priority": "P1",
+      "area": "UI",
+      "effort": "S",
+      "status": "backlog",
+      "acceptanceCriteria": "FAB, .flow-footer, and .toast respect the bottom safe area (e.g. padding-bottom: max(<current>, env(safe-area-inset-bottom))). Primary actions sit fully above the home indicator on notched iPhones.",
+      "reproSteps": "",
+      "affectedFiles": "src/styles/main.css (.fab, .flow-footer, .toast)",
+      "tags": [
+        "redesign",
+        "ios",
+        "mobile"
+      ],
+      "updatedAt": "2026-07-08T00:00:00.000Z",
+      "releaseId": "REL-20",
+      "createdAt": "2026-07-08T00:00:00.000Z"
+    },
+    {
+      "id": "1783538961175",
+      "itemId": "IT-092",
+      "type": "enhancement",
+      "title": "[v0.3.2] Add dark-mode support to the design system",
+      "description": "The 'Quiet Utility' tokens are explicitly light-only. Many iPhones run dark mode system-wide, so the app is a full-white glare screen for those users. Needs a dark token set (prefers-color-scheme) mapped onto the existing CSS custom properties. Likely a design pass to define the dark palette.",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "L",
+      "status": "backlog",
+      "acceptanceCriteria": "A prefers-color-scheme: dark token set exists; all surfaces/ink/accent/status colors have dark equivalents; app is legible and on-brand in dark mode with no hardcoded light colors leaking through.",
+      "reproSteps": "",
+      "affectedFiles": "src/styles/main.css (:root tokens)",
+      "tags": [
+        "redesign",
+        "ios",
+        "design-needed"
+      ],
+      "updatedAt": "2026-07-08T00:00:00.000Z",
+      "releaseId": "REL-20",
+      "createdAt": "2026-07-08T00:00:00.000Z"
+    },
+    {
+      "id": "1783538961176",
+      "itemId": "IT-093",
+      "type": "enhancement",
+      "title": "[v0.3.2] Home screen duplicates List navigation",
+      "description": "The Home hero's four big CTAs (View All / View Restaurants / View Bars / Add a Place) duplicate navigation already on The List: the All/Want to Try/Recommended segmented tabs and the Restaurants/Bars type filter. This creates two competing navigation models and adds a tap before users reach content. Consider making The List the landing screen and demoting the hero to a first-run / empty state.",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "M",
+      "status": "backlog",
+      "acceptanceCriteria": "Navigation is not duplicated between Home and The List; users reach the list without an extra interstitial tap. Hero content (if kept) is repositioned as first-run/empty-state guidance.",
+      "reproSteps": "",
+      "affectedFiles": "",
+      "tags": [
+        "redesign",
+        "ux"
+      ],
+      "updatedAt": "2026-07-08T00:00:00.000Z",
+      "releaseId": "REL-20",
+      "createdAt": "2026-07-08T00:00:00.000Z"
+    },
+    {
+      "id": "1783538961177",
+      "itemId": "IT-094",
+      "type": "enhancement",
+      "title": "[v0.3.2] Reduce controls stack above the first card",
+      "description": "On a 390px screen the user scrolls past segmented status tabs, the List/Map toggle + 'Filter & sort' pill, and the 'PLACES n' count label before the first card. It's a lot of chrome. The view-tab labels also shrink to ~10px under 360px width, hurting legibility. Tighten/consolidate the controls region.",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "M",
+      "status": "backlog",
+      "acceptanceCriteria": "Controls above the first card are visually condensed; view-tab labels remain legible down to 360px width (no sub-11px text).",
+      "reproSteps": "",
+      "affectedFiles": "src/styles/main.css (.view-tabs, .view-tab, .display-mode-row, .section-title)",
+      "tags": [
+        "redesign",
+        "ux",
+        "mobile"
+      ],
+      "updatedAt": "2026-07-08T00:00:00.000Z",
+      "releaseId": "REL-20",
+      "createdAt": "2026-07-08T00:00:00.000Z"
+    },
+    {
+      "id": "1783538961178",
+      "itemId": "IT-095",
+      "type": "enhancement",
+      "title": "[v0.3.2] Place card tap targets aren't discoverable",
+      "description": "The card name, top-take, and comments row all open the detail sheet, but nothing signals the name is tappable (no chevron/underline/affordance). Users may not discover they can open a place by tapping its name.",
+      "priority": "P3",
+      "area": "UI",
+      "effort": "S",
+      "status": "backlog",
+      "acceptanceCriteria": "The primary card tap affordance is visually discoverable (e.g. chevron or clear interactive treatment) so users know how to open the detail sheet.",
+      "reproSteps": "",
+      "affectedFiles": "src/styles/main.css (.pc-title, .pc-name); src/js/ui-render.js (placeCardHTML)",
+      "tags": [
+        "redesign",
+        "ux"
+      ],
+      "updatedAt": "2026-07-08T00:00:00.000Z",
+      "releaseId": "REL-20",
+      "createdAt": "2026-07-08T00:00:00.000Z"
+    },
+    {
+      "id": "1783538961179",
+      "itemId": "IT-096",
+      "type": "task",
+      "title": "[v0.3.2] Home/onboarding copy fixes",
+      "description": "Two copy issues on the Home hero: (1) 'Welcome to my Inner Table' uses 'my' for what is a shared group app — ownership is confusing; consider 'your'/'the'. (2) \"but don't add crap places! Your friends will hate you\" is fun for a private friend group but reads unpolished if the audience widens. Review tone/wording.",
+      "priority": "P3",
+      "area": "Other",
+      "effort": "S",
+      "status": "backlog",
+      "acceptanceCriteria": "Home hero heading no longer implies single ownership; body copy tone reviewed and agreed.",
+      "reproSteps": "",
+      "affectedFiles": "index.html (#home-section .home-hero)",
+      "tags": [
+        "redesign",
+        "copy"
+      ],
+      "updatedAt": "2026-07-08T00:00:00.000Z",
+      "releaseId": "REL-20",
+      "createdAt": "2026-07-08T00:00:00.000Z"
+    },
+    {
+      "id": "1783538961180",
+      "itemId": "IT-097",
+      "type": "enhancement",
+      "title": "[v0.3.2] Muted text/placeholder contrast below WCAG AA",
+      "description": "Muted text (--color-text-muted #8A817A) and placeholders (--color-placeholder #A79E93) on the near-white background fall below the WCAG AA 4.5:1 ratio for small text — card meta lines, hints, and mono micro-labels are hard to read. Darken muted/placeholder tokens or reserve the lightest greys for large/decorative text only.",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "S",
+      "status": "backlog",
+      "acceptanceCriteria": "All small body/meta/placeholder text meets WCAG AA (>=4.5:1) against its background; verified with a contrast checker.",
+      "reproSteps": "",
+      "affectedFiles": "src/styles/main.css (--color-text-muted, --color-placeholder, .pc-meta, .filter-label, .micro-label)",
+      "tags": [
+        "redesign",
+        "accessibility"
+      ],
+      "updatedAt": "2026-07-08T00:00:00.000Z",
+      "releaseId": "REL-20",
+      "createdAt": "2026-07-08T00:00:00.000Z"
+    },
+    {
+      "id": "1783538961181",
+      "itemId": "IT-098",
+      "type": "enhancement",
+      "title": "[v0.3.2] Add drag handle to bottom-sheet panels",
+      "description": "The place-detail bottom sheet and the add-flow modal have no drag handle / grabber at the top. iPhone users expect a grabber affordance on bottom sheets to signal draggability/dismissal.",
+      "priority": "P3",
+      "area": "UI",
+      "effort": "S",
+      "status": "backlog",
+      "acceptanceCriteria": "Bottom-sheet panels display a grabber/handle affordance at the top edge on mobile.",
+      "reproSteps": "",
+      "affectedFiles": "index.html (#place-detail-panel, .modal); src/styles/main.css",
+      "tags": [
+        "redesign",
+        "ux",
+        "mobile"
+      ],
+      "updatedAt": "2026-07-08T00:00:00.000Z",
+      "releaseId": "REL-20",
+      "createdAt": "2026-07-08T00:00:00.000Z"
+    },
+    {
+      "id": "1783538961182",
+      "itemId": "IT-099",
+      "type": "enhancement",
+      "title": "[v0.3.2] Inconsistent Google rating treatment (card vs detail)",
+      "description": "Place cards render the cached Google rating as the plain text 'Google ★ 4.7', while the detail panel uses the inline multicolour Google 'G' SVG. Pick one treatment for consistency (recommend reusing the G mark on the card).",
+      "priority": "P3",
+      "area": "UI",
+      "effort": "S",
+      "status": "backlog",
+      "acceptanceCriteria": "Google aggregate rating uses a single consistent visual treatment across card and detail views.",
+      "reproSteps": "",
+      "affectedFiles": "src/js/ui-render.js (signalHTML, aggregateRowHTML, GOOGLE_G_SVG)",
+      "tags": [
+        "redesign",
+        "polish"
+      ],
+      "updatedAt": "2026-07-08T00:00:00.000Z",
+      "releaseId": "REL-20",
+      "createdAt": "2026-07-08T00:00:00.000Z"
+    },
+    {
+      "id": "1783538961183",
+      "itemId": "IT-100",
+      "type": "enhancement",
+      "title": "[v0.3.2] 'Sign in with Google' button lacks Google mark/branding",
+      "description": "The welcome sign-in button is a plain clay button with no Google 'G' mark. This reduces recognizability and doesn't align with Google's sign-in branding guidance. Add the G mark / standard treatment.",
+      "priority": "P3",
+      "area": "UI",
+      "effort": "S",
+      "status": "backlog",
+      "acceptanceCriteria": "Sign-in button includes the Google 'G' mark and follows Google's sign-in button guidance.",
+      "reproSteps": "",
+      "affectedFiles": "index.html (#google-signin-btn); src/styles/main.css (.btn-primary)",
+      "tags": [
+        "redesign",
+        "polish"
+      ],
+      "updatedAt": "2026-07-08T00:00:00.000Z",
+      "releaseId": "REL-20",
+      "createdAt": "2026-07-08T00:00:00.000Z"
     }
   ],
   "releases": [
@@ -1928,8 +2164,17 @@
       "status": "released",
       "createdAt": "2026-04-17T22:50:19.435Z",
       "releasedAt": "2026-04-19T23:24:57.983Z"
+    },
+    {
+      "id": "REL-20",
+      "version": "0.3.2",
+      "name": "iPhone Fixes & Redesign Polish",
+      "targetDate": "",
+      "goals": "Address iPhone-specific issues and polish surfaced by the v0.3.1 \"Quiet Utility\" redesign review (iPhone-width render walkthrough). Fixes real iOS Safari bugs (input focus-zoom, missing safe-area insets), reduces navigation redundancy between Home and The List, and closes accessibility/contrast and visual-consistency gaps. Front-end only — no schema or data changes.",
+      "status": "planning",
+      "createdAt": "2026-07-08T00:00:00.000Z"
     }
   ],
-  "nextItemId": 90,
-  "nextReleaseId": 20
+  "nextItemId": 102,
+  "nextReleaseId": 21
 }
