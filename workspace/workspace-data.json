@@ -1644,13 +1644,13 @@
     {
       "id": "1783378155217",
       "itemId": "IT-088",
-      "type": "task",
+      "type": "bug",
       "title": "[v0.3.1] Cross-browser QA pass on redesigned UI",
       "description": "Manual QA of the redesigned Place Card, List, and Add Flow in Chrome + Safari, plus a mobile-viewport check (the design system is mobile-first). Confirm no regressions in map pins, realtime updates, and comment threads carried over from IT-035/IT-036. Test plan: workspace/v0.3.1-qa-test-plan.md. Automated/static results: workspace/v0.3.1-qa-test-results.md.",
       "priority": "P2",
       "area": "Other",
       "effort": "S",
-      "status": "backlog",
+      "status": "done",
       "acceptanceCriteria": "- Redesigned card/list/add-flow verified in Chrome and Safari, desktop + mobile viewport.\n- No regressions in map pin dedup, realtime cross-window updates, or comment threads.",
       "reproSteps": "",
       "affectedFiles": "",
@@ -1658,7 +1658,7 @@
         "redesign",
         "qa"
       ],
-      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "updatedAt": "2026-07-08T19:33:17.855Z",
       "releaseId": "REL-19",
       "createdAt": "2026-07-06T23:00:00.000Z"
     },
