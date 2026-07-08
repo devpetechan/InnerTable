@@ -1577,7 +1577,7 @@
       "tags": [
         "redesign"
       ],
-      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "updatedAt": "2026-07-08T19:33:24.175Z",
       "releaseId": "REL-19",
       "createdAt": "2026-07-06T23:00:00.000Z"
     },
@@ -1597,7 +1597,7 @@
       "tags": [
         "redesign"
       ],
-      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "updatedAt": "2026-07-08T19:33:24.175Z",
       "releaseId": "REL-19",
       "createdAt": "2026-07-06T23:00:00.000Z"
     },
@@ -1617,7 +1617,7 @@
       "tags": [
         "redesign"
       ],
-      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "updatedAt": "2026-07-08T19:33:24.175Z",
       "releaseId": "REL-19",
       "createdAt": "2026-07-06T23:00:00.000Z"
     },
@@ -1637,7 +1637,7 @@
       "tags": [
         "redesign"
       ],
-      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "updatedAt": "2026-07-08T19:33:24.175Z",
       "releaseId": "REL-19",
       "createdAt": "2026-07-06T23:00:00.000Z"
     },
@@ -1658,7 +1658,7 @@
         "redesign",
         "qa"
       ],
-      "updatedAt": "2026-07-08T19:33:17.855Z",
+      "updatedAt": "2026-07-08T19:33:24.175Z",
       "releaseId": "REL-19",
       "createdAt": "2026-07-06T23:00:00.000Z"
     },
@@ -1852,8 +1852,9 @@
       "name": "Visual Redesign — \"Quiet Utility\" Design System",
       "targetDate": "",
       "goals": "Translate the locked design system (design/CLAUDE.md, design/*.dc.html — Design System Directions, Place Card, The List, Add Flow) into the live app: new design tokens, redesigned place card, redesigned list/header, and a guided multi-step add flow. Pure front-end reskin of already-shipped v0.3 functionality — no schema or data changes. Ships before REL-11 (Friend Circles) so v0.4 work builds on the new design system rather than needing a second pass.",
-      "status": "active",
-      "createdAt": "2026-07-06T23:00:00.000Z"
+      "status": "released",
+      "createdAt": "2026-07-06T23:00:00.000Z",
+      "releasedAt": "2026-07-08T19:33:24.174Z"
     },
     {
       "id": "REL-11",
