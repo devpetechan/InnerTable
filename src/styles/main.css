@@ -436,7 +436,9 @@ main { max-width: 860px; margin: 0 auto; padding: 20px var(--sp-5) 120px; }
    LIST CONTROLS (IT-086 · "2a + Map toggle")
    (Home hero removed in IT-093 — The List is the landing screen.)
 ═══════════════════════════════════════════════════════════════ */
-#list-map-section { display: none; }
+#list-map-section { display: none; min-width: 0; }
+
+#cards-container { min-width: 0; overflow-x: clip; }
 
 /* Full-width segmented status control [All | Want to Try | Recommended] */
 .view-tabs {
@@ -641,6 +643,7 @@ main { max-width: 860px; margin: 0 auto; padding: 20px var(--sp-5) 120px; }
   border-radius: var(--radius-sm);
   white-space: nowrap;
   flex: none;
+  flex-shrink: 0;
   line-height: 1.4;
 }
 .chip .chip-dot { width: 5px; height: 5px; border-radius: 50%; flex: none; }
@@ -714,7 +717,9 @@ main { max-width: 860px; margin: 0 auto; padding: 20px var(--sp-5) 120px; }
 ═══════════════════════════════════════════════════════════════ */
 .cards-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  /* minmax(0,1fr) lets the track shrink below content min-width — without
+     it, long signal/footer lines force place-cards wider than the viewport. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
 }
 
@@ -725,6 +730,8 @@ main { max-width: 860px; margin: 0 auto; padding: 20px var(--sp-5) 120px; }
   padding: var(--sp-4);
   box-shadow: 0 1px 2px rgba(40,30,20,.04);
   transition: border-color .2s, box-shadow .2s;
+  min-width: 0;
+  overflow: hidden;
 }
 .place-card:hover {
   border-color: var(--color-card-hover);
@@ -737,14 +744,17 @@ main { max-width: 860px; margin: 0 auto; padding: 20px var(--sp-5) 120px; }
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
+  min-width: 0;
 }
-.pc-title { min-width: 0; cursor: pointer; }
+.pc-title { min-width: 0; flex: 1; cursor: pointer; }
 .pc-name {
   font-weight: 700;
   font-size: 1.06rem;   /* 17px */
   color: var(--color-text);
   letter-spacing: -0.01em;
   line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 /* Disclosure chevron after the name — signals the title opens detail (IT-095) */
 .pc-name-chev {
@@ -768,12 +778,14 @@ main { max-width: 860px; margin: 0 auto; padding: 20px var(--sp-5) 120px; }
   justify-content: space-between;
   gap: 10px;
   margin-top: 13px;
+  min-width: 0;
 }
 .pc-signal-left {
   display: flex;
   align-items: center;
   gap: 9px;
   min-width: 0;
+  flex: 1;
 }
 .pc-signal-text {
   font-size: .78rem;
@@ -781,6 +793,8 @@ main { max-width: 860px; margin: 0 auto; padding: 20px var(--sp-5) 120px; }
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
+  flex: 1;
 }
 .pc-signal-text .signal-muted { color: var(--color-text-muted); }
 .pc-signal-text .pass-text { color: var(--status-pass-text); font-weight: 600; }
@@ -807,6 +821,7 @@ main { max-width: 860px; margin: 0 auto; padding: 20px var(--sp-5) 120px; }
   border-top: 1px solid var(--color-divider);
   padding-top: 13px;
   cursor: pointer;
+  min-width: 0;
 }
 .pc-toptake .take-avatar {
   width: 28px;
@@ -847,6 +862,7 @@ main { max-width: 860px; margin: 0 auto; padding: 20px var(--sp-5) 120px; }
   justify-content: space-between;
   gap: 10px;
   margin-top: 14px;
+  min-width: 0;
 }
 .pc-cta {
   font-family: inherit;
@@ -857,6 +873,7 @@ main { max-width: 860px; margin: 0 auto; padding: 20px var(--sp-5) 120px; }
   cursor: pointer;
   transition: background .15s, color .15s, border-color .15s;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 .pc-cta.outline {
   border: 1px solid var(--color-primary);
@@ -884,6 +901,7 @@ main { max-width: 860px; margin: 0 auto; padding: 20px var(--sp-5) 120px; }
   font-family: inherit;
   padding: 4px 0;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 .pc-comments:hover { color: var(--color-text-secondary); }
 .pc-comments .bubble {
@@ -1978,5 +1996,5 @@ a.tag:hover { color: var(--color-primary); border-color: var(--color-primary); b
    DESKTOP — min 700px
 ═══════════════════════════════════════════════════════════════ */
 @media (min-width: 700px) {
-  .cards-grid { grid-template-columns: 1fr 1fr; align-items: start; }
+  .cards-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
 }
