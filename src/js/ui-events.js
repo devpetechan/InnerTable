@@ -14,13 +14,6 @@ document.addEventListener('DOMContentLoaded', function () {
   document.querySelector('.user-chip')
     .addEventListener('click', signOut);
 
-  // ── Home CTAs ─────────────────────────────────────
-  const homeBtns = document.querySelectorAll('.home-cta-btn');
-  homeBtns[0].addEventListener('click', () => navigateToList('all'));
-  homeBtns[1].addEventListener('click', () => navigateToList('restaurant'));
-  homeBtns[2].addEventListener('click', () => navigateToList('bar'));
-  homeBtns[3].addEventListener('click', openModal);
-
   // ── Segmented status control (event delegation — data-view attr) ─
   document.querySelector('.view-tabs')
     .addEventListener('click', e => {

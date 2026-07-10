@@ -26,7 +26,11 @@
     <h1>Inner Table</h1>
     <p>Your group's shared restaurant bible.<br>Save places to try, and share what you've loved — or didn't.</p>
     <div class="input-group">
-      <button id="google-signin-btn" class="btn-primary">Sign in with Google</button>
+      <!-- Follows Google's sign-in branding: white pill, G mark, neutral text (IT-100) -->
+      <button id="google-signin-btn" class="btn-google">
+        <svg viewBox="0 0 18 18" width="18" height="18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2045c0-.6381-.0573-1.2518-.1636-1.8409H9v3.4814h4.8436c-.2086 1.125-.8427 2.0782-1.7959 2.7164v2.2581h2.9087c1.7018-1.5668 2.6836-3.874 2.6836-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.4673-.806 5.9564-2.1805l-2.9087-2.2581c-.8059.54-1.8368.859-3.0477.859-2.344 0-4.3282-1.5831-5.036-3.7104H.9574v2.3318C2.4382 15.9832 5.4818 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.2822-1.1168-.2822-1.71s.1023-1.17.2823-1.71V4.9582H.9573A8.9965 8.9965 0 0 0 0 9c0 1.4523.3477 2.8268.9573 4.0418L3.964 10.71z"/><path fill="#EA4335" d="M9 3.5795c1.3214 0 2.5077.4541 3.4405 1.346l2.5813-2.5814C13.4632.8918 11.426 0 9 0 5.4818 0 2.4382 2.0168.9573 4.9582L3.964 7.29C4.6718 5.1627 6.656 3.5795 9 3.5795z"/></svg>
+        Sign in with Google
+      </button>
       <p class="welcome-hint">We use Google to keep your recommendations tied to you.</p>
     </div>
   </div>
@@ -46,42 +50,9 @@
 
   <main>
 
-    <!-- ── HOME SECTION ── -->
-    <div id="home-section">
-      <div class="home-hero">
-        <div class="table-mark" style="margin:0 auto 20px;"></div>
-        <h2>Welcome to my Inner Table.</h2>
-        <p>The Inner Table is a curated list of food and drink spots that your trusted inner circle of friends like or want to try. Add to the Inner Table list — but don't add crap places! Your friends will hate you.</p>
-        <div class="home-ctas">
-          <button class="home-cta-btn">
-            <span class="home-cta-text">
-              <strong>View All</strong>
-              <span>See every place on the list</span>
-            </span>
-          </button>
-          <button class="home-cta-btn">
-            <span class="home-cta-text">
-              <strong>View Restaurants</strong>
-              <span>Browse the full restaurant list</span>
-            </span>
-          </button>
-          <button class="home-cta-btn">
-            <span class="home-cta-text">
-              <strong>View Bars</strong>
-              <span>See bars and cocktail spots</span>
-            </span>
-          </button>
-          <button class="home-cta-btn primary">
-            <span class="home-cta-text">
-              <strong>Add a New Place</strong>
-              <span>Share a spot with the group</span>
-            </span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── LIST + MAP SECTION (IT-086 · "2a + Map toggle") ── -->
+    <!-- ── LIST + MAP SECTION (IT-086 · "2a + Map toggle") ──
+         The List is the landing screen (IT-093); the old Home hero's
+         guidance lives on in the list's first-run empty state. -->
     <div id="list-map-section">
 
       <!-- Full-width segmented status control -->
@@ -91,11 +62,15 @@
         <button class="view-tab"        data-view="recommended" role="tab" aria-selected="false">Recommended</button>
       </div>
 
-      <!-- Controls row: List | Map toggle + Filter & sort pill -->
+      <!-- Controls row: List | Map toggle + place count + Filter & sort pill
+           (count folded in here to shrink the chrome stack, IT-094) -->
       <div class="display-mode-row">
         <div class="display-mode-toggle">
           <button class="display-mode-btn active" id="mode-list">List</button>
           <button class="display-mode-btn"        id="mode-map">Map</button>
+        </div>
+        <div class="section-title" id="count-title">
+          <span class="count-label">Places</span> <span class="count-badge" id="rec-count">0</span>
         </div>
         <button class="filter-sort-btn" id="filter-sort-btn" aria-expanded="false" aria-controls="filters-row">
           <span class="filter-sort-icon"><span></span><span></span><span></span></span>
@@ -126,10 +101,6 @@
         </div>
       </div>
 
-      <div class="section-title" id="count-title">
-        Places <span class="count-badge" id="rec-count">0</span>
-      </div>
-
       <!-- List view -->
       <div id="cards-container">
         <div class="loading-spinner">Loading…</div>
@@ -150,6 +121,7 @@
 <!-- ═══════════════ ADD/EDIT FLOW (IT-087 · "6b Guided multi-step") ═══════════════ -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
+    <div class="sheet-grabber" aria-hidden="true"></div>
 
     <!-- Header: Cancel / back + progress dots + spacer -->
     <div class="flow-header">
@@ -321,6 +293,7 @@
 <!-- ═══════════════ PLACE DETAIL PANEL ═══════════════ -->
 <div id="place-detail-overlay">
   <div id="place-detail-panel">
+    <div class="sheet-grabber" aria-hidden="true"></div>
     <div class="modal-header">
       <div class="modal-title" id="detail-panel-title"></div>
       <button class="btn-close">✕</button>

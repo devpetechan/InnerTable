@@ -20,6 +20,7 @@
 // ── Global state ─────────────────────────────────
 // allPlaces is the single client-side cache of place data (replaced the legacy allRecs).
 let allPlaces = {};
+let placesLoaded = false; // false until the first fetch resolves (renderCards shows a spinner)
 
 
 // ── Module-private state ─────────────────────────
@@ -170,6 +171,7 @@ function parseMentions(text) {
 // Fetches all data and sets up the Realtime subscription.
 async function loadPlaces() {
   allPlaces = await fetchAllPlaces();
+  placesLoaded = true;
 
   // IT-056: refresh any missing/expired Google ratings in the background.
   // Deliberately not awaited — cards render immediately from the cache and
@@ -334,6 +336,8 @@ async function submitEntry() {
     return;
   }
 
+  await _fillMissingPlaceDetails(placeId);
+
   const toastMsg = isTryType ? 'Saved to Want to Try.'
     : addType === 'been-skip' ? 'Hard Pass noted.'
     : 'Your take is on the table.';
@@ -341,6 +345,30 @@ async function submitEntry() {
   closeModal();
   btn.disabled = false;
   // Realtime triggers the re-fetch + re-render.
+}
+
+
+// IT-101: when taking a place someone else created (e.g. as want-to-try),
+// cuisine/price may still be blank.  The first user to supply them fills the
+// gap through the fill_place_details RPC (fill-only — existing values are
+// never overwritten, preserving the metadata-locked-after-creation model).
+async function _fillMissingPlaceDetails(placeId) {
+  const place = allPlaces[placeId];
+  if (!place) return; // brand-new place — details were part of the insert
+
+  const cuisine = document.getElementById('f-cuisine').value.trim();
+  const price   = document.getElementById('f-price').value;
+  const fillCuisine = !place.cuisine && cuisine ? cuisine : null;
+  const fillPrice   = !place.price   && price   ? price   : null;
+  if (!fillCuisine && !fillPrice) return;
+
+  const { error } = await supabaseClient.rpc('fill_place_details', {
+    p_place_id: placeId,
+    p_cuisine:  fillCuisine,
+    p_price:    fillPrice
+  });
+  // Non-fatal: the take itself already saved.
+  if (error) console.error('[submitEntry] fill_place_details failed:', error);
 }
 
 

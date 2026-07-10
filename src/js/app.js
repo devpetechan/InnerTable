@@ -44,11 +44,15 @@ function getUserColor(name) {
 
 // ══════════════════════════════════════════════════
 //  NAVIGATION
+//  The List IS the landing screen (IT-093) — "home" just resets it.
 // ══════════════════════════════════════════════════
 function goHome() {
-  document.getElementById('home-section').style.display = 'block';
-  document.getElementById('list-map-section').style.display = 'none';
-  document.getElementById('add-place-fab').style.display = 'none';
+  currentView = 'all';
+  currentFilter = 'all';
+  document.querySelectorAll('#friend-filter-bar .filter-chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.filter === 'all');
+  });
+  navigateToList('all');
 }
 
 function navigateToList(typeFilter) {
@@ -69,7 +73,6 @@ function navigateToList(typeFilter) {
   });
 
   // Show list section
-  document.getElementById('home-section').style.display = 'none';
   document.getElementById('list-map-section').style.display = 'block';
   document.getElementById('add-place-fab').style.display = '';
 
@@ -308,15 +311,20 @@ function updateSubmitBtn() { updateFlowUI(); }
 
 // Lock/unlock the fields that belong to the place row (not the user's take).
 // Place metadata can't be edited after creation (IT-035 resolved decision #1),
-// so these are disabled whenever the place already exists.
-function setPlaceFieldsLocked(locked) {
+// so these are disabled whenever the place already exists — EXCEPT cuisine
+// and price when the place doesn't have them yet: the first user to know
+// those details may fill the gap (IT-101, fill-only via fill_place_details).
+function setPlaceFieldsLocked(locked, place = null) {
   placeFieldsLocked = locked;
-  ['f-name', 'f-location', 'f-cuisine'].forEach(id => {
+  ['f-name', 'f-location'].forEach(id => {
     document.getElementById(id).disabled = locked;
   });
   document.getElementById('tog-restaurant').disabled = locked;
   document.getElementById('tog-bar').disabled        = locked;
-  document.querySelectorAll('#price-seg .seg-btn').forEach(b => { b.disabled = locked; });
+  const cuisineLocked = locked && !!(place ? place.cuisine : true);
+  const priceLocked   = locked && !!(place ? place.price   : true);
+  document.getElementById('f-cuisine').disabled = cuisineLocked;
+  document.querySelectorAll('#price-seg .seg-btn').forEach(b => { b.disabled = priceLocked; });
 }
 
 // Prefill the place fields of the modal from an allPlaces entry and lock them.
@@ -326,7 +334,7 @@ function _prefillPlaceFields(place) {
   document.getElementById('f-cuisine').value  = place.cuisine  || '';
   setPrice(place.price || '');
   setPlaceType(place.placeType || 'restaurant');
-  setPlaceFieldsLocked(true);
+  setPlaceFieldsLocked(true, place);
 }
 
 // "Add your take" CTA on a place card where the current user has no entry yet.
