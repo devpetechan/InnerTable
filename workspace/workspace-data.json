@@ -1918,6 +1918,28 @@
       "updatedAt": "2026-07-09T00:06:28.000Z",
       "releaseId": "REL-20",
       "createdAt": "2026-07-08T00:00:00.000Z"
+    },
+    {
+      "id": "1783688436037",
+      "itemId": "IT-102",
+      "type": "bug",
+      "title": "[v0.3.2] Place cards overflow past right edge on mobile",
+      "description": "On iPhone list view, place cards extend ~23px past the viewport right edge \u2014 left padding looks correct but right corners are clipped and signal/footer content sits flush against the screen edge. Root cause: CSS grid items default to min-width:auto, so long signal lines (e.g. email display names like \"pete.chan@gmail.com, Peter Chan recommend\") force .place-card wider than its 358px column (397px measured at 390px viewport).",
+      "priority": "P1",
+      "area": "UI",
+      "effort": "S",
+      "status": "done",
+      "acceptanceCriteria": "At 390px viewport width, document scrollWidth equals clientWidth (no horizontal overflow). Place cards fit within main padding; long signal text ellipsizes instead of widening the card.",
+      "reproSteps": "1. Open list view on iPhone (or 390px viewport).\n2. View a place card where recommender display names are long (e.g. email addresses).\n3. Observe card right edge clipped / content flush against screen edge.",
+      "affectedFiles": "src/styles/main.css (.cards-grid, .place-card, .pc-signal, .pc-signal-text, .pc-top, .pc-footer, #cards-container); overflow-test/measure.js (regression harness)",
+      "tags": [
+        "mobile",
+        "ios",
+        "bugfix"
+      ],
+      "releaseId": "REL-20",
+      "createdAt": "2026-07-10T13:00:36.000Z",
+      "updatedAt": "2026-07-10T13:00:36.000Z"
     }
   ],
   "releases": [
@@ -2176,6 +2198,6 @@
       "releasedAt": "2026-07-10T12:39:18.594Z"
     }
   ],
-  "nextItemId": 102,
+  "nextItemId": 103,
   "nextReleaseId": 21
 }
