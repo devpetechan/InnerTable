@@ -123,36 +123,26 @@
 }
 
 /* ───────────────────────────────────────────────────────────────
-   DARK TOKENS (IT-092) — warm charcoal mapped onto the same
-   custom properties. Ink/muted values keep >=4.5:1 on all surfaces;
-   the clay accent is lightened one step so it reads on dark ground.
+   DARK MODE (IT-092)
+   Brand colors (surfaces, ink, accent, borders, statuses, rating,
+   avatars) are NOT redefined here — they flow automatically from the
+   dark primitive layer in tokens/colors.css through the semantic
+   var() mappings in :root above. This block only carries the pieces
+   the token package doesn't define: app-level neutrals, the WCAG-safe
+   muted/placeholder overrides, hover states, overlay, and shadows.
 ─────────────────────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
 
-    /* Surfaces */
-    --color-bg:               #1B1815;
-    --color-paper:            #201C18;
-    --color-card:             #242019;
-    --color-canvas:           #2A251F;
-
-    /* Ink */
-    --color-text:             #F0EAE3;
-    --color-text-secondary:   #C4BBB0;
+    /* Ink — muted/placeholder kept >=4.5:1 on dark surfaces (app override) */
     --color-text-muted:       #A89E92;
     --color-placeholder:      #9A9084;
 
-    /* Accent — Clay (lightened) */
-    --color-primary:          #D96E45;
+    /* Accent hover (no primitive equivalent) */
     --color-primary-hover:    #E3805A;
-    --color-primary-tint:     #33241D;
-    --focus-ring:             0 0 0 3px rgba(217, 110, 69, .28);
 
-    /* Hairlines / borders */
-    --color-border:           #3A332B;
-    --color-border-tag:       #3F382F;
-    --color-divider:          #322C25;
+    /* App-level neutrals (not brand primitives) */
     --color-hover-border:     #4A4238;
     --color-card-hover:       #4A4238;
     --color-icon-muted:       #7A7168;
@@ -166,31 +156,7 @@
     --color-table-mark-inner: #3A332B;
     --color-on-primary:       #FFFFFF;
 
-    /* Status — Want to Try (blue) */
-    --status-try-bg:          #1F2A34;
-    --status-try-text:        #9DBBD6;
-    --status-try-dot:         #7FA6C9;
-    /* Status — Recommends (green) */
-    --status-rec-bg:          #212E22;
-    --status-rec-text:        #A4C6A6;
-    --status-rec-dot:         #85AC79;
-    /* Status — Hard Pass (red) */
-    --status-pass-bg:         #362420;
-    --status-pass-text:       #E0988A;
-    --status-pass-dot:        #CD7361;
-
-    /* Rating stars */
-    --color-star:             #D96E45;
-    --color-star-empty:       #4A4238;
-
-    /* Avatar palette (lightened for dark ground, white 700 text) */
-    --avatar-1:               #C1552E;
-    --avatar-2:               #55779A;
-    --avatar-3:               #66875A;
-    --avatar-4:               #A9784A;
-    --avatar-5:               #86689A;
-
-    /* Overlay + shadows */
+    /* Overlay + shadows (app-level in both modes) */
     --color-overlay:          rgba(0, 0, 0, 0.55);
     --shadow-card:            0 1px 2px rgba(0,0,0,.20), 0 10px 30px rgba(0,0,0,.24);
     --shadow-soft:            0 10px 24px rgba(0,0,0,.40);

@@ -57,3 +57,63 @@
   /* Elevation tints */
   --fab-shadow: rgba(193, 85, 46, .34);
 }
+
+/* ───────────────────────────────────────────────────────────────
+   DARK LAYER (app-added; not part of the original Claude Design export)
+   Warm-charcoal equivalents of every BRAND primitive above. Because the
+   semantic tokens in main.css reference these primitives with var(), simply
+   switching the primitive values here flips the whole app to dark — the
+   semantic layer needs no dark-specific redefinition for brand colors.
+   App-only neutrals (hover borders, chevrons, overlay, shadows) are not
+   brand primitives and stay in main.css's dark block.
+─────────────────────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Ink & body */
+    --color-ink: #F0EAE3;
+    --color-secondary: #C4BBB0;
+
+    /* Accent — Clay, lightened one step to read on dark ground */
+    --color-accent: #D96E45;
+    --color-accent-soft: #33241D;
+    --color-accent-ring: rgba(217, 110, 69, .28);
+
+    /* Surfaces */
+    --color-paper: #201C18;
+    --color-paper-raised: #242019;
+    --color-page-bg: #1B1815;
+    --color-canvas: #2A251F;
+
+    /* Borders & dividers */
+    --color-border-card: #3A332B;
+    --color-border-tag: #3F382F;
+    --color-border-input: #3A332B;
+    --color-divider: #322C25;
+
+    /* Status — Want to Try */
+    --status-try-bg: #1F2A34;
+    --status-try-text: #9DBBD6;
+    --status-try-dot: #7FA6C9;
+
+    /* Status — Recommends */
+    --status-rec-bg: #212E22;
+    --status-rec-text: #A4C6A6;
+    --status-rec-dot: #85AC79;
+
+    /* Status — Hard Pass */
+    --status-pass-bg: #362420;
+    --status-pass-text: #E0988A;
+    --status-pass-dot: #CD7361;
+
+    /* Rating */
+    --rating-filled: #D96E45;
+    --rating-empty: #4A4238;
+
+    /* Avatar initials palette (lightened for dark ground) */
+    --avatar-1: #C1552E;
+    --avatar-2: #55779A;
+    --avatar-3: #66875A;
+    --avatar-4: #A9784A;
+    --avatar-5: #86689A;
+  }
+}
