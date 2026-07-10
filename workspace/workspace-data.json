@@ -1940,6 +1940,50 @@
       "releaseId": "REL-20",
       "createdAt": "2026-07-10T13:00:36.000Z",
       "updatedAt": "2026-07-10T13:00:36.000Z"
+    },
+    {
+      "id": "1783695015951",
+      "itemId": "IT-103",
+      "type": "enhancement",
+      "title": "[v0.3.2] Extract design tokens into CSS imports + design-system reference",
+      "description": "Split the Quiet Utility primitive palette out of main.css into src/styles/tokens/*.css (colors, typography, spacing, shadows) and @import them before the semantic :root mappings. Add design/design-system/ as the Claude Design export mirror (components, guidelines, UI kits) so future palette updates replace token files rather than hunting literals in main.css.",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "M",
+      "status": "done",
+      "acceptanceCriteria": "Primitive tokens live in src/styles/tokens/*.css; main.css maps them to semantic app variables; design/design-system/ mirrors the export for reference; app appearance unchanged in light mode.",
+      "reproSteps": "",
+      "affectedFiles": "src/styles/main.css; src/styles/tokens/*.css; design/design-system/",
+      "tags": [
+        "design-system",
+        "tokens",
+        "refactor"
+      ],
+      "releaseId": "REL-20",
+      "createdAt": "2026-07-10T14:50:15.000Z",
+      "updatedAt": "2026-07-10T14:50:15.000Z"
+    },
+    {
+      "id": "1783695015952",
+      "itemId": "IT-104",
+      "type": "enhancement",
+      "title": "[v0.3.2] Move dark-mode brand primitives into tokens/colors.css",
+      "description": "Consolidate IT-092 dark mode: brand primitives (surfaces, ink, accent, borders, status chips, rating, avatars) now flip via a @media (prefers-color-scheme: dark) layer in tokens/colors.css. main.css dark block keeps only app-level neutrals (hover borders, chevrons, overlay, shadows) and the WCAG-safe muted/placeholder overrides \u2014 no duplicate brand color definitions.",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "S",
+      "status": "done",
+      "acceptanceCriteria": "Dark mode brand colors are defined once in tokens/colors.css; semantic var() mappings in main.css pick them up automatically; app-only neutrals remain in main.css dark block; dark mode legible and on-brand.",
+      "reproSteps": "Enable system dark mode on iPhone or desktop; verify surfaces, ink, accent, and status chips.",
+      "affectedFiles": "src/styles/tokens/colors.css; src/styles/main.css",
+      "tags": [
+        "design-system",
+        "tokens",
+        "dark-mode"
+      ],
+      "releaseId": "REL-20",
+      "createdAt": "2026-07-10T14:50:15.000Z",
+      "updatedAt": "2026-07-10T14:50:15.000Z"
     }
   ],
   "releases": [
@@ -2192,12 +2236,12 @@
       "version": "0.3.2",
       "name": "iPhone Fixes & Redesign Polish",
       "targetDate": "",
-      "goals": "Address iPhone-specific issues and polish surfaced by the v0.3.1 \"Quiet Utility\" redesign review (iPhone-width render walkthrough). Fixes real iOS Safari bugs (input focus-zoom, missing safe-area insets), reduces navigation redundancy between Home and The List, and closes accessibility/contrast and visual-consistency gaps. Front-end plus one additive migration (0016 fill_place_details \u2014 fill-only cuisine/price on existing places, IT-101).",
+      "goals": "Address iPhone-specific issues and polish surfaced by the v0.3.1 \"Quiet Utility\" redesign review. Fixes iOS Safari bugs (input focus-zoom, safe-area insets), removes Home/List navigation duplication, closes accessibility/contrast and visual-consistency gaps, and refactors the design token architecture (src/styles/tokens/*.css + design/design-system/ reference, dark primitives in token layer). Includes migration 0016 fill_place_details for IT-101.",
       "status": "released",
       "createdAt": "2026-07-08T00:00:00.000Z",
       "releasedAt": "2026-07-10T12:39:18.594Z"
     }
   ],
-  "nextItemId": 103,
+  "nextItemId": 105,
   "nextReleaseId": 21
 }
