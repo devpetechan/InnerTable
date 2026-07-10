@@ -1,0 +1,70 @@
+<!-- @dsCard group="InnerTable" viewport="390x800" subtitle="The List → Add flow, click-through" -->
+<!-- @startingPoint section="Screens" subtitle="InnerTable — The List with guided Add flow" viewport="390x800" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>InnerTable — UI Kit</title>
+<link rel="stylesheet" href="../../styles.css">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" src="./TheList.jsx"></script>
+<script type="text/babel" src="./AddFlow.jsx"></script>
+<style>
+  html, body { margin: 0; background: #E4E0D8; font-family: 'Hanken Grotesk', system-ui, sans-serif; }
+  #root { display: flex; justify-content: center; padding: 32px 0; }
+</style>
+</head>
+<body>
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <rect width="200" height="200" fill="#F1EDE6"/>
+    <circle cx="100" cy="100" r="60" fill="#C1552E"/>
+    <text x="100" y="112" font-family="sans-serif" font-size="46" fill="#FCFBF9" text-anchor="middle">IT</text>
+  </svg>
+</template>
+<div id="root"></div>
+<script type="text/babel">
+  const { TheList, AddFlow } = window;
+
+  function Phone({ children }) {
+    return (
+      <div style={{ width: 412, background: '#211c17', borderRadius: 48, padding: 11, boxShadow: '0 1px 2px rgba(40,30,20,.06), 0 26px 64px rgba(40,30,20,.16)' }}>
+        <div style={{ position: 'relative', width: 390, height: 800, background: '#FCFBFA', borderRadius: 38, overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 11, left: '50%', transform: 'translateX(-50%)', width: 110, height: 30, background: '#211c17', borderRadius: 16, zIndex: 30 }} />
+          {children}
+        </div>
+      </div>
+    );
+  }
+
+  function App() {
+    const [modal, setModal] = React.useState(null); // null | { place, initialStep }
+
+    return (
+      <Phone>
+        <TheList
+          onAddPlace={() => setModal({ place: '', initialStep: 1 })}
+          onAddTake={(p) => setModal({ place: p.name, initialStep: 2 })}
+        />
+        {modal && (
+          <div style={{ position: 'absolute', inset: 0, zIndex: 40, background: '#FCFBFA' }}>
+            <AddFlow
+              place={modal.place}
+              initialStep={modal.initialStep}
+              onCancel={() => setModal(null)}
+              onDone={() => setModal(null)}
+            />
+          </div>
+        )}
+      </Phone>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

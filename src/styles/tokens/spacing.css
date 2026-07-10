@@ -1,0 +1,16 @@
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 44px;
+
+  --radius-sm: 7px;    /* chips, tags */
+  --radius-md: 11px;   /* inputs, small controls */
+  --radius-lg: 14px;   /* compact cards */
+  --radius-xl: 16px;   /* roomy cards, sheets */
+  --radius-pill: 999px;/* segmented controls, FAB */
+}

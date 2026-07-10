@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<meta name="design_doc_mode" content="canvas">
+<style>
+  html,body{margin:0;background:#E4E0D8;font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+  ::-webkit-scrollbar{width:0;height:0;}
+</style>
+</helmet>
+
+<section style="padding:56px 48px 90px;box-sizing:border-box;min-width:1400px;">
+
+  <div style="margin:0 0 40px;max-width:900px;">
+    <div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9A9186;margin-bottom:14px;">InnerTable · Turn 4 · The place card</div>
+    <h1 style="font-family:'Hanken Grotesk';font-weight:800;font-size:34px;line-height:1.1;color:#2B2521;margin:0 0 12px;letter-spacing:-0.02em;">Three takes on the friend signal</h1>
+    <p style="font-size:16px;line-height:1.55;color:#6E655B;margin:0;max-width:660px;">Each direction shown in three states — <b style="color:#2B2521;">strong recommend</b>, <b style="color:#2B2521;">want-to-try only</b>, and <b style="color:#2B2521;">mixed / hard-pass</b>. All collapsed by default; the footer affordance expands into takes &amp; comments (Place Detail). Shown on the real app ground. Reference as <b style="color:#2B2521;">4a</b>, <b style="color:#2B2521;">4b</b>, <b style="color:#2B2521;">4c</b>.</p>
+  </div>
+
+  <div style="display:flex;gap:34px;align-items:flex-start;flex-wrap:wrap;">
+
+    <!-- ============================ 4a — COMPACT ============================ -->
+    <div id="4a" style="width:402px;">
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:7px;"><span style="background:#C1552E;color:#fff;font-weight:700;font-size:12px;padding:3px 9px;border-radius:7px;">4a</span><span style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#9A9186;">Compact · one-line signal</span></div>
+        <p style="font-size:13px;line-height:1.45;color:#6E655B;margin:0;">Tightest scan unit. Status chip + a single confident signal line + rating. Takes/comments collapse behind the footer.</p>
+      </div>
+
+      <div style="background:#F1EDE6;border-radius:22px;padding:18px;display:flex;flex-direction:column;gap:16px;">
+
+        <!-- STATE 1: strong recommend -->
+        <div>
+          <div style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:8px;">① Strong recommend</div>
+          <div style="background:#FFFFFF;border:1px solid #E7E1D9;border-radius:14px;padding:15px;box-shadow:0 1px 2px rgba(40,30,20,.04);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+              <div><div style="font-weight:700;font-size:16.5px;color:#292420;letter-spacing:-0.01em;">Casa Enrique</div><div style="font-size:12.5px;color:#8A817A;margin-top:3px;">Restaurant · Mexican · $$ · LIC</div></div>
+              <span style="display:inline-flex;align-items:center;gap:5px;background:#EAF1EA;color:#3F6A44;font-weight:600;font-size:11.5px;padding:4px 9px;border-radius:7px;white-space:nowrap;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#5C7A4F;"></span>Recommended</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px;">
+              <div style="display:flex;align-items:center;gap:9px;min-width:0;">
+                <div style="display:flex;padding-left:8px;"><span style="width:26px;height:26px;border-radius:50%;background:#9A6B3F;color:#fff;font-weight:700;font-size:10.5px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">SM</span><span style="width:26px;height:26px;border-radius:50%;background:#5C7A4F;color:#fff;font-weight:700;font-size:10.5px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">AR</span><span style="width:26px;height:26px;border-radius:50%;background:#7A5C8A;color:#fff;font-weight:700;font-size:10.5px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">PT</span></div>
+                <span style="font-size:12.5px;color:#5F574F;">Sam, Ana <span style="color:#8A817A;">+3 recommend</span></span>
+              </div>
+              <span style="color:#C1552E;font-weight:700;font-size:15px;white-space:nowrap;">★ 4.7</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;border-top:1px solid #F1EDE6;padding-top:11px;">
+              <span style="font-size:12px;color:#8A817A;">6 takes · 4 comments</span>
+              <span style="color:#B8AFA4;font-size:17px;line-height:0;">›</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STATE 2: want to try only -->
+        <div>
+          <div style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:8px;">② Want to try only · nobody’s been</div>
+          <div style="background:#FFFFFF;border:1px solid #E7E1D9;border-radius:14px;padding:15px;box-shadow:0 1px 2px rgba(40,30,20,.04);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+              <div><div style="font-weight:700;font-size:16.5px;color:#292420;letter-spacing:-0.01em;">Attaboy</div><div style="font-size:12.5px;color:#8A817A;margin-top:3px;">Bar · Cocktails · $$$ · Lower East Side</div></div>
+              <span style="display:inline-flex;align-items:center;gap:5px;background:#EDF1F5;color:#3D5A78;font-weight:600;font-size:11.5px;padding:4px 9px;border-radius:7px;white-space:nowrap;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#4B6B8A;"></span>Want to Try</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px;">
+              <div style="display:flex;align-items:center;gap:9px;min-width:0;">
+                <div style="display:flex;padding-left:8px;"><span style="width:26px;height:26px;border-radius:50%;background:#5C7A4F;color:#fff;font-weight:700;font-size:10.5px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">AR</span><span style="width:26px;height:26px;border-radius:50%;background:#9A6B3F;color:#fff;font-weight:700;font-size:10.5px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">SL</span><span style="width:26px;height:26px;border-radius:50%;background:#C1552E;color:#fff;font-weight:700;font-size:10.5px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">MK</span></div>
+                <span style="font-size:12.5px;color:#5F574F;">4 friends want to try</span>
+              </div>
+              <span style="color:#A79E93;font-weight:600;font-size:12px;white-space:nowrap;">Google ★ 4.5</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;border-top:1px solid #F1EDE6;padding-top:11px;">
+              <span style="font-size:12px;color:#8A817A;">No takes yet · 2 comments</span>
+              <span style="color:#B8AFA4;font-size:17px;line-height:0;">›</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STATE 3: mixed / hard pass -->
+        <div>
+          <div style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:8px;">③ Mixed · a hard pass in the group</div>
+          <div style="background:#FFFFFF;border:1px solid #E7E1D9;border-radius:14px;padding:15px;box-shadow:0 1px 2px rgba(40,30,20,.04);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+              <div><div style="font-weight:700;font-size:16.5px;color:#292420;letter-spacing:-0.01em;">Kiki’s</div><div style="font-size:12.5px;color:#8A817A;margin-top:3px;">Restaurant · Greek · $$ · Lower East Side</div></div>
+              <span style="display:inline-flex;align-items:center;gap:5px;background:#F1EDE6;color:#6E655B;font-weight:600;font-size:11.5px;padding:4px 9px;border-radius:7px;white-space:nowrap;flex:none;border:1px solid #E0DAD2;">Mixed</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px;">
+              <div style="display:flex;align-items:center;gap:9px;min-width:0;">
+                <div style="display:flex;padding-left:8px;"><span style="width:26px;height:26px;border-radius:50%;background:#C1552E;color:#fff;font-weight:700;font-size:10.5px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">MK</span><span style="width:26px;height:26px;border-radius:50%;background:#9A6B3F;color:#fff;font-weight:700;font-size:10.5px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">SM</span></div>
+                <span style="font-size:12.5px;color:#5F574F;">2 recommend · <span style="color:#9E4234;font-weight:600;">2 passed</span></span>
+              </div>
+              <span style="color:#C1552E;font-weight:700;font-size:15px;white-space:nowrap;">★ 3.1</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;border-top:1px solid #F1EDE6;padding-top:11px;">
+              <span style="font-size:12px;color:#8A817A;">5 takes · 7 comments</span>
+              <span style="color:#B8AFA4;font-size:17px;line-height:0;">›</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============================ 4b — RICHER (top take) ============================ -->
+    <div id="4b" style="width:402px;">
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:7px;"><span style="background:#C1552E;color:#fff;font-weight:700;font-size:12px;padding:3px 9px;border-radius:7px;">4b</span><span style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#9A9186;">Richer · surfaces the top take</span></div>
+        <p style="font-size:13px;line-height:1.45;color:#6E655B;margin:0;">Signal plus one representative take (name, rating, one-liner) and an explicit Add-your-take + comments footer. Expand for the rest.</p>
+      </div>
+
+      <div style="background:#F1EDE6;border-radius:22px;padding:18px;display:flex;flex-direction:column;gap:16px;">
+
+        <!-- STATE 1 -->
+        <div>
+          <div style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:8px;">① Strong recommend</div>
+          <div style="background:#FFFFFF;border:1px solid #E7E1D9;border-radius:16px;padding:16px;box-shadow:0 1px 2px rgba(40,30,20,.04);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+              <div><div style="font-weight:700;font-size:17px;color:#292420;letter-spacing:-0.01em;">Casa Enrique</div><div style="font-size:12.5px;color:#8A817A;margin-top:3px;">Restaurant · Mexican · $$ · LIC</div></div>
+              <span style="display:inline-flex;align-items:center;gap:5px;background:#EAF1EA;color:#3F6A44;font-weight:600;font-size:11.5px;padding:4px 9px;border-radius:7px;white-space:nowrap;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#5C7A4F;"></span>Recommended</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px;">
+              <div style="display:flex;align-items:center;gap:9px;min-width:0;">
+                <div style="display:flex;padding-left:8px;"><span style="width:26px;height:26px;border-radius:50%;background:#9A6B3F;color:#fff;font-weight:700;font-size:10.5px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">SM</span><span style="width:26px;height:26px;border-radius:50%;background:#5C7A4F;color:#fff;font-weight:700;font-size:10.5px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">AR</span><span style="width:26px;height:26px;border-radius:50%;background:#7A5C8A;color:#fff;font-weight:700;font-size:10.5px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">PT</span></div>
+                <span style="font-size:12.5px;color:#5F574F;">Sam, Ana <span style="color:#8A817A;">+3 recommend</span></span>
+              </div>
+              <span style="color:#C1552E;font-weight:700;font-size:15px;white-space:nowrap;">★ 4.7</span>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:13px;border-top:1px solid #F1EDE6;padding-top:13px;">
+              <span style="width:28px;height:28px;border-radius:50%;background:#9A6B3F;color:#fff;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;flex:none;">SM</span>
+              <div style="min-width:0;"><div style="display:flex;align-items:center;gap:8px;"><span style="font-weight:700;font-size:13.5px;color:#292420;">Sam</span><span style="color:#C1552E;font-weight:600;font-size:12px;">★ 5.0</span></div><div style="font-size:13px;line-height:1.5;color:#5F574F;margin-top:2px;">“Best mole in the city — worth the L train. Get the enchiladas.”</div></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;">
+              <button style="border:1px solid #C1552E;background:#fff;color:#C1552E;font-family:inherit;font-weight:700;font-size:12.5px;padding:8px 14px;border-radius:9px;cursor:pointer;">+ Add your take</button>
+              <span style="display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#8A817A;cursor:pointer;"><span style="width:14px;height:11px;border:1.6px solid #B8AFA4;border-radius:4px;display:inline-block;"></span>4 comments <span style="color:#B8AFA4;font-size:15px;line-height:0;">›</span></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STATE 2 -->
+        <div>
+          <div style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:8px;">② Want to try only · nobody’s been</div>
+          <div style="background:#FFFFFF;border:1px solid #E7E1D9;border-radius:16px;padding:16px;box-shadow:0 1px 2px rgba(40,30,20,.04);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+              <div><div style="font-weight:700;font-size:17px;color:#292420;letter-spacing:-0.01em;">Attaboy</div><div style="font-size:12.5px;color:#8A817A;margin-top:3px;">Bar · Cocktails · $$$ · Lower East Side</div></div>
+              <span style="display:inline-flex;align-items:center;gap:5px;background:#EDF1F5;color:#3D5A78;font-weight:600;font-size:11.5px;padding:4px 9px;border-radius:7px;white-space:nowrap;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#4B6B8A;"></span>Want to Try</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px;">
+              <div style="display:flex;align-items:center;gap:9px;min-width:0;">
+                <div style="display:flex;padding-left:8px;"><span style="width:26px;height:26px;border-radius:50%;background:#5C7A4F;color:#fff;font-weight:700;font-size:10.5px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">AR</span><span style="width:26px;height:26px;border-radius:50%;background:#9A6B3F;color:#fff;font-weight:700;font-size:10.5px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">SL</span><span style="width:26px;height:26px;border-radius:50%;background:#C1552E;color:#fff;font-weight:700;font-size:10.5px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">MK</span></div>
+                <span style="font-size:12.5px;color:#5F574F;">4 friends want to try</span>
+              </div>
+              <span style="color:#A79E93;font-weight:600;font-size:12px;white-space:nowrap;">Google ★ 4.5</span>
+            </div>
+            <div style="margin-top:13px;border-top:1px solid #F1EDE6;padding-top:13px;font-size:13px;color:#8A817A;">Nobody’s been yet — be the first to try it.</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;">
+              <button style="border:none;background:#C1552E;color:#fff;font-family:inherit;font-weight:700;font-size:12.5px;padding:9px 15px;border-radius:9px;cursor:pointer;">I’ve been — add a take</button>
+              <span style="display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#8A817A;cursor:pointer;"><span style="width:14px;height:11px;border:1.6px solid #B8AFA4;border-radius:4px;display:inline-block;"></span>2 comments <span style="color:#B8AFA4;font-size:15px;line-height:0;">›</span></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STATE 3 -->
+        <div>
+          <div style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:8px;">③ Mixed · a hard pass in the group</div>
+          <div style="background:#FFFFFF;border:1px solid #E7E1D9;border-radius:16px;padding:16px;box-shadow:0 1px 2px rgba(40,30,20,.04);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+              <div><div style="font-weight:700;font-size:17px;color:#292420;letter-spacing:-0.01em;">Kiki’s</div><div style="font-size:12.5px;color:#8A817A;margin-top:3px;">Restaurant · Greek · $$ · Lower East Side</div></div>
+              <span style="display:inline-flex;align-items:center;gap:5px;background:#F1EDE6;color:#6E655B;font-weight:600;font-size:11.5px;padding:4px 9px;border-radius:7px;white-space:nowrap;flex:none;border:1px solid #E0DAD2;">Mixed</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px;">
+              <div style="display:flex;align-items:center;gap:9px;min-width:0;">
+                <div style="display:flex;padding-left:8px;"><span style="width:26px;height:26px;border-radius:50%;background:#C1552E;color:#fff;font-weight:700;font-size:10.5px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">MK</span><span style="width:26px;height:26px;border-radius:50%;background:#9A6B3F;color:#fff;font-weight:700;font-size:10.5px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">SM</span></div>
+                <span style="font-size:12.5px;color:#5F574F;">2 recommend · <span style="color:#9E4234;font-weight:600;">2 passed</span></span>
+              </div>
+              <span style="color:#C1552E;font-weight:700;font-size:15px;white-space:nowrap;">★ 3.1</span>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:13px;border-top:1px solid #F1EDE6;padding-top:13px;">
+              <span style="width:28px;height:28px;border-radius:50%;background:#9A6B3F;color:#fff;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;flex:none;">SM</span>
+              <div style="min-width:0;"><div style="display:flex;align-items:center;gap:8px;"><span style="font-weight:700;font-size:13.5px;color:#292420;">Sam</span><span style="display:inline-flex;align-items:center;gap:4px;background:#F5EBE8;color:#9E4234;font-weight:600;font-size:10.5px;padding:2px 7px;border-radius:6px;"><span style="width:4px;height:4px;border-radius:50%;background:#B14A3C;"></span>Hard Pass</span></div><div style="font-size:13px;line-height:1.5;color:#5F574F;margin-top:2px;">“90-minute wait and the food was mid. Skip it.”</div></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;">
+              <button style="border:1px solid #C1552E;background:#fff;color:#C1552E;font-family:inherit;font-weight:700;font-size:12.5px;padding:8px 14px;border-radius:9px;cursor:pointer;">+ Add your take</button>
+              <span style="display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#8A817A;cursor:pointer;"><span style="width:14px;height:11px;border:1.6px solid #B8AFA4;border-radius:4px;display:inline-block;"></span>7 comments <span style="color:#B8AFA4;font-size:15px;line-height:0;">›</span></span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============================ 4c — VERDICT METER ============================ -->
+    <div id="4c" style="width:402px;">
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:7px;"><span style="background:#C1552E;color:#fff;font-weight:700;font-size:12px;padding:3px 9px;border-radius:7px;">4c</span><span style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#9A9186;">Verdict meter · the split at a glance</span></div>
+        <p style="font-size:13px;line-height:1.45;color:#6E655B;margin:0;">A slim bar shows the recommend / want / pass split proportionally — mixed signals read instantly. Data-forward but calm.</p>
+      </div>
+
+      <div style="background:#F1EDE6;border-radius:22px;padding:18px;display:flex;flex-direction:column;gap:16px;">
+
+        <!-- STATE 1 -->
+        <div>
+          <div style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:8px;">① Strong recommend</div>
+          <div style="background:#FFFFFF;border:1px solid #E7E1D9;border-radius:14px;padding:15px;box-shadow:0 1px 2px rgba(40,30,20,.04);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+              <div><div style="font-weight:700;font-size:16.5px;color:#292420;letter-spacing:-0.01em;">Casa Enrique</div><div style="font-size:12.5px;color:#8A817A;margin-top:3px;">Restaurant · Mexican · $$ · LIC</div></div>
+              <span style="color:#C1552E;font-weight:700;font-size:15px;white-space:nowrap;flex:none;">★ 4.7</span>
+            </div>
+            <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;gap:3px;margin-top:13px;">
+              <span style="flex:5;background:#5C7A4F;border-radius:3px;"></span>
+              <span style="flex:1;background:#4B6B8A;border-radius:3px;"></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;margin-top:9px;font-size:11.5px;color:#6E655B;">
+              <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:6px;height:6px;border-radius:50%;background:#5C7A4F;"></span>5 recommend</span>
+              <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:6px;height:6px;border-radius:50%;background:#4B6B8A;"></span>1 want to try</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:13px;border-top:1px solid #F1EDE6;padding-top:11px;">
+              <div style="display:flex;padding-left:8px;"><span style="width:24px;height:24px;border-radius:50%;background:#9A6B3F;color:#fff;font-weight:700;font-size:10px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">SM</span><span style="width:24px;height:24px;border-radius:50%;background:#5C7A4F;color:#fff;font-weight:700;font-size:10px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">AR</span><span style="width:24px;height:24px;border-radius:50%;background:#7A5C8A;color:#fff;font-weight:700;font-size:10px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">PT</span><span style="width:24px;height:24px;border-radius:50%;background:#F1EDE6;color:#6E655B;font-weight:700;font-size:9.5px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">+3</span></div>
+              <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#8A817A;">6 takes · 4 comments <span style="color:#B8AFA4;font-size:16px;line-height:0;">›</span></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STATE 2 -->
+        <div>
+          <div style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:8px;">② Want to try only · nobody’s been</div>
+          <div style="background:#FFFFFF;border:1px solid #E7E1D9;border-radius:14px;padding:15px;box-shadow:0 1px 2px rgba(40,30,20,.04);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+              <div><div style="font-weight:700;font-size:16.5px;color:#292420;letter-spacing:-0.01em;">Attaboy</div><div style="font-size:12.5px;color:#8A817A;margin-top:3px;">Bar · Cocktails · $$$ · Lower East Side</div></div>
+              <span style="color:#A79E93;font-weight:600;font-size:12px;white-space:nowrap;flex:none;">Google ★ 4.5</span>
+            </div>
+            <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;gap:3px;margin-top:13px;">
+              <span style="flex:1;background:#4B6B8A;border-radius:3px;"></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;margin-top:9px;font-size:11.5px;color:#6E655B;">
+              <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:6px;height:6px;border-radius:50%;background:#4B6B8A;"></span>4 want to try</span>
+              <span style="color:#A79E93;">· nobody’s been</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:13px;border-top:1px solid #F1EDE6;padding-top:11px;">
+              <div style="display:flex;padding-left:8px;"><span style="width:24px;height:24px;border-radius:50%;background:#5C7A4F;color:#fff;font-weight:700;font-size:10px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">AR</span><span style="width:24px;height:24px;border-radius:50%;background:#9A6B3F;color:#fff;font-weight:700;font-size:10px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">SL</span><span style="width:24px;height:24px;border-radius:50%;background:#C1552E;color:#fff;font-weight:700;font-size:10px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">MK</span><span style="width:24px;height:24px;border-radius:50%;background:#F1EDE6;color:#6E655B;font-weight:700;font-size:9.5px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">+1</span></div>
+              <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#8A817A;">No takes yet · 2 comments <span style="color:#B8AFA4;font-size:16px;line-height:0;">›</span></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STATE 3 -->
+        <div>
+          <div style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#A79E93;margin-bottom:8px;">③ Mixed · a hard pass in the group</div>
+          <div style="background:#FFFFFF;border:1px solid #E7E1D9;border-radius:14px;padding:15px;box-shadow:0 1px 2px rgba(40,30,20,.04);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+              <div><div style="font-weight:700;font-size:16.5px;color:#292420;letter-spacing:-0.01em;">Kiki’s</div><div style="font-size:12.5px;color:#8A817A;margin-top:3px;">Restaurant · Greek · $$ · Lower East Side</div></div>
+              <span style="color:#C1552E;font-weight:700;font-size:15px;white-space:nowrap;flex:none;">★ 3.1</span>
+            </div>
+            <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;gap:3px;margin-top:13px;">
+              <span style="flex:2;background:#5C7A4F;border-radius:3px;"></span>
+              <span style="flex:1;background:#4B6B8A;border-radius:3px;"></span>
+              <span style="flex:2;background:#B14A3C;border-radius:3px;"></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:13px;margin-top:9px;font-size:11.5px;color:#6E655B;flex-wrap:wrap;">
+              <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:6px;height:6px;border-radius:50%;background:#5C7A4F;"></span>2 recommend</span>
+              <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:6px;height:6px;border-radius:50%;background:#4B6B8A;"></span>1 want</span>
+              <span style="display:inline-flex;align-items:center;gap:5px;color:#9E4234;font-weight:600;"><span style="width:6px;height:6px;border-radius:50%;background:#B14A3C;"></span>2 hard pass</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:13px;border-top:1px solid #F1EDE6;padding-top:11px;">
+              <div style="display:flex;padding-left:8px;"><span style="width:24px;height:24px;border-radius:50%;background:#C1552E;color:#fff;font-weight:700;font-size:10px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">MK</span><span style="width:24px;height:24px;border-radius:50%;background:#9A6B3F;color:#fff;font-weight:700;font-size:10px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">SM</span><span style="width:24px;height:24px;border-radius:50%;background:#F1EDE6;color:#6E655B;font-weight:700;font-size:9.5px;display:flex;align-items:center;justify-content:center;border:2px solid #FFFFFF;margin-left:-8px;">+3</span></div>
+              <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#8A817A;">5 takes · 7 comments <span style="color:#B8AFA4;font-size:16px;line-height:0;">›</span></span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+</body>
+</html>

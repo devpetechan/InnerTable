@@ -1,0 +1,59 @@
+:root {
+  /* Ink & body */
+  --color-ink: #292420;
+  --color-secondary: #5F574F;
+  --color-muted: #8A817A;
+  --color-faint: #A79E93;
+
+  /* Accent */
+  --color-accent: #C1552E;
+  --color-accent-soft: #FBF3EF;
+  --color-accent-ring: rgba(193, 85, 46, .12);
+
+  /* Surfaces */
+  --color-paper: #FCFBF9;
+  --color-paper-raised: #FFFFFF;
+  --color-page-bg: #FCFBFA;
+  --color-canvas: #F1EDE6;
+
+  /* Borders & dividers */
+  --color-border-card: #E7E1D9;
+  --color-border-tag: #E0DAD2;
+  --color-border-input: #E7E1D9;
+  --color-divider: #EFEAE2;
+
+  /* Status — Want to Try */
+  --status-try-bg: #EDF1F5;
+  --status-try-text: #3D5A78;
+  --status-try-dot: #4B6B8A;
+
+  /* Status — Recommends */
+  --status-rec-bg: #EAF1EA;
+  --status-rec-text: #3F6A44;
+  --status-rec-dot: #5C7A4F;
+
+  /* Status — Hard Pass */
+  --status-pass-bg: #F5EBE8;
+  --status-pass-text: #9E4234;
+  --status-pass-dot: #B14A3C;
+
+  /* Status — Mixed (neutral outline) */
+  --status-mixed-bg: #F1EDE6;
+  --status-mixed-text: #6E655B;
+  --status-mixed-border: #E0DAD2;
+
+  /* Rating */
+  --rating-filled: #C1552E;
+  --rating-empty: #D8D2CA;
+  --rating-muted-text: #A79E93;
+
+  /* Avatar initials palette (cycle in order) */
+  --avatar-1: #C1552E;
+  --avatar-2: #4B6B8A;
+  --avatar-3: #5C7A4F;
+  --avatar-4: #9A6B3F;
+  --avatar-5: #7A5C8A;
+
+  /* Elevation tints */
+  --fab-shadow: rgba(193, 85, 46, .34);
+}

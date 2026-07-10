@@ -1,0 +1,22 @@
+<!-- @dsCard group="Components" viewport="700x220" subtitle="Primary / outline / ghost / FAB" name="Button" -->
+<link rel="stylesheet" href="../../styles.css">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="../../_ds_bundle.js"></script>
+<div id="root" style="padding:20px;background:var(--color-canvas);"></div>
+<script type="text/babel">
+  const { Button } = window.InnerTable;
+  function Demo() {
+    return (
+      <div style={{display:'flex', flexDirection:'column', gap:16, alignItems:'flex-start'}}>
+        <Button variant="primary">Save to Want to Try</Button>
+        <Button variant="outline" size="sm">+ Add your take</Button>
+        <Button variant="ghost" size="sm">Filter &amp; sort</Button>
+        <Button variant="fab" icon="+">Add a place</Button>
+      </div>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script>

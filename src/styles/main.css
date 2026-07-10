@@ -1,8 +1,23 @@
 /* ═══════════════════════════════════════════════════════════════════
    InnerTable — main.css
-   v0.3.2 "Quiet Utility" design system (design/CLAUDE.md)
+   "Quiet Utility" design system (Direction 1a).
    Mobile-first, single column. Paper / canvas / ink + clay accent.
+
+   TOKEN SOURCE OF TRUTH
+   ---------------------
+   The raw brand values (primitive tokens) live in ./tokens/*.css, exported
+   from Claude Design and mirrored under design/design-system/ for reference.
+   The @imports below load those primitives (--color-ink, --color-accent, …).
+   The :root block then maps them onto app-level SEMANTIC tokens
+   (--color-text, --color-primary, …) that the rest of this file uses.
+   To update the palette/type later, replace the token files — not this file.
 ═══════════════════════════════════════════════════════════════════ */
+
+/* Primitive tokens (must precede all style rules) */
+@import "tokens/colors.css";
+@import "tokens/typography.css";
+@import "tokens/spacing.css";
+@import "tokens/shadows.css";
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -12,29 +27,29 @@
 ─────────────────────────────────────────────────────────────── */
 :root {
   color-scheme: light;
-  /* Surfaces */
-  --color-bg:               #FCFBFA;  /* page background */
-  --color-paper:            #FCFBF9;  /* card bg (soft paper) */
-  --color-card:             #FFFFFF;  /* raised cards */
-  --color-canvas:           #F1EDE6;  /* neutral ground / segmented tracks */
+  /* Surfaces — mapped to primitive tokens (tokens/colors.css).
+     --color-paper and --color-canvas share their names with the primitives,
+     so they flow straight through from the import (no redefine needed). */
+  --color-bg:               var(--color-page-bg);     /* #FCFBFA page background */
+  --color-card:             var(--color-paper-raised); /* #FFFFFF raised cards */
 
-  /* Ink.  Muted + placeholder darkened from the original spec values
-     (#8A817A / #A79E93) to meet WCAG AA 4.5:1 for small text (IT-097). */
-  --color-text:             #292420;
-  --color-text-secondary:   #5F574F;
+  /* Ink.  Text/secondary map to primitives; muted + placeholder are kept
+     DARKER than the raw spec (#8A817A / #A79E93) to meet WCAG AA 4.5:1 for
+     small text (IT-097) — intentional app-level overrides, do not revert. */
+  --color-text:             var(--color-ink);          /* #292420 */
+  --color-text-secondary:   var(--color-secondary);    /* #5F574F */
   --color-text-muted:       #6E655C;
   --color-placeholder:      #7A7168;
 
   /* Accent — Clay */
-  --color-primary:          #C1552E;
-  --color-primary-hover:    #A84A28;
-  --color-primary-tint:     #FBF3EF;
-  --focus-ring:             0 0 0 3px rgba(193, 85, 46, .12);
+  --color-primary:          var(--color-accent);       /* #C1552E */
+  --color-primary-hover:    #A84A28;                   /* app-level hover (not in tokens) */
+  --color-primary-tint:     var(--color-accent-soft);  /* #FBF3EF */
+  --focus-ring:             0 0 0 3px var(--color-accent-ring);
 
-  /* Hairlines / borders */
-  --color-border:           #E7E1D9;  /* cards, inputs */
-  --color-border-tag:       #E0DAD2;  /* tag outlines */
-  --color-divider:          #EFEAE2;  /* section dividers */
+  /* Hairlines / borders.  --color-border-tag and --color-divider share names
+     with the primitives, so they flow straight through from the import. */
+  --color-border:           var(--color-border-card);  /* #E7E1D9 cards, inputs */
   --color-hover-border:     #D8CFC4;  /* interactive hover borders */
   --color-card-hover:       #DAD2C7;  /* card hover border */
   --color-icon-muted:       #B8AFA4;  /* chevrons, comment bubble outline */
@@ -48,18 +63,10 @@
   --color-table-mark-inner: #EAE4DC;  /* welcome mark inner ring */
   --color-on-primary:       #FFFFFF;  /* text on clay / avatar fills */
 
-  /* Status — Want to Try (blue) */
-  --status-try-bg:          #EDF1F5;
-  --status-try-text:        #3D5A78;
-  --status-try-dot:         #4B6B8A;
-  /* Status — Recommends (green) */
-  --status-rec-bg:          #EAF1EA;
-  --status-rec-text:        #3F6A44;
-  --status-rec-dot:         #5C7A4F;
-  /* Status — Hard Pass (red) */
-  --status-pass-bg:         #F5EBE8;
-  --status-pass-text:       #9E4234;
-  --status-pass-dot:        #B14A3C;
+  /* Status chips (Want to Try / Recommends / Hard Pass) share their names with
+     the primitives in tokens/colors.css, so all --status-* values flow straight
+     through from the import — no redefine needed here in light mode.
+     (The dark-mode block below overrides them with dark-ground equivalents.) */
 
   /* Semantic aliases used by existing components */
   --color-success:          var(--status-rec-text);
@@ -69,16 +76,14 @@
   --color-info:             var(--status-try-text);
   --color-info-tint:        var(--status-try-bg);
 
-  /* Rating stars */
-  --color-star:             #C1552E;
-  --color-star-empty:       #D8D2CA;
+  /* Rating stars — mapped to primitive tokens (tokens/colors.css) */
+  --color-star:             var(--rating-filled);  /* #C1552E */
+  --color-star-empty:       var(--rating-empty);   /* #D8D2CA */
 
-  /* Avatar palette (colored initials, white 700 text) */
-  --avatar-1:               #C1552E;
-  --avatar-2:               #4B6B8A;
-  --avatar-3:               #5C7A4F;
-  --avatar-4:               #9A6B3F;
-  --avatar-5:               #7A5C8A;
+  /* Avatar palette (colored initials, white 700 text).
+     --avatar-1..5 share their names with the primitives, so they flow
+     straight through from the import in light mode; the dark-mode block
+     redefines a few for a darker ground. */
 
   /* Overlay + shadows */
   --color-overlay:          rgba(41, 36, 32, 0.35);
