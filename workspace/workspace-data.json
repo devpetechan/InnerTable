@@ -2271,7 +2271,23 @@
       "goals": "Sticky top chrome for The List screen: header, status tabs, and List/Map controls row stay pinned while only the card grid scrolls beneath them (design handoff: design_handoff_sticky_list/).",
       "status": "released",
       "createdAt": "2026-07-11T00:00:00.000Z",
-      "releasedAt": "2026-07-11T00:00:00.000Z"
+      "releasedAt": "2026-07-11T00:00:00.000Z",
+      "releaseNotes": {
+        "generatedAt": "2026-07-11T13:30:20.071Z",
+        "releaseDate": "2026-07-11",
+        "sections": [
+          {
+            "heading": "✨ What's New",
+            "notes": [
+              {
+                "itemId": "IT-105",
+                "title": "[v0.3.3] The List — static top controls, scrolling cards",
+                "note": "[v0.3.3] The List — static top controls, scrolling cards is live — go check it out!"
+              }
+            ]
+          }
+        ]
+      }
     }
   ],
   "nextItemId": 106,
