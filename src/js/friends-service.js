@@ -82,13 +82,43 @@ async function loadFriends() {
       outgoingRequests.push(edge);
       _relationshipById[row.friend_id] = 'pending-out';
     } else if (row.status === 'blocked') {
+      blockedUsers.push(edge);
       _relationshipById[row.friend_id] = 'blocked';
     }
   }
 
   myFriends.sort((a, b) => a.profile.display_name.localeCompare(b.profile.display_name));
 
+  _updateHeaderBadge();
   renderFriendsScreen();
+  _subscribeFriendsRealtime();
+}
+
+
+// ── Realtime (Phase 3) ────────────────────────────
+// Subscribe once to changes on MY friendship edges.  The filter narrows
+// events to rows where user_id = me (matching the RLS SELECT policy), so a
+// new incoming request updates the badge without a refresh.  A debounce
+// collapses event bursts (e.g. the two-row pair updating) into one re-fetch.
+function _subscribeFriendsRealtime() {
+  if (_friendsChannel || !currentUser) return;
+  _friendsChannel = supabaseClient
+    .channel('inner-table-friendships')
+    .on('postgres_changes',
+      { event: '*', schema: 'public', table: 'friendships', filter: `user_id=eq.${currentUser.id}` },
+      () => {
+        clearTimeout(_friendsDebounce);
+        _friendsDebounce = setTimeout(loadFriends, 200);
+      })
+    .subscribe();
+}
+
+// Header badge = incoming pending requests (mirrors the Requests tab badge).
+function _updateHeaderBadge() {
+  const badge = document.getElementById('friends-btn-badge');
+  const n = incomingRequests.length;
+  badge.textContent = n;
+  badge.style.display = n > 0 ? '' : 'none';
 }
 
 
@@ -121,6 +151,18 @@ function removeFriend(targetId) {
 function blockUser(targetId) {
   if (!confirm('Block this user? They will not be able to send you requests.')) return;
   return _friendRpc('block_user', { p_target: targetId }, 'User blocked.');
+}
+function unblockUser(targetId) {
+  return _friendRpc('unblock_user', { p_target: targetId }, 'User unblocked.');
+}
+
+// Profile-page variants: perform the action, then leave the profile —
+// the person is no longer in the circle, so the page no longer applies.
+async function removeFriendFromProfile(targetId) {
+  if (await removeFriend(targetId)) hideFriendProfile();
+}
+async function blockUserFromProfile(targetId) {
+  if (await blockUser(targetId)) hideFriendProfile();
 }
 
 
@@ -191,6 +233,7 @@ function _rerenderSearchCtas() {
 // ══════════════════════════════════════════════════
 
 function switchFriendsTab(tab, el) {
+  hideFriendProfile();
   currentFriendsTab = tab;
   document.querySelectorAll('#friends-tabs .view-tab').forEach(t => {
     t.classList.toggle('active', t === el);
@@ -208,6 +251,12 @@ function switchFriendsTab(tab, el) {
 function renderFriendsScreen() {
   const section = document.getElementById('friends-section');
   if (!section || section.style.display === 'none') return;
+  // Keep an open profile fresh (realtime may have changed the friendship)
+  if (_profileUserId) {
+    const friend = myFriends.find(f => f.userId === _profileUserId);
+    if (friend) _renderFriendProfile(friend);
+    else hideFriendProfile(); // unfriended/blocked while viewing
+  }
   _renderMyFriends();
   _renderRequests();
   _updateRequestsBadge();
@@ -244,25 +293,119 @@ function _entryCountFor(userId) {
 // ── My Friends tab ────────────────────────────────
 function _renderMyFriends() {
   const el = document.getElementById('my-friends-list');
+
+  // Blocked users (managed here so a block is always reversible in the UI)
+  const blockedHtml = !blockedUsers.length ? '' : `
+    <div class="friends-subheading">Blocked</div>
+    ${blockedUsers.map(b => `
+      <div class="friend-card">
+        ${_friendAvatarHtml(b.profile)}
+        ${_friendIdentityHtml(b.profile)}
+        <button class="friend-cta ghost" onclick="unblockUser('${b.userId}')">Unblock</button>
+      </div>`).join('')}`;
+
   if (!myFriends.length) {
     el.innerHTML = `
       <div class="friends-empty">
         <p>No friends yet.</p>
         <p class="friends-empty-hint">Find people you know by handle or email, and their notes will join your circle.</p>
         <button class="btn-inline-primary" onclick="switchFriendsTab('find', document.querySelector('[data-ftab=find]'))">Find friends</button>
-      </div>`;
+      </div>` + blockedHtml;
     return;
   }
+
   el.innerHTML = myFriends.map(f => {
     const places = _entryCountFor(f.userId);
     return `
-      <div class="friend-card">
+      <div class="friend-card clickable" onclick="showFriendProfile('${f.userId}')" role="button" tabindex="0">
         ${_friendAvatarHtml(f.profile)}
         ${_friendIdentityHtml(f.profile)}
         <span class="friend-meta">${places} place${places === 1 ? '' : 's'}</span>
-        <button class="friend-cta ghost" onclick="removeFriend('${f.userId}')">Remove</button>
+        <span class="friend-chev" aria-hidden="true">›</span>
       </div>`;
-  }).join('');
+  }).join('') + blockedHtml;
+}
+
+
+// ── Friend profile (Phase 3) ──────────────────────
+// Swaps the tab panels out for a single friend's page: identity, bio,
+// stats, and their places (from the already-loaded allPlaces cache — after
+// the Phase 4 privacy migration, RLS trims what lands in that cache, so
+// this page automatically only shows what you're allowed to see).
+function showFriendProfile(userId) {
+  const friend = myFriends.find(f => f.userId === userId);
+  if (!friend) return;
+  _profileUserId = userId;
+
+  document.getElementById('friends-tabs').style.display = 'none';
+  document.querySelectorAll('.ftab-panel').forEach(p => p.style.display = 'none');
+  document.getElementById('friend-profile').style.display = 'block';
+  _renderFriendProfile(friend);
+}
+
+function hideFriendProfile() {
+  if (!_profileUserId) return;
+  _profileUserId = null;
+  document.getElementById('friend-profile').style.display = 'none';
+  document.getElementById('friends-tabs').style.display = '';
+  document.getElementById('ftab-friends').style.display  = currentFriendsTab === 'friends'  ? 'block' : 'none';
+  document.getElementById('ftab-requests').style.display = currentFriendsTab === 'requests' ? 'block' : 'none';
+  document.getElementById('ftab-find').style.display     = currentFriendsTab === 'find'     ? 'block' : 'none';
+}
+
+function _renderFriendProfile(friend) {
+  const p  = friend.profile;
+  const el = document.getElementById('friend-profile');
+
+  // Their places, newest take first
+  const theirPlaces = [];
+  for (const place of Object.values(allPlaces)) {
+    const take = place.takes.find(t => t.userId === friend.userId);
+    if (take) theirPlaces.push({ place, take });
+  }
+  theirPlaces.sort((a, b) => b.take.ts - a.take.ts);
+
+  const lastActive = theirPlaces.length
+    ? new Date(theirPlaces[0].take.ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+    : null;
+
+  const chipFor = (status) =>
+    status === 'want-to-go'     ? '<span class="chip chip-try"><span class="chip-dot"></span>Want to Try</span>'
+    : status === 'been-skip'    ? '<span class="chip chip-pass"><span class="chip-dot"></span>Hard Pass</span>'
+    :                             '<span class="chip chip-rec"><span class="chip-dot"></span>Recommends</span>';
+
+  el.innerHTML = `
+    <button class="profile-back" onclick="hideFriendProfile()">‹ Friends</button>
+
+    <div class="profile-head">
+      ${_friendAvatarHtml(p).replace('friend-avatar', 'friend-avatar profile-avatar')}
+      <div class="profile-identity">
+        <div class="profile-name">${esc(p.display_name)}</div>
+        ${p.handle ? `<div class="friend-handle">@${esc(p.handle)}</div>` : ''}
+      </div>
+    </div>
+    ${p.bio ? `<p class="profile-bio">${esc(p.bio)}</p>` : ''}
+    <div class="profile-stats">
+      <span>${theirPlaces.length} place${theirPlaces.length === 1 ? '' : 's'}</span>
+      ${lastActive ? `<span>· Last added ${esc(lastActive)}</span>` : ''}
+    </div>
+
+    <div class="profile-actions">
+      <button class="friend-cta ghost" onclick="removeFriendFromProfile('${friend.userId}')">Remove friend</button>
+      <button class="friend-cta ghost danger" onclick="blockUserFromProfile('${friend.userId}')">Block</button>
+    </div>
+
+    <div class="friends-subheading">Their places</div>
+    ${theirPlaces.length ? theirPlaces.map(({ place, take }) => `
+      <div class="friend-card clickable" onclick="openPlaceDetail('${place.id}')" role="button" tabindex="0">
+        <div class="friend-identity">
+          <div class="friend-name">${esc(place.name)}</div>
+          ${place.location ? `<div class="friend-handle">${esc(place.location)}</div>` : ''}
+        </div>
+        ${take.rating > 0 ? `<span class="friend-meta">★ ${take.rating}</span>` : ''}
+        ${chipFor(take.status)}
+      </div>`).join('')
+    : '<div class="friends-empty-line">No places yet.</div>'}`;
 }
 
 // ── Requests tab (incoming + outgoing) ───────────

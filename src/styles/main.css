@@ -2149,3 +2149,47 @@ a.tag:hover { color: var(--color-primary); border-color: var(--color-primary); b
   cursor: pointer;
 }
 .btn-inline-primary:hover { background: var(--color-primary-hover); }
+
+/* Clickable rows (My Friends → profile; profile → place detail) */
+.friend-card.clickable { cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+.friend-card.clickable:hover { border-color: var(--color-primary); }
+.friend-chev { color: var(--color-text-muted); font-size: 1.1rem; line-height: 1; }
+
+/* Friend profile (Phase 3) */
+.profile-back {
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font-size: .86rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0 0 var(--sp-3);
+}
+.profile-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-2);
+}
+.profile-avatar { width: 56px; height: 56px; font-size: 1.1rem; }
+.profile-name { font-size: 1.2rem; font-weight: 700; color: var(--color-text); }
+.profile-bio {
+  font-size: .88rem;
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--sp-2);
+}
+.profile-stats {
+  display: flex;
+  gap: 6px;
+  font-size: .78rem;
+  color: var(--color-text-muted);
+  margin-bottom: var(--sp-3);
+}
+.profile-actions {
+  display: flex;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+.friend-cta.ghost.danger { color: var(--color-danger); }
+.friend-cta.ghost.danger:hover { border-color: var(--color-danger); }
