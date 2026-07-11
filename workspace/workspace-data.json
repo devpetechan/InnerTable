@@ -2227,7 +2227,7 @@
       "name": "Friend Circles (Ego-Network)",
       "targetDate": "",
       "goals": "Add directional friendships, invite flow, and circle-scoped candor: notes/comments visible to accepted friends only via RLS, ratings member-visible as trust-engine signal, and My Circle / Just Mine / Everyone feed lenses. Includes place tags.",
-      "status": "planning",
+      "status": "active",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
     {
