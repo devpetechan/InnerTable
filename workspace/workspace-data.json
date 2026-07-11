@@ -2269,8 +2269,9 @@
       "name": "List Screen Layout Polish",
       "targetDate": "",
       "goals": "Sticky top chrome for The List screen: header, status tabs, and List/Map controls row stay pinned while only the card grid scrolls beneath them (design handoff: design_handoff_sticky_list/).",
-      "status": "planning",
-      "createdAt": "2026-07-11T00:00:00.000Z"
+      "status": "released",
+      "createdAt": "2026-07-11T00:00:00.000Z",
+      "releasedAt": "2026-07-11T00:00:00.000Z"
     }
   ],
   "nextItemId": 106,
