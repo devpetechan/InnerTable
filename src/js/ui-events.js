@@ -14,6 +14,21 @@ document.addEventListener('DOMContentLoaded', function () {
   document.querySelector('.user-chip')
     .addEventListener('click', signOut);
 
+  // ── Friends screen (v0.4.0) ───────────────────────
+  document.getElementById('friends-btn')
+    .addEventListener('click', showFriendsScreen);
+
+  // Subview tabs (event delegation — data-ftab attr)
+  document.getElementById('friends-tabs')
+    .addEventListener('click', e => {
+      const tab = e.target.closest('.view-tab');
+      if (tab) switchFriendsTab(tab.dataset.ftab, tab);
+    });
+
+  // Debounced friend search
+  document.getElementById('friend-search-input')
+    .addEventListener('input', onFriendSearchInput);
+
   // ── Segmented status control (event delegation — data-view attr) ─
   document.querySelector('.view-tabs')
     .addEventListener('click', e => {

@@ -44,10 +44,16 @@
     <header>
       <div class="header-inner">
         <div class="header-logo" title="Home">Inner Table</div>
+        <div class="header-actions">
+          <button class="friends-btn" id="friends-btn" title="Friends" aria-label="Friends">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span class="friends-btn-badge" id="friends-btn-badge" style="display:none">0</span>
+          </button>
         <button class="user-chip" title="Sign out">
           <div class="avatar" id="header-avatar">?</div>
           <span id="header-name" class="sr-only">You</span>
         </button>
+        </div>
       </div>
     </header>
 
@@ -116,6 +122,34 @@
     <div id="map-container">
       <div id="map-view"></div>
       <div id="map-no-coords">No map locations for current filters</div>
+    </div>
+
+  </main>
+
+  <!-- ── FRIENDS SCREEN (v0.4.0 Phase 2 · REL-11) ──
+       Replaces the list region while open; the header stays. -->
+  <main id="friends-section" style="display:none">
+
+    <div class="view-tabs" id="friends-tabs" role="tablist" aria-label="Friends sections">
+      <button class="view-tab active" data-ftab="friends"  role="tab" aria-selected="true">My Friends</button>
+      <button class="view-tab"        data-ftab="requests" role="tab" aria-selected="false">Requests <span class="count-badge" id="requests-badge" style="display:none">0</span></button>
+      <button class="view-tab"        data-ftab="find"     role="tab" aria-selected="false">Find</button>
+    </div>
+
+    <div class="ftab-panel" id="ftab-friends">
+      <div id="my-friends-list"></div>
+    </div>
+
+    <div class="ftab-panel" id="ftab-requests" style="display:none">
+      <div id="requests-lists"></div>
+    </div>
+
+    <div class="ftab-panel" id="ftab-find" style="display:none">
+      <input class="form-input" id="friend-search-input" type="text"
+             placeholder="Search by name or handle, or enter an exact email…"
+             maxlength="120" autocomplete="off" />
+      <div class="flow-hint">Email search needs the exact address and only finds people who have allowed it.</div>
+      <div id="friend-search-results"></div>
     </div>
 
   </main>
@@ -319,6 +353,7 @@
 <script src="src/js/auth.js"></script>
 <script src="src/js/external-aggregates.js"></script>
 <script src="src/js/places-service.js"></script>
+<script src="src/js/friends-service.js"></script>
 <script src="src/js/ui-render.js"></script>
 <script src="src/js/map.js"></script>
 <script src="src/js/ui-events.js"></script>

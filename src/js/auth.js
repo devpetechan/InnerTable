@@ -91,6 +91,7 @@ function showApp() {
 
   goHome();
   loadPlaces();
+  loadFriends(); // v0.4.0 — friendship edges for the Friends screen
 }
 
 function signOut() {
