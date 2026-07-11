@@ -2067,7 +2067,48 @@
       "goals": "Clean up of workflows",
       "status": "released",
       "createdAt": "2026-04-10T19:11:01.964Z",
-      "releasedAt": "2026-04-11T08:17:13.904Z"
+      "releasedAt": "2026-04-11T08:17:13.904Z",
+      "releaseNotes": {
+        "generatedAt": "2026-07-11T13:30:37.961Z",
+        "releaseDate": "2026-04-11",
+        "sections": [
+          {
+            "heading": "✨ What's New",
+            "notes": [
+              {
+                "itemId": "IT-002",
+                "title": "Remove the filter by user",
+                "note": "Remove the filter by user is live — go check it out!"
+              },
+              {
+                "itemId": "IT-005",
+                "title": "Allow Reactions on comments",
+                "note": "You can now allow Reactions on comments. Life just got a little easier."
+              },
+              {
+                "itemId": "IT-006",
+                "title": "Support link to Maps",
+                "note": "We added support link to Maps because you deserve nice things."
+              }
+            ]
+          },
+          {
+            "heading": "🐛 Bug Fixes",
+            "notes": [
+              {
+                "itemId": "IT-003",
+                "title": "Remove duplicate \"Add Place\" options on Landing Page",
+                "note": "Fixed: Remove duplicate \"Add Place\" options on Landing Page. You're welcome. 🐛"
+              },
+              {
+                "itemId": "IT-004",
+                "title": "Replace Gulf of America with Gulf of Mexico",
+                "note": "We hunted down the Replace Gulf of America with Gulf of Mexico bug and sent it packing."
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "REL-4",
