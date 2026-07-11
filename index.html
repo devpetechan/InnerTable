@@ -38,22 +38,20 @@
 
 <!-- ═══════════════ APP ═══════════════ -->
 <div id="app">
-  <header>
-    <div class="header-inner">
-      <div class="header-logo" title="Home">Inner Table</div>
-      <button class="user-chip" title="Sign out">
-        <div class="avatar" id="header-avatar">?</div>
-        <span id="header-name" class="sr-only">You</span>
-      </button>
-    </div>
-  </header>
+  <!-- ── STATIC TOP (IT-105) — header + status tabs + controls row stay
+       pinned; only the card list below scrolls. ── -->
+  <div id="list-top">
+    <header>
+      <div class="header-inner">
+        <div class="header-logo" title="Home">Inner Table</div>
+        <button class="user-chip" title="Sign out">
+          <div class="avatar" id="header-avatar">?</div>
+          <span id="header-name" class="sr-only">You</span>
+        </button>
+      </div>
+    </header>
 
-  <main>
-
-    <!-- ── LIST + MAP SECTION (IT-086 · "2a + Map toggle") ──
-         The List is the landing screen (IT-093); the old Home hero's
-         guidance lives on in the list's first-run empty state. -->
-    <div id="list-map-section">
+    <div class="list-controls">
 
       <!-- Full-width segmented status control -->
       <div class="view-tabs" role="tablist" aria-label="Filter by status">
@@ -101,18 +99,25 @@
         </div>
       </div>
 
-      <!-- List view -->
-      <div id="cards-container">
-        <div class="loading-spinner">Loading…</div>
-      </div>
-
-      <!-- Map view -->
-      <div id="map-container">
-        <div id="map-view"></div>
-        <div id="map-no-coords">No map locations for current filters</div>
-      </div>
-
     </div>
+  </div>
+
+  <!-- ── SCROLLING LIST + MAP SECTION (IT-086 · "2a + Map toggle"; IT-105) ──
+       The List is the landing screen (IT-093); the old Home hero's
+       guidance lives on in the list's first-run empty state. -->
+  <main id="list-map-section">
+
+    <!-- List view -->
+    <div id="cards-container">
+      <div class="loading-spinner">Loading…</div>
+    </div>
+
+    <!-- Map view -->
+    <div id="map-container">
+      <div id="map-view"></div>
+      <div id="map-no-coords">No map locations for current filters</div>
+    </div>
+
   </main>
 
   <button class="fab" id="add-place-fab" style="display:none"><span>+</span>Add a place</button>

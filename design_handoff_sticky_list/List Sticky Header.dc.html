@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/innertable-design-system-2e4e18ae-af06-460e-adb0-c0bf5215fbfc/tokens/colors.css">
+<link rel="stylesheet" href="_ds/innertable-design-system-2e4e18ae-af06-460e-adb0-c0bf5215fbfc/tokens/typography.css">
+<link rel="stylesheet" href="_ds/innertable-design-system-2e4e18ae-af06-460e-adb0-c0bf5215fbfc/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/innertable-design-system-2e4e18ae-af06-460e-adb0-c0bf5215fbfc/tokens/radius.css">
+<link rel="stylesheet" href="_ds/innertable-design-system-2e4e18ae-af06-460e-adb0-c0bf5215fbfc/tokens/shadows.css">
+<link rel="stylesheet" href="_ds/innertable-design-system-2e4e18ae-af06-460e-adb0-c0bf5215fbfc/tokens/base.css">
+<link rel="stylesheet" href="_ds/innertable-design-system-2e4e18ae-af06-460e-adb0-c0bf5215fbfc/styles.css">
+<script src="_ds/innertable-design-system-2e4e18ae-af06-460e-adb0-c0bf5215fbfc/_ds_bundle.js"></script>
+<style>
+  html, body { margin: 0; background: #ddd6cb; }
+</style>
+</helmet>
+
+<div style="min-height: 100vh; background: #ddd6cb; font-family: var(--font-ui); display: flex; align-items: flex-start; justify-content: center; padding: 40px 20px; box-sizing: border-box;">
+
+  <div style="width: 390px; height: 760px; background: var(--color-bg); border-radius: 32px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.25); border: 8px solid #1B1815; display: flex; flex-direction: column; position: relative;">
+
+    <!-- ─── STATIC TOP ─── -->
+    <div style="flex-shrink: 0; background: var(--color-bg); border-bottom: 1px solid var(--color-divider); box-shadow: 0 6px 14px -10px rgba(0,0,0,.25); z-index: 5;">
+      <div style="padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;">
+        <div style="font-size: 1.25rem; font-weight: 800; color: var(--color-text); letter-spacing: -0.02em;">Inner Table</div>
+        <x-import component-from-global-scope="InnerTableDesignSystem_2e4e18.Avatar" name="You" size="default" hint-size="34px,34px"></x-import>
+      </div>
+      <div style="padding: 0 20px 12px; display: flex; flex-direction: column; gap: 10px;">
+        <x-import component-from-global-scope="InnerTableDesignSystem_2e4e18.SegmentedControl" variant="track" value="{{ view }}" onChange="{{ setView }}" options="{{ viewOptions }}" hint-size="100%,40px"></x-import>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+          <x-import component-from-global-scope="InnerTableDesignSystem_2e4e18.SegmentedControl" variant="track" full-width="{{ false }}" value="{{ mode }}" onChange="{{ setMode }}" options="{{ modeOptions }}" hint-size="120px,40px"></x-import>
+          <span style="flex: 1; text-align: center; font-family: var(--font-mono); font-size: .65rem; letter-spacing: .14em; text-transform: uppercase; color: var(--color-text-muted); font-weight: 600;">Places <span style="background: var(--color-canvas); border-radius: 999px; padding: 2px 9px; font-family: var(--font-ui); letter-spacing: 0; font-weight: 700; font-size: .68rem;">{{ count }}</span></span>
+          <button onClick="{{ toggleFilters }}" style="display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--color-border-tag); background: var(--color-card); color: var(--color-text-secondary); font-family: inherit; font-weight: 600; font-size: .8rem; padding: 7px 13px; border-radius: 9px; cursor: pointer; min-height: 34px; white-space: nowrap;">≡ Filter</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SCROLLING CARDS ─── -->
+    <div style="flex: 1; overflow-y: auto; padding: 16px 20px 120px;">
+      <div style="display: grid; grid-template-columns: minmax(0,1fr); gap: 12px;">
+        <sc-for list="{{ places }}" as="p" hint-placeholder-count="3">
+          <x-import component-from-global-scope="InnerTableDesignSystem_2e4e18.PlaceCard" dc-props="{{ p }}" hint-size="100%,180px"></x-import>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="position: absolute; right: 18px; bottom: 20px; z-index: 6;">
+      <x-import component-from-global-scope="InnerTableDesignSystem_2e4e18.Fab" hint-size="150px,48px"></x-import>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { view: 'all', mode: 'list', filtersOpen: false };
+
+  renderVals() {
+    const ALL = [
+      {
+        name: 'Rintaro', meta: 'Restaurant · Japanese · $$$ · Mission District',
+        status: 'rec', signalNames: ['Sam', 'Ana', 'Jordan'], signalText: 'Sam, Ana +2 recommend', rating: 4.6,
+        topTake: { author: 'Sam', rating: 5, note: 'Get the nasu dengaku, worth the wait. Sit at the counter if you can.' },
+        footerVariant: 'outline', commentsCount: 1,
+      },
+      {
+        name: 'Bar Part Time', meta: 'Bar · Cocktail Bar · $$ · Hayes Valley',
+        status: 'try', signalNames: ['Jordan'], signalText: 'Jordan wants to try', rating: 4.3, ratingGoogle: true,
+        topTake: null, footerVariant: 'filled', footerLabel: "I've been — add a take", commentsCount: 0,
+      },
+      {
+        name: 'La Taqueria', meta: 'Restaurant · Mexican · $ · Mission District',
+        status: 'mixed', signalNames: ['Ana', 'Riley'], signalText: '1 recommend · 1 passed', rating: 3.8,
+        topTake: { author: 'Riley', verdict: 'pass', note: 'Line was an hour, not worth it for a burrito.' },
+        footerVariant: 'outline', commentsCount: 0,
+      },
+      {
+        name: 'Tartine Manufactory', meta: 'Restaurant · Bakery · $$ · Mission District',
+        status: 'rec', signalNames: ['Ana', 'Sam'], signalText: 'Ana, Sam recommend', rating: 4.4,
+        topTake: { author: 'Ana', rating: 4, note: 'Morning bun + coffee, get there before 10.' },
+        footerVariant: 'outline', commentsCount: 2,
+      },
+      {
+        name: 'Trick Dog', meta: 'Bar · Cocktail Bar · $$ · Mission District',
+        status: 'try', signalNames: ['Riley'], signalText: 'Riley wants to try', rating: 4.5, ratingGoogle: true,
+        topTake: null, footerVariant: 'filled', footerLabel: "I've been — add a take", commentsCount: 0,
+      },
+    ];
+
+    const view = this.state.view;
+    const places = ALL.filter((p) => {
+      if (view === 'all') return true;
+      if (view === 'try') return p.status === 'try' || p.status === 'mixed';
+      if (view === 'rec') return p.status === 'rec' || p.status === 'mixed';
+      return true;
+    });
+
+    return {
+      view,
+      mode: this.state.mode,
+      places,
+      count: places.length,
+      viewOptions: [
+        { value: 'all', label: 'All' }, { value: 'try', label: 'Want to Try' }, { value: 'rec', label: 'Recommended' },
+      ],
+      modeOptions: [{ value: 'list', label: 'List' }, { value: 'map', label: 'Map' }],
+      setView: (v) => this.setState({ view: v }),
+      setMode: (m) => this.setState({ mode: m }),
+      toggleFilters: () => this.setState((s) => ({ filtersOpen: !s.filtersOpen })),
+    };
+  }
+}
+</script>
+</body>
+</html>

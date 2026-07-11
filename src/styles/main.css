@@ -343,16 +343,18 @@ body {
 
 /* ═══════════════════════════════════════════════════════════════
    APP SHELL — header: wordmark + avatar (IT-086 · "2a")
+   #app is the fixed-height screen: a static top region (header + tabs +
+   controls) stacked over a scrolling list region (IT-105).
 ═══════════════════════════════════════════════════════════════ */
-#app { display: none; }
-
-header {
-  background: var(--color-bg);
-  border-bottom: 1px solid var(--color-divider);
-  position: sticky;
-  top: 0;
-  z-index: 100;
+#app {
+  display: none; /* toggled to 'flex' once signed in (auth.js) */
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
 }
+
+header { background: var(--color-bg); }
 .header-inner {
   max-width: 860px;
   margin: 0 auto;
@@ -399,15 +401,35 @@ header {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   MAIN LAYOUT
+   STATIC TOP REGION — header + status tabs + controls row (IT-105).
+   Pinned above the scrolling card list; never moves while cards scroll.
 ═══════════════════════════════════════════════════════════════ */
-main { max-width: 860px; margin: 0 auto; padding: 20px var(--sp-5) 120px; }
+#list-top {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 5;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-divider);
+  box-shadow: 0 6px 14px -10px rgba(0,0,0,.25);
+}
+
+.list-controls { max-width: 860px; margin: 0 auto; padding: 20px var(--sp-5) 0; }
 
 /* ═══════════════════════════════════════════════════════════════
-   LIST CONTROLS (IT-086 · "2a + Map toggle")
+   LIST + MAP SECTION (IT-086 · "2a + Map toggle") — the scrolling
+   region beneath the static top (IT-105).
    (Home hero removed in IT-093 — The List is the landing screen.)
 ═══════════════════════════════════════════════════════════════ */
-#list-map-section { display: none; min-width: 0; }
+#list-map-section {
+  display: none; /* toggled to 'block' once places are ready (app.js) */
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  max-width: 860px;
+  margin: 0 auto;
+  width: 100%;
+  padding: var(--sp-4) var(--sp-5) 120px;
+}
 
 #cards-container { min-width: 0; overflow-x: clip; }
 
@@ -1947,7 +1969,8 @@ a.tag:hover { color: var(--color-primary); border-color: var(--color-primary); b
   .filter-bar::-webkit-scrollbar { display: none; }
   .filter-chip { white-space: nowrap; flex-shrink: 0; font-size: .74rem; padding: 4px 10px; min-height: 30px; }
 
-  main { padding: var(--sp-4) var(--sp-4) 110px; }
+  .list-controls { padding: var(--sp-4) var(--sp-4) 0; }
+  #list-map-section { padding: var(--sp-4) var(--sp-4) 110px; }
   .header-inner { padding: var(--sp-3) var(--sp-4); }
   .header-logo { font-size: 1.15rem; }
   .pc-name { font-size: 1rem; }

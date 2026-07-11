@@ -79,7 +79,7 @@ async function buildCurrentUser(user) {
 
 function showApp() {
   document.getElementById('welcome-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
+  document.getElementById('app').style.display = 'flex';
 
   const avatarEl = document.getElementById('header-avatar');
   if (currentUser.avatar_url) {
