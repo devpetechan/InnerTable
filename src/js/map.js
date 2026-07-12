@@ -93,9 +93,10 @@ function renderMapMarkers() {
     }));
   }
 
-  // Type filter
+  // Type filter — tags first, place_type fallback (same as list view)
   if (currentTypeFilter !== 'all') {
-    places = places.filter(p => p.placeType === currentTypeFilter);
+    places = places.filter(p =>
+      (p.tags && p.tags[currentTypeFilter]) || p.placeType === currentTypeFilter);
   }
 
   // Lens filter (same as list view, v0.4.0): circle / mine / all

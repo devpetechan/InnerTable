@@ -2193,3 +2193,114 @@ a.tag:hover { color: var(--color-primary); border-color: var(--color-primary); b
 }
 .friend-cta.ghost.danger { color: var(--color-danger); }
 .friend-cta.ghost.danger:hover { border-color: var(--color-danger); }
+
+/* ═══════════════════════════════════════════════════════════════
+   USER TAGS (v0.4.0 Phase 6 — multi-author place tags)
+═══════════════════════════════════════════════════════════════ */
+.user-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin: 6px 0 var(--sp-2);
+}
+.tag.user-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--color-canvas);
+}
+.tag.user-tag.mine {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-primary-tint);
+}
+.tag-count {
+  font-size: .64rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+.tag-remove {
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: .8rem;
+  line-height: 1;
+  padding: 0 0 0 2px;
+  cursor: pointer;
+  opacity: .7;
+}
+.tag-remove:hover { opacity: 1; }
+.tag.tag-add { padding: 0; background: transparent; border-style: dashed; }
+.tag-add-input {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: .72rem;
+  color: var(--color-text-secondary);
+  padding: 3px 8px;
+  width: 64px;
+  outline: none;
+}
+.tag-add-input:focus { width: 110px; color: var(--color-text); }
+
+/* ═══════════════════════════════════════════════════════════════
+   ACCOUNT MENU + PROFILE SETTINGS (IT-106)
+═══════════════════════════════════════════════════════════════ */
+.header-actions { position: relative; }
+.user-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 40;
+  background: var(--color-paper-raised, var(--color-card));
+  border: 1px solid var(--color-border-card);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px -8px rgba(0,0,0,.25);
+  min-width: 170px;
+  padding: 4px;
+}
+.user-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: .84rem;
+  font-weight: 500;
+  color: var(--color-text);
+  padding: 9px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.user-menu button:hover { background: var(--color-canvas); }
+
+.settings-modal { max-width: 420px; }
+.settings-body { padding: var(--sp-2) var(--sp-5) var(--sp-5); }
+.settings-body .btn-submit { margin-top: var(--sp-2); }
+.settings-error {
+  color: var(--color-danger);
+  font-size: .78rem;
+  margin-top: 6px;
+  min-height: 1em;
+}
+.settings-toggle-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  cursor: pointer;
+  font-size: .88rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+.settings-toggle-row .flow-hint { display: block; margin-top: 2px; }
+.settings-toggle-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--color-primary);
+  flex-shrink: 0;
+  cursor: pointer;
+}

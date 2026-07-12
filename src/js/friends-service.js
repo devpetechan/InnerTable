@@ -447,6 +447,86 @@ function _updateRequestsBadge() {
   badge.style.display = n > 0 ? '' : 'none';
 }
 
+// ══════════════════════════════════════════════════
+//  PROFILE SETTINGS (IT-106) — handle, bio, email-lookup opt-in
+//  Writes the signed-in user's own public.users row (0001 RLS allows
+//  updating only your own).  Handle uniqueness is enforced by the DB's
+//  UNIQUE constraint — a 23505 error surfaces as an inline message.
+// ══════════════════════════════════════════════════
+
+function toggleUserMenu() {
+  const menu = document.getElementById('user-menu');
+  const opening = menu.style.display === 'none';
+  menu.style.display = opening ? 'block' : 'none';
+  if (opening) {
+    const close = (e) => {
+      if (!e.target.closest('.header-actions')) {
+        menu.style.display = 'none';
+        document.removeEventListener('mousedown', close);
+      }
+    };
+    setTimeout(() => document.addEventListener('mousedown', close), 0);
+  }
+}
+
+async function openProfileSettings() {
+  document.getElementById('user-menu').style.display = 'none';
+  document.getElementById('s-handle-error').textContent = '';
+
+  const { data, error } = await supabaseClient
+    .from('users')
+    .select('handle, bio, allow_email_lookup')
+    .eq('id', currentUser.id)
+    .single();
+  if (error) { console.error('[openProfileSettings]', error); showToast('Could not load your profile.'); return; }
+
+  document.getElementById('s-handle').value          = data.handle || '';
+  document.getElementById('s-bio').value             = data.bio    || '';
+  document.getElementById('s-email-lookup').checked  = !!data.allow_email_lookup;
+  document.getElementById('settings-overlay').classList.add('open');
+}
+
+function closeProfileSettings() {
+  document.getElementById('settings-overlay').classList.remove('open');
+}
+
+async function saveProfileSettings() {
+  const errEl  = document.getElementById('s-handle-error');
+  const btn    = document.getElementById('settings-save');
+  errEl.textContent = '';
+
+  const rawHandle = document.getElementById('s-handle').value.trim().toLowerCase();
+  if (rawHandle && !/^[a-z0-9_-]{3,20}$/.test(rawHandle)) {
+    errEl.textContent = 'Handles are 3–20 characters: lowercase letters, numbers, - and _.';
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const { error } = await supabaseClient
+    .from('users')
+    .update({
+      handle:             rawHandle || null,
+      bio:                document.getElementById('s-bio').value.trim() || null,
+      allow_email_lookup: document.getElementById('s-email-lookup').checked
+    })
+    .eq('id', currentUser.id);
+  btn.disabled = false; btn.textContent = 'Save';
+
+  if (error) {
+    if (error.code === '23505') {
+      errEl.textContent = 'That handle is taken — try another.';
+    } else {
+      console.error('[saveProfileSettings]', error);
+      showToast('Could not save your profile.');
+    }
+    return;
+  }
+
+  showToast('Profile saved.');
+  closeProfileSettings();
+}
+
+
 // ── Find tab results ──────────────────────────────
 function _searchCtaHtml(userId) {
   switch (_relationshipById[userId]) {
