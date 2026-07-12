@@ -390,7 +390,10 @@ async function submitEntry() {
   showToast(toastMsg);
   closeModal();
   btn.disabled = false;
-  // Realtime triggers the re-fetch + re-render.
+  // Refresh explicitly — never rely on realtime for your OWN write (IT-107).
+  // Realtime covers OTHER users' changes (publication fixed in 0020); your
+  // own submit should reflect immediately and unconditionally.
+  await loadPlaces();
 }
 
 
@@ -498,5 +501,6 @@ async function deleteEntry(entryId) {
   const { error } = await supabaseClient.from('entries').delete().eq('id', entryId);
   if (error) { console.error(error); showToast('Could not delete.'); return; }
   showToast('Your take was deleted.');
+  await loadPlaces(); // explicit refresh — own writes never wait on realtime (IT-107)
 }
 

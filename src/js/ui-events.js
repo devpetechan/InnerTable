@@ -172,6 +172,9 @@ document.addEventListener('DOMContentLoaded', function () {
   document.querySelector('#place-detail-panel .btn-close')
     .addEventListener('click', closeDetailPanel);
 
+  // ── Pull-to-refresh on the list (IT-108) ──────────
+  initPullToRefresh();
+
   // ── @-mention autocomplete (IT-035 Phase 5) ───────
   // Comment textareas are re-created on every render, so we use one
   // DELEGATED listener plus a single shared dropdown element, instead of
@@ -179,6 +182,59 @@ document.addEventListener('DOMContentLoaded', function () {
   initMentionAutocomplete();
 
 });
+
+// ══════════════════════════════════════════════════
+//  PULL-TO-REFRESH (IT-108)
+//  Touch-only gesture on the scrolling list region: pull down while at the
+//  top → past the threshold → explicit loadPlaces().  Listeners are passive
+//  (we never block native scrolling); the indicator grows with resistance
+//  (0.6×) so the pull feels physical.  Desktop users are covered by
+//  realtime (0020) + explicit post-write refreshes (IT-107).
+// ══════════════════════════════════════════════════
+function initPullToRefresh() {
+  const container = document.getElementById('list-map-section');
+
+  const indicator = document.createElement('div');
+  indicator.className = 'ptr-indicator';
+  indicator.innerHTML = '<span class="ptr-arrow" aria-hidden="true">↓</span><span class="ptr-label">Pull to refresh</span>';
+  container.prepend(indicator);
+  const label = indicator.querySelector('.ptr-label');
+
+  const THRESHOLD = 80;   // px of pull that arms the refresh
+  let startY = null, dist = 0, refreshing = false;
+
+  container.addEventListener('touchstart', (e) => {
+    // Only arm when the list is scrolled to the very top, in list mode.
+    startY = (!refreshing && container.scrollTop <= 0 && currentDisplayMode === 'list')
+      ? e.touches[0].clientY : null;
+    dist = 0;
+  }, { passive: true });
+
+  container.addEventListener('touchmove', (e) => {
+    if (startY === null) return;
+    dist = e.touches[0].clientY - startY;
+    if (dist > 8 && container.scrollTop <= 0) {
+      indicator.style.height = Math.min(dist * 0.6, 66) + 'px';
+      const armed = dist > THRESHOLD;
+      indicator.classList.toggle('armed', armed);
+      label.textContent = armed ? 'Release to refresh' : 'Pull to refresh';
+    }
+  }, { passive: true });
+
+  container.addEventListener('touchend', async () => {
+    const shouldRefresh = startY !== null && dist > THRESHOLD && !refreshing;
+    startY = null;
+    if (shouldRefresh) {
+      refreshing = true;
+      indicator.classList.add('loading');
+      label.textContent = 'Refreshing…';
+      try { await loadPlaces(); } finally { refreshing = false; }
+    }
+    indicator.style.height = '0';
+    indicator.classList.remove('armed', 'loading');
+    setTimeout(() => { label.textContent = 'Pull to refresh'; }, 300);
+  });
+}
 
 function initMentionAutocomplete() {
   const dropdown = document.createElement('ul');

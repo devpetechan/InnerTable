@@ -2304,3 +2304,27 @@ a.tag:hover { color: var(--color-primary); border-color: var(--color-primary); b
   flex-shrink: 0;
   cursor: pointer;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   PULL-TO-REFRESH (IT-108)
+═══════════════════════════════════════════════════════════════ */
+.ptr-indicator {
+  height: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+  padding-bottom: 0;
+  font-size: .74rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  transition: height .15s ease-out;
+}
+.ptr-indicator .ptr-arrow {
+  display: inline-block;
+  transition: transform .15s;
+}
+.ptr-indicator.armed { color: var(--color-primary); }
+.ptr-indicator.armed .ptr-arrow { transform: rotate(180deg); }
+.ptr-indicator.loading .ptr-arrow { display: none; }
