@@ -31,11 +31,15 @@ function renderCards() {
     places = places.filter(p => p.placeType === currentTypeFilter);
   }
 
-  // Author filter — show only places where the chosen author has a take
+  // Lens filter (v0.4.0) — a relevance lens over already-RLS-filtered data,
+  // not access control.  'circle' = places someone in my circle (me or an
+  // accepted friend) has a take on; 'mine' = my takes; 'all' = every member.
+  // _relationshipById comes from friends-service (loaded at sign-in).
   places = places.filter(p => {
     if (currentFilter === 'all')  return true;
-    if (currentFilter === 'mine') return p.takes.some(t => t.author === currentUser.display_name);
-    return p.takes.some(t => t.author === currentFilter);
+    if (currentFilter === 'mine') return p.takes.some(t => t.userId === currentUser.id);
+    return p.takes.some(t =>
+      t.userId === currentUser.id || _relationshipById[t.userId] === 'friends');
   });
 
   document.getElementById('rec-count').textContent = places.length;
@@ -77,6 +81,7 @@ function emptyStateHTML() {
   if (currentView === 'try')              { heading = 'Nothing to try yet';     msg = 'No \u201cwant to try\u201d places match. Save one from the button below.'; }
   else if (currentView === 'recommended') { heading = 'No recommendations yet'; msg = 'Nobody\u2019s recommended a place here yet. Visit somewhere and rate it.'; }
   else if (currentFilter === 'mine')      { heading = 'Nothing of yours yet';   msg = 'You haven\u2019t added any places yet. Add one to get started.'; }
+  else if (currentFilter === 'circle')    { heading = 'Your circle is quiet';   msg = 'Nobody in your circle has added a place yet. Find friends from the header, or switch the lens to Everyone.'; }
   else if (currentTypeFilter === 'restaurant') { heading = 'No restaurants here'; msg = 'No restaurants match these filters.'; }
   else if (currentTypeFilter === 'bar')        { heading = 'No bars here';        msg = 'No bars match these filters.'; }
 

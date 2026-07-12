@@ -85,10 +85,13 @@
       <!-- Filter chips — collapsed behind the Filter & sort pill
            (the designed sheet is a follow-up; this keeps existing logic reachable) -->
       <div class="filters-row" id="filters-row">
+        <!-- v0.4.0: lenses, not walls — RLS already decided what data you
+             have; these chips just choose which places to spotlight. -->
         <div class="filter-bar" id="friend-filter-bar" role="group" aria-label="Filter by author">
           <span class="filter-label">By</span>
-          <div class="filter-chip active" data-filter="all">Everyone</div>
-          <div class="filter-chip" data-filter="mine">Just mine</div>
+          <div class="filter-chip active" data-filter="circle">My Circle</div>
+          <div class="filter-chip" data-filter="mine">Just Mine</div>
+          <div class="filter-chip" data-filter="all">Everyone</div>
         </div>
 
         <div class="filter-bar" id="type-filter-bar" role="group" aria-label="Filter by type">
@@ -227,6 +230,7 @@
           <div class="intent-expand">
             <label class="flow-label" for="f-try-note">Note <span class="optional">(optional)</span></label>
             <textarea class="form-textarea" id="f-try-note" placeholder="Why it looks good, who told you about it…" maxlength="400"></textarea>
+            <div class="flow-hint">Notes are visible to your friends only.</div>
             <label class="flow-label" for="f-url">Link / review URL <span class="optional">(optional)</span></label>
             <input class="form-input" id="f-url" type="url" placeholder="https://…" />
           </div>
@@ -267,6 +271,7 @@
         <div class="flow-block">
           <label class="flow-label" for="f-notes">Note <span class="optional">(optional)</span></label>
           <textarea class="form-textarea" id="f-notes" placeholder="What should they order?" maxlength="400"></textarea>
+          <div class="flow-hint">Notes are visible to your friends only.</div>
         </div>
 
         <button class="details-disclosure" id="details-disclosure" aria-expanded="false" aria-controls="details-fields">

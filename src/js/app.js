@@ -8,7 +8,7 @@
 let currentUser        = null;  // shape: { id, display_name, avatar_url, is_admin }
 let currentScreen      = 'list'; // 'list' | 'friends' (v0.4.0)
 let currentView        = 'all';
-let currentFilter      = 'all';
+let currentFilter      = 'circle'; // 'circle' | 'mine' | 'all' (v0.4.0 lenses)
 let currentTypeFilter  = 'all';
 let currentDisplayMode = 'list';
 let currentSort        = 'date'; // 'date' | 'rating'
@@ -49,9 +49,9 @@ function getUserColor(name) {
 // ══════════════════════════════════════════════════
 function goHome() {
   currentView = 'all';
-  currentFilter = 'all';
+  currentFilter = 'circle'; // v0.4.0 default lens: My Circle
   document.querySelectorAll('#friend-filter-bar .filter-chip').forEach(c => {
-    c.classList.toggle('active', c.dataset.filter === 'all');
+    c.classList.toggle('active', c.dataset.filter === 'circle');
   });
   navigateToList('all');
 }

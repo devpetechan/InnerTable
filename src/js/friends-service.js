@@ -92,6 +92,13 @@ async function loadFriends() {
   _updateHeaderBadge();
   renderFriendsScreen();
   _subscribeFriendsRealtime();
+
+  // The My Circle feed lens (v0.4.0 Phase 5) classifies takes using
+  // _relationshipById — re-render the list so it reflects fresh edges.
+  if (typeof placesLoaded !== 'undefined' && placesLoaded
+      && currentScreen === 'list' && currentDisplayMode === 'list') {
+    renderCards();
+  }
 }
 
 

@@ -54,6 +54,15 @@ async function fetchAllPlaces() {
   const { data: entries } = await supabaseClient
     .from('entries').select('*').order('created_at', { ascending: false });
 
+  // 3b. Notes — split into entry_notes in v0.4.0 (migration 0018).  RLS
+  //     silently trims this to what the current user may see (own notes +
+  //     accepted friends'), so a missing note is indistinguishable from a
+  //     note that was never written — which is exactly the point.
+  const { data: noteRows } = await supabaseClient
+    .from('entry_notes').select('*');
+  const notesByEntry = {};
+  (noteRows || []).forEach(n => { notesByEntry[n.entry_id] = n; });
+
   // 4. Comments — place-keyed since migration 0010, with quote-reply columns
   const { data: comments } = await supabaseClient
     .from('comments').select('*').order('created_at', { ascending: true });
@@ -110,8 +119,9 @@ async function fetchAllPlaces() {
         value:    e.value    || 0,
         ambiance: e.ambiance || 0
       },
-      notes:    e.notes    || '',
-      tryNote:  e.try_note || '',
+      // v0.4.0: notes live in entry_notes (circle-scoped) — merge by entry id
+      notes:    (notesByEntry[e.id] || {}).notes    || '',
+      tryNote:  (notesByEntry[e.id] || {}).try_note || '',
       url:      e.url      || ''
     });
   }
@@ -196,6 +206,7 @@ async function loadPlaces() {
     .channel('inner-table-realtime')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'places'            }, _onDbChange)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'entries'           }, _onDbChange)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'entry_notes'       }, _onDbChange)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'comments'          }, _onDbChange)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'comment_reactions' }, _onDbChange)
     .subscribe();
@@ -305,16 +316,16 @@ async function submitEntry() {
     return;
   }
 
-  // ── Entry row (the user's take) ──
+  // ── Entry row (the user's take — ratings/status only) ──
   // Rating columns are always written explicitly (null = not rated) so an
   // edit that clears a rating actually clears it under upsert semantics.
+  // v0.4.0: free text (notes / try_note) moved to entry_notes — circle-scoped
+  // via RLS — so the write splits into two steps.
   const isTryType = (addType === 'try' || addType === 'want-to-go');
   const entryRow = {
     user_id:  currentUser.id,
     place_id: placeId,
     status:   computeUserStatus(addType),
-    notes:    document.getElementById('f-notes').value.trim()    || null,
-    try_note: document.getElementById('f-try-note').value.trim() || null,
     url:      document.getElementById('f-url').value.trim()      || null,
     overall_rating: null, quality: null, service: null, value: null, ambiance: null
   };
@@ -327,13 +338,22 @@ async function submitEntry() {
     entryRow.ambiance = factorRatings.ambiance || null;
   }
 
-  const { error: entryErr } = await supabaseClient
-    .from('entries').upsert(entryRow, { onConflict: 'user_id,place_id' });
+  const { data: savedEntry, error: entryErr } = await supabaseClient
+    .from('entries').upsert(entryRow, { onConflict: 'user_id,place_id' })
+    .select('id').single();
   if (entryErr) {
     console.error('[submitEntry] entry write failed:', entryErr);
     showToast('Could not save your entry.');
     btn.disabled = false; updateSubmitBtn();
     return;
+  }
+
+  // ── Step 2: the note row (circle-only free text) ──
+  const noteErr = await _saveEntryNote(savedEntry.id);
+  if (noteErr) {
+    // The take itself saved — warn rather than fail the whole submit.
+    console.error('[submitEntry] note write failed:', noteErr);
+    showToast('Your take saved, but the note did not. Edit to retry.');
   }
 
   await _fillMissingPlaceDetails(placeId);
@@ -345,6 +365,29 @@ async function submitEntry() {
   closeModal();
   btn.disabled = false;
   // Realtime triggers the re-fetch + re-render.
+}
+
+
+// v0.4.0: upsert (or clear) the circle-scoped note row for an entry.
+// Both fields are written together; when the user emptied both, the row is
+// deleted — no empty husks, and "no note" stays indistinguishable from
+// "note hidden by RLS".  Returns the error (or null) for the caller to report.
+async function _saveEntryNote(entryId) {
+  const notes   = document.getElementById('f-notes').value.trim();
+  const tryNote = document.getElementById('f-try-note').value.trim();
+
+  if (!notes && !tryNote) {
+    const { error } = await supabaseClient
+      .from('entry_notes').delete().eq('entry_id', entryId);
+    return error;
+  }
+  const { error } = await supabaseClient.from('entry_notes').upsert({
+    entry_id: entryId,
+    user_id:  currentUser.id,
+    notes:    notes   || null,
+    try_note: tryNote || null
+  }, { onConflict: 'entry_id' });
+  return error;
 }
 
 
