@@ -738,7 +738,7 @@
       "itemId": "IT-039",
       "type": "enhancement",
       "title": "[v0.4] Friend search UI (by handle or email)",
-      "description": "CONTEXT: Users need a way to find and invite friends already on InnerTable.\n\nGOAL: Build a 'Find Friends' panel with search-by-handle and search-by-email.\n\nUI:\n- New route/panel: 'Friends' tab in the header.\n- Search input: debounced search, calls Supabase for users where handle ilike or email (email search hits a public.users_email_index view with RLS that only returns the exact match if the user has allowed email-lookup).\n- Result cards: avatar, display name, handle, primary CTA 'Send request'.\n\nPRIVACY: email search returns a match only if the target user has enabled 'allow_email_lookup' in their profile settings (add this column now).\n\nSTATUS 2026-07-11: Done in v0.4.0 Phase 2 (commit b2af77d, branch feat/v0.4.0-friend-circles). One search input handles both modes: text with '@' = exact email lookup via find_user_by_email RPC; otherwise matches handle OR display name (display name added because handles are not yet populated at signup \u2014 no handle-setup UI exists yet, candidate backlog item). Contextual CTA per relationship state.",
+      "description": "CONTEXT: Users need a way to find and invite friends already on InnerTable.\n\nGOAL: Build a 'Find Friends' panel with search-by-handle and search-by-email.\n\nUI:\n- New route/panel: 'Friends' tab in the header.\n- Search input: debounced search, calls Supabase for users where handle ilike or email (email search hits a public.users_email_index view with RLS that only returns the exact match if the user has allowed email-lookup).\n- Result cards: avatar, display name, handle, primary CTA 'Send request'.\n\nPRIVACY: email search returns a match only if the target user has enabled 'allow_email_lookup' in their profile settings (add this column now).\n\nSTATUS 2026-07-11: Done in v0.4.0 Phase 2 (commit b2af77d, branch feat/v0.4.0-friend-circles). One search input handles both modes: text with '@' = exact email lookup via find_user_by_email RPC; otherwise matches handle OR display name (display name added because handles are not yet populated at signup \u2014 no handle-setup UI exists yet, candidate backlog item). Contextual CTA per relationship state.\n\nCAVEAT 2026-07-11: search mechanics done and tested, but handle search and email search are inert until IT-106 (profile settings) ships \u2014 no handles exist and allow_email_lookup has no UI. Display-name search is the working path today.",
       "priority": "P1",
       "area": "UI",
       "effort": "M",
@@ -747,7 +747,7 @@
       "reproSteps": "",
       "affectedFiles": "src/js/ui-render.js, src/js/friends.js (new), index.html, supabase/migrations/0009_email_lookup_flag.sql",
       "tags": [],
-      "updatedAt": "2026-07-11T16:59:03.949151Z",
+      "updatedAt": "2026-07-12T15:11:00.877966Z",
       "releaseId": "REL-11",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
@@ -2006,6 +2006,24 @@
       "releaseId": "REL-21",
       "createdAt": "2026-07-11T00:00:00.000Z",
       "updatedAt": "2026-07-11T00:00:00.000Z"
+    },
+    {
+      "id": "1752300000000",
+      "itemId": "IT-106",
+      "type": "enhancement",
+      "title": "[v0.4] Profile settings: handle, bio, email-lookup opt-in",
+      "description": "CONTEXT: IT-039's friend search is built, but its two specced modes are inert in practice: nothing in the app sets users.handle (signup only writes display_name), and users.allow_email_lookup defaults to false with no UI to enable it. Search currently works via the display-name fallback only. The bio column (added in 0017 for the friend profile page) is likewise unused.\n\nGOAL: A small profile-settings surface where the signed-in user edits their own users row: handle (unique, lowercase, validated), bio (short text), and an 'Allow people to find me by email' toggle.\n\nUI: reachable from the user chip in the header (currently sign-out only \u2014 needs a small menu or a settings entry on the Friends screen). Writes use the existing 0001 RLS policy (users update own row). Handle uniqueness violation (23505) surfaces as an inline error.\n\nDESIGN NOTE: no .dc.html design comp exists for the Friends screen or this settings surface yet \u2014 create/review one before or alongside implementation (see design/*.dc.html convention).",
+      "priority": "P2",
+      "area": "UI",
+      "effort": "S",
+      "status": "backlog",
+      "acceptanceCriteria": "- User can set a unique handle; duplicate handle shows a friendly inline error.\n- User can set/edit bio; it renders on their friend profile page.\n- Email-lookup toggle persists; with it ON, find_user_by_email returns the user (exact match); OFF, it doesn't.\n- With handles set, IT-039's search-by-handle acceptance criteria pass end-to-end.",
+      "reproSteps": "",
+      "affectedFiles": "index.html, src/js/friends-service.js (or new profile-service), src/styles/main.css",
+      "tags": [],
+      "createdAt": "2026-07-12T15:11:00.877966Z",
+      "updatedAt": "2026-07-12T15:11:00.877966Z",
+      "releaseId": "REL-11"
     }
   ],
   "releases": [
