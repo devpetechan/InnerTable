@@ -2060,6 +2060,42 @@
       "createdAt": "2026-07-12T15:56:25.024630Z",
       "updatedAt": "2026-07-12T15:56:25.024630Z",
       "releaseId": "REL-11"
+    },
+    {
+      "itemId": "IT-109",
+      "type": "bug",
+      "title": "[v0.4] Spaces/Enter swallowed while typing in try-note field",
+      "description": "Found during v0.4.0 QA (automated browser pass). The intent-try card's accessibility keydown handler (Space/Enter selects the card, IT-087) intercepted keystrokes bubbling up from the note and URL fields nested inside the card — typing 'qa test note' produced 'qatestnote'. Pre-existing since IT-087; the click handler always had an input/textarea guard, the keydown handler didn't. FIX: same guard added to the keydown handler.",
+      "priority": "P1",
+      "area": "UI",
+      "effort": "XS",
+      "status": "done",
+      "acceptanceCriteria": "- Typing spaces and newlines in the try-note textarea works.\n- Space/Enter with the card itself focused still selects it (a11y preserved).",
+      "affectedFiles": "src/js/ui-events.js",
+      "id": "1783891544260",
+      "reproSteps": "",
+      "tags": [],
+      "createdAt": "2026-07-12T21:25:44.259996Z",
+      "updatedAt": "2026-07-12T21:25:44.259996Z",
+      "releaseId": "REL-11"
+    },
+    {
+      "itemId": "IT-110",
+      "type": "bug",
+      "title": "[v0.4] Place detail panel shows stale take after delete",
+      "description": "Minor, found during QA: deleting your take from the open detail panel refreshes the list behind it (IT-107 explicit refresh) but the panel itself keeps rendering the deleted take until closed. Candidate fix: _refreshOpenDetailPanel pattern (used by tags) applied to deleteEntry, closing the panel if the place has no takes left.",
+      "priority": "P3",
+      "area": "UI",
+      "effort": "XS",
+      "status": "backlog",
+      "acceptanceCriteria": "- Deleting a take from the detail panel updates or closes the panel immediately.",
+      "affectedFiles": "src/js/places-service.js",
+      "id": "1783891544261",
+      "reproSteps": "",
+      "tags": [],
+      "createdAt": "2026-07-12T21:25:44.259996Z",
+      "updatedAt": "2026-07-12T21:25:44.259996Z",
+      "releaseId": "REL-11"
     }
   ],
   "releases": [
@@ -2471,6 +2507,6 @@
       }
     }
   ],
-  "nextItemId": 109,
+  "nextItemId": 111,
   "nextReleaseId": 22
 }

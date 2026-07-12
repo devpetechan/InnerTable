@@ -127,6 +127,11 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   document.getElementById('intent-try')
     .addEventListener('keydown', e => {
+      // IT-109: keydown bubbles up from the note/URL fields inside this card.
+      // Without this guard, every Space/Enter typed in the try-note was
+      // swallowed by the card's accessibility handler ("qatestnote" instead
+      // of "qa test note"). The click handler has had this guard all along.
+      if (e.target.closest('input, textarea')) return;
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         setIntent('try');
