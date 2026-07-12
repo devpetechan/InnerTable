@@ -93,16 +93,18 @@ function renderMapMarkers() {
     }));
   }
 
-  // Type filter
+  // Type filter — tags first, place_type fallback (same as list view)
   if (currentTypeFilter !== 'all') {
-    places = places.filter(p => p.placeType === currentTypeFilter);
+    places = places.filter(p =>
+      (p.tags && p.tags[currentTypeFilter]) || p.placeType === currentTypeFilter);
   }
 
-  // Friend/author filter (same as list view)
+  // Lens filter (same as list view, v0.4.0): circle / mine / all
   places = places.filter(p => {
     if (currentFilter === 'all')  return true;
-    if (currentFilter === 'mine') return p.takes.some(t => t.author === currentUser.display_name);
-    return p.takes.some(t => t.author === currentFilter);
+    if (currentFilter === 'mine') return p.takes.some(t => t.userId === currentUser.id);
+    return p.takes.some(t =>
+      t.userId === currentUser.id || _relationshipById[t.userId] === 'friends');
   });
 
   if (!places.length) {

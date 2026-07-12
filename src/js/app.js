@@ -6,8 +6,9 @@
 //  STATE
 // ══════════════════════════════════════════════════
 let currentUser        = null;  // shape: { id, display_name, avatar_url, is_admin }
+let currentScreen      = 'list'; // 'list' | 'friends' (v0.4.0)
 let currentView        = 'all';
-let currentFilter      = 'all';
+let currentFilter      = 'circle'; // 'circle' | 'mine' | 'all' (v0.4.0 lenses)
 let currentTypeFilter  = 'all';
 let currentDisplayMode = 'list';
 let currentSort        = 'date'; // 'date' | 'rating'
@@ -48,14 +49,19 @@ function getUserColor(name) {
 // ══════════════════════════════════════════════════
 function goHome() {
   currentView = 'all';
-  currentFilter = 'all';
+  currentFilter = 'circle'; // v0.4.0 default lens: My Circle
   document.querySelectorAll('#friend-filter-bar .filter-chip').forEach(c => {
-    c.classList.toggle('active', c.dataset.filter === 'all');
+    c.classList.toggle('active', c.dataset.filter === 'circle');
   });
   navigateToList('all');
 }
 
 function navigateToList(typeFilter) {
+  // Leaving the Friends screen (v0.4.0): restore the list chrome.
+  currentScreen = 'list';
+  document.getElementById('friends-section').style.display = 'none';
+  document.querySelector('.list-controls').style.display = '';
+
   // Update type filter state and chips
   currentTypeFilter = typeFilter || 'all';
   document.querySelectorAll('[data-type]').forEach(c => {
@@ -82,6 +88,17 @@ function navigateToList(typeFilter) {
   } else {
     renderCards();
   }
+}
+
+
+// Friends screen (v0.4.0) — swaps the list region out; header stays.
+function showFriendsScreen() {
+  currentScreen = 'friends';
+  document.querySelector('.list-controls').style.display = 'none';
+  document.getElementById('list-map-section').style.display = 'none';
+  document.getElementById('add-place-fab').style.display = 'none';
+  document.getElementById('friends-section').style.display = 'block';
+  renderFriendsScreen();
 }
 
 

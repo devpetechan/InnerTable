@@ -11,8 +11,37 @@ document.addEventListener('DOMContentLoaded', function () {
   document.querySelector('.header-logo')
     .addEventListener('click', goHome);
 
+  // IT-106: the user chip opens the account menu (settings / sign out)
+  // instead of signing out directly.
   document.querySelector('.user-chip')
+    .addEventListener('click', toggleUserMenu);
+  document.getElementById('menu-signout')
     .addEventListener('click', signOut);
+  document.getElementById('menu-settings')
+    .addEventListener('click', openProfileSettings);
+  document.getElementById('settings-close')
+    .addEventListener('click', closeProfileSettings);
+  document.getElementById('settings-save')
+    .addEventListener('click', saveProfileSettings);
+  document.getElementById('settings-overlay')
+    .addEventListener('click', e => {
+      if (e.target === document.getElementById('settings-overlay')) closeProfileSettings();
+    });
+
+  // ── Friends screen (v0.4.0) ───────────────────────
+  document.getElementById('friends-btn')
+    .addEventListener('click', showFriendsScreen);
+
+  // Subview tabs (event delegation — data-ftab attr)
+  document.getElementById('friends-tabs')
+    .addEventListener('click', e => {
+      const tab = e.target.closest('.view-tab');
+      if (tab) switchFriendsTab(tab.dataset.ftab, tab);
+    });
+
+  // Debounced friend search
+  document.getElementById('friend-search-input')
+    .addEventListener('input', onFriendSearchInput);
 
   // ── Segmented status control (event delegation — data-view attr) ─
   document.querySelector('.view-tabs')

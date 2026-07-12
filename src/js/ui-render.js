@@ -26,16 +26,23 @@ function renderCards() {
     }));
   }
 
-  // Type filter
+  // Type filter — tags first (v0.4.0 Phase 6), place_type as fallback.
+  // A place someone tagged 'bar' shows under Bars even if created as a
+  // restaurant — the social layer overrides the creation-time binary.
   if (currentTypeFilter !== 'all') {
-    places = places.filter(p => p.placeType === currentTypeFilter);
+    places = places.filter(p =>
+      (p.tags && p.tags[currentTypeFilter]) || p.placeType === currentTypeFilter);
   }
 
-  // Author filter — show only places where the chosen author has a take
+  // Lens filter (v0.4.0) — a relevance lens over already-RLS-filtered data,
+  // not access control.  'circle' = places someone in my circle (me or an
+  // accepted friend) has a take on; 'mine' = my takes; 'all' = every member.
+  // _relationshipById comes from friends-service (loaded at sign-in).
   places = places.filter(p => {
     if (currentFilter === 'all')  return true;
-    if (currentFilter === 'mine') return p.takes.some(t => t.author === currentUser.display_name);
-    return p.takes.some(t => t.author === currentFilter);
+    if (currentFilter === 'mine') return p.takes.some(t => t.userId === currentUser.id);
+    return p.takes.some(t =>
+      t.userId === currentUser.id || _relationshipById[t.userId] === 'friends');
   });
 
   document.getElementById('rec-count').textContent = places.length;
@@ -77,6 +84,7 @@ function emptyStateHTML() {
   if (currentView === 'try')              { heading = 'Nothing to try yet';     msg = 'No \u201cwant to try\u201d places match. Save one from the button below.'; }
   else if (currentView === 'recommended') { heading = 'No recommendations yet'; msg = 'Nobody\u2019s recommended a place here yet. Visit somewhere and rate it.'; }
   else if (currentFilter === 'mine')      { heading = 'Nothing of yours yet';   msg = 'You haven\u2019t added any places yet. Add one to get started.'; }
+  else if (currentFilter === 'circle')    { heading = 'Your circle is quiet';   msg = 'Nobody in your circle has added a place yet. Find friends from the header, or switch the lens to Everyone.'; }
   else if (currentTypeFilter === 'restaurant') { heading = 'No restaurants here'; msg = 'No restaurants match these filters.'; }
   else if (currentTypeFilter === 'bar')        { heading = 'No bars here';        msg = 'No bars match these filters.'; }
 
@@ -271,11 +279,14 @@ function placeCardBodyHTML(place) {
       ${place.cuisine  ? `<span class="tag">${esc(place.cuisine)}</span>` : ''}
       ${place.price    ? `<span class="tag">${esc(place.price)}</span>`   : ''}
       ${place.location ? `<a class="tag" href="${buildMapsUrl({ placeId: place.googlePlaceId, name: place.name, location: place.location })}" target="_blank" rel="noopener">${esc(place.location)} ↗</a>` : ''}
-    </div>`;
+    </div>
+    ${userTagsHTML(place)}`;
 
   const takesStack = place.takes.length
     ? `<div class="takes-stack">${place.takes.map(t => takeRowHTML(place, t)).join('')}</div>`
     : '';
+
+  // (userTagsHTML is defined below, near the other card-section helpers.)
 
   // "Add your take" CTA — only when the current user has no take here.
   // Opens the add flow prefilled with this place (place fields locked).
@@ -445,6 +456,34 @@ function commentsSectionHTML(place) {
     </div>
     <button class="card-btn" onclick="toggleCommentForm('${id}')">${commentLabel}</button>
   </div>`;
+}
+
+
+// ══════════════════════════════════════════════════
+//  USER TAGS (v0.4.0 Phase 6 — multi-author classification)
+//  Aggregated chips: "date spot ×3".  Your own tags show a remove ×;
+//  the add row writes through places-service addPlaceTag.
+//  data-tag carries the value so quotes in tags can't break the handler.
+// ══════════════════════════════════════════════════
+function userTagsHTML(place) {
+  const entries = Object.entries(place.tags || {});
+  const chips = entries.map(([tag, info]) => `
+    <span class="tag user-tag${info.mine ? ' mine' : ''}">
+      ${esc(tag)}${info.count > 1 ? `<span class="tag-count">×${info.count}</span>` : ''}
+      ${info.mine ? `<button class="tag-remove" title="Remove your tag"
+        data-tag="${esc(tag)}" onclick="removePlaceTag('${place.id}', this.dataset.tag)">×</button>` : ''}
+    </span>`).join('');
+
+  return `
+    <div class="user-tags-row">
+      ${chips}
+      <span class="tag tag-add">
+        <input class="tag-add-input" id="tag-input-${place.id}" type="text"
+               maxlength="30" placeholder="+ tag"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();addPlaceTag('${place.id}', this.value, this);}"
+               onclick="event.stopPropagation()" />
+      </span>
+    </div>`;
 }
 
 

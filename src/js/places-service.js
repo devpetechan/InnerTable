@@ -54,6 +54,15 @@ async function fetchAllPlaces() {
   const { data: entries } = await supabaseClient
     .from('entries').select('*').order('created_at', { ascending: false });
 
+  // 3b. Notes — split into entry_notes in v0.4.0 (migration 0018).  RLS
+  //     silently trims this to what the current user may see (own notes +
+  //     accepted friends'), so a missing note is indistinguishable from a
+  //     note that was never written — which is exactly the point.
+  const { data: noteRows } = await supabaseClient
+    .from('entry_notes').select('*');
+  const notesByEntry = {};
+  (noteRows || []).forEach(n => { notesByEntry[n.entry_id] = n; });
+
   // 4. Comments — place-keyed since migration 0010, with quote-reply columns
   const { data: comments } = await supabaseClient
     .from('comments').select('*').order('created_at', { ascending: true });
@@ -61,6 +70,14 @@ async function fetchAllPlaces() {
   // 5. Reactions — one row per (comment, user, emoji)
   const { data: reactionRows } = await supabaseClient
     .from('comment_reactions').select('*');
+
+  // 5c. Place tags (v0.4.0 Phase 6) — multi-author classification layer.
+  const { data: tagRows } = await supabaseClient
+    .from('place_tags').select('*');
+  const tagsByPlace = {};
+  (tagRows || []).forEach(t => {
+    (tagsByPlace[t.place_id] = tagsByPlace[t.place_id] || []).push(t);
+  });
 
   // 5b. External aggregates cache (IT-056) — Google ratings, read from our
   //     own table, never the live Google API.
@@ -79,6 +96,10 @@ async function fetchAllPlaces() {
       lng:           p.lng,
       googlePlaceId: p.google_place_id,
       placeType:     p.place_type || 'restaurant',
+      // v0.4.0: user tags — raw rows plus an aggregated {tag: {count, mine}}
+      // map the renderer consumes.  place_type stays as fallback (IT cleanup
+      // item pending); the type filter reads tags first.
+      tags:          _aggregateTags(tagsByPlace[p.id] || []),
       takes:         [],
       comments:      [],
       aggregate:     { avgRating: 0, ratingsCount: 0, recommends: [], hardPasses: [], wantsToGo: [], triedBy: [] },
@@ -110,8 +131,9 @@ async function fetchAllPlaces() {
         value:    e.value    || 0,
         ambiance: e.ambiance || 0
       },
-      notes:    e.notes    || '',
-      tryNote:  e.try_note || '',
+      // v0.4.0: notes live in entry_notes (circle-scoped) — merge by entry id
+      notes:    (notesByEntry[e.id] || {}).notes    || '',
+      tryNote:  (notesByEntry[e.id] || {}).try_note || '',
       url:      e.url      || ''
     });
   }
@@ -160,6 +182,19 @@ async function fetchAllPlaces() {
   return result;
 }
 
+// Aggregate raw place_tags rows into { tag: { count, mine } }, sorted by
+// count desc so the most-agreed-on tags render first.
+function _aggregateTags(rows) {
+  const agg = {};
+  for (const r of rows) {
+    if (!agg[r.tag]) agg[r.tag] = { count: 0, mine: false };
+    agg[r.tag].count++;
+    if (currentUser && r.user_id === currentUser.id) agg[r.tag].mine = true;
+  }
+  return Object.fromEntries(
+    Object.entries(agg).sort((a, b) => b[1].count - a[1].count));
+}
+
 // Helper: parse @mentions out of comment text into a list of display names.
 // Matches @Alice, @alice_b, @Bob-Smith. Stops at whitespace or punctuation.
 function parseMentions(text) {
@@ -196,6 +231,8 @@ async function loadPlaces() {
     .channel('inner-table-realtime')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'places'            }, _onDbChange)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'entries'           }, _onDbChange)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'entry_notes'       }, _onDbChange)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'place_tags'        }, _onDbChange)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'comments'          }, _onDbChange)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'comment_reactions' }, _onDbChange)
     .subscribe();
@@ -305,16 +342,16 @@ async function submitEntry() {
     return;
   }
 
-  // ── Entry row (the user's take) ──
+  // ── Entry row (the user's take — ratings/status only) ──
   // Rating columns are always written explicitly (null = not rated) so an
   // edit that clears a rating actually clears it under upsert semantics.
+  // v0.4.0: free text (notes / try_note) moved to entry_notes — circle-scoped
+  // via RLS — so the write splits into two steps.
   const isTryType = (addType === 'try' || addType === 'want-to-go');
   const entryRow = {
     user_id:  currentUser.id,
     place_id: placeId,
     status:   computeUserStatus(addType),
-    notes:    document.getElementById('f-notes').value.trim()    || null,
-    try_note: document.getElementById('f-try-note').value.trim() || null,
     url:      document.getElementById('f-url').value.trim()      || null,
     overall_rating: null, quality: null, service: null, value: null, ambiance: null
   };
@@ -327,13 +364,22 @@ async function submitEntry() {
     entryRow.ambiance = factorRatings.ambiance || null;
   }
 
-  const { error: entryErr } = await supabaseClient
-    .from('entries').upsert(entryRow, { onConflict: 'user_id,place_id' });
+  const { data: savedEntry, error: entryErr } = await supabaseClient
+    .from('entries').upsert(entryRow, { onConflict: 'user_id,place_id' })
+    .select('id').single();
   if (entryErr) {
     console.error('[submitEntry] entry write failed:', entryErr);
     showToast('Could not save your entry.');
     btn.disabled = false; updateSubmitBtn();
     return;
+  }
+
+  // ── Step 2: the note row (circle-only free text) ──
+  const noteErr = await _saveEntryNote(savedEntry.id);
+  if (noteErr) {
+    // The take itself saved — warn rather than fail the whole submit.
+    console.error('[submitEntry] note write failed:', noteErr);
+    showToast('Your take saved, but the note did not. Edit to retry.');
   }
 
   await _fillMissingPlaceDetails(placeId);
@@ -345,6 +391,29 @@ async function submitEntry() {
   closeModal();
   btn.disabled = false;
   // Realtime triggers the re-fetch + re-render.
+}
+
+
+// v0.4.0: upsert (or clear) the circle-scoped note row for an entry.
+// Both fields are written together; when the user emptied both, the row is
+// deleted — no empty husks, and "no note" stays indistinguishable from
+// "note hidden by RLS".  Returns the error (or null) for the caller to report.
+async function _saveEntryNote(entryId) {
+  const notes   = document.getElementById('f-notes').value.trim();
+  const tryNote = document.getElementById('f-try-note').value.trim();
+
+  if (!notes && !tryNote) {
+    const { error } = await supabaseClient
+      .from('entry_notes').delete().eq('entry_id', entryId);
+    return error;
+  }
+  const { error } = await supabaseClient.from('entry_notes').upsert({
+    entry_id: entryId,
+    user_id:  currentUser.id,
+    notes:    notes   || null,
+    try_note: tryNote || null
+  }, { onConflict: 'entry_id' });
+  return error;
 }
 
 
@@ -369,6 +438,54 @@ async function _fillMissingPlaceDetails(placeId) {
   });
   // Non-fatal: the take itself already saved.
   if (error) console.error('[submitEntry] fill_place_details failed:', error);
+}
+
+
+// ══════════════════════════════════════════════════
+//  PLACE TAGS (v0.4.0 Phase 6) — add/remove MY tag on any place.
+//  Normalization mirrors the DB CHECK (lowercase, trimmed, ≤30 chars);
+//  the client additionally restricts the charset so tags stay clean.
+// ══════════════════════════════════════════════════
+function normalizeTag(raw) {
+  return String(raw || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9 &\-]/g, '')  // letters, digits, spaces, & and - only
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 30);
+}
+
+async function addPlaceTag(placeId, rawTag, inputEl) {
+  const tag = normalizeTag(rawTag);
+  if (!tag) { if (inputEl) shake(inputEl); return; }
+
+  const { error } = await supabaseClient.from('place_tags').insert({
+    place_id: placeId, user_id: currentUser.id, tag
+  });
+  if (error && error.code !== '23505') {  // 23505 = you already have this tag
+    console.error('[addPlaceTag]', error);
+    showToast('Could not add the tag.');
+    return;
+  }
+  await loadPlaces();
+  _refreshOpenDetailPanel(placeId);
+}
+
+async function removePlaceTag(placeId, tag) {
+  const { error } = await supabaseClient.from('place_tags').delete()
+    .eq('place_id', placeId)
+    .eq('user_id', currentUser.id)
+    .eq('tag', tag);
+  if (error) { console.error('[removePlaceTag]', error); showToast('Could not remove the tag.'); return; }
+  await loadPlaces();
+  _refreshOpenDetailPanel(placeId);
+}
+
+// Re-render the detail panel in place if it's showing this place — the list
+// re-render from loadPlaces doesn't touch the open overlay.
+function _refreshOpenDetailPanel(placeId) {
+  const overlay = document.getElementById('place-detail-overlay');
+  if (overlay.classList.contains('open')) openPlaceDetail(placeId);
 }
 
 
