@@ -2320,7 +2320,82 @@
       "status": "released",
       "createdAt": "2026-04-17T22:38:56.634051Z",
       "releasedAt": "2026-07-13T08:42:32.957717Z",
-      "releaseNotes": "Friend Circles (ego-network). Directional friendships with mutual-accept, block/unblock, and a Friends screen (search by name/handle/email, requests inbox with realtime badge, friend profiles). Circle-scoped candor: notes and comments visible to accepted friends only (entry_notes split, fail-closed quote rule); ratings stay member-visible as trust-engine signal. Feed lenses My Circle / Just Mine / Everyone (default My Circle). Multi-author place tags. Profile settings (handle, bio, email-lookup opt-in). Fixes: post-write list refresh + realtime publication (IT-107), pull-to-refresh (IT-108), try-note keystroke swallowing (IT-109). Migrations 0017-0020. QA: 42 automated DB checks + browser pass, results in workspace/v0.4.0-qa-test-results.md."
+      "releaseNotes": {
+        "generatedAt": "2026-07-13T08:47:49.451Z",
+        "releaseDate": "2026-07-13",
+        "sections": [
+          {
+            "heading": "✨ What's New",
+            "notes": [
+              {
+                "itemId": "IT-038",
+                "title": "[v0.4] Friendships table",
+                "note": "Directional friendships with a mutual-accept flow — request, accept, decline, cancel, remove, block/unblock — enforced by database RPCs."
+              },
+              {
+                "itemId": "IT-039",
+                "title": "[v0.4] Friend search",
+                "note": "Find friends by name, handle, or exact email (opt-in only) from the new Friends screen."
+              },
+              {
+                "itemId": "IT-040",
+                "title": "[v0.4] Requests inbox",
+                "note": "Incoming/outgoing requests with accept, decline and cancel — the badge updates live, no refresh needed."
+              },
+              {
+                "itemId": "IT-041",
+                "title": "[v0.4] Friend profiles",
+                "note": "My Friends list with entry counts, plus per-friend profile pages showing their bio and places."
+              },
+              {
+                "itemId": "IT-083",
+                "title": "[v0.4] Place tags",
+                "note": "Anyone can tag any place — 'date spot ×3' beats a rigid restaurant/bar binary. Type filter reads tags first."
+              },
+              {
+                "itemId": "IT-106",
+                "title": "[v0.4] Profile settings",
+                "note": "Set your handle and bio, and opt in to being found by email — from the new account menu."
+              },
+              {
+                "itemId": "IT-108",
+                "title": "[v0.4] Pull-to-refresh",
+                "note": "Pull down at the top of The List on your phone to refresh."
+              }
+            ]
+          },
+          {
+            "heading": "🔒 Privacy",
+            "notes": [
+              {
+                "itemId": "IT-042",
+                "title": "[v0.4] Circle-scoped notes & comments",
+                "note": "Your notes and comments are now visible only to accepted friends, enforced by Row-Level Security in the database. Ratings stay visible to all members as trust-engine signal."
+              },
+              {
+                "itemId": "IT-044",
+                "title": "[v0.4] Feed lenses",
+                "note": "The feed filter is now My Circle / Just Mine / Everyone, defaulting to My Circle."
+              }
+            ]
+          },
+          {
+            "heading": "🐛 Fixes",
+            "notes": [
+              {
+                "itemId": "IT-107",
+                "title": "[v0.4] List refresh after writes",
+                "note": "Adding or deleting a place now updates the list instantly; live updates from friends work too (realtime publication fixed)."
+              },
+              {
+                "itemId": "IT-109",
+                "title": "[v0.4] Try-note typing",
+                "note": "Spaces and Enter no longer get swallowed while typing a want-to-try note."
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "REL-12",
