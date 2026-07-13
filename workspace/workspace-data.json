@@ -2083,7 +2083,7 @@
       "itemId": "IT-110",
       "type": "bug",
       "title": "[v0.4] Place detail panel shows stale take after delete",
-      "description": "Minor, found during QA: deleting your take from the open detail panel refreshes the list behind it (IT-107 explicit refresh) but the panel itself keeps rendering the deleted take until closed. Candidate fix: _refreshOpenDetailPanel pattern (used by tags) applied to deleteEntry, closing the panel if the place has no takes left.",
+      "description": "Minor, found during QA: deleting your take from the open detail panel refreshes the list behind it (IT-107 explicit refresh) but the panel itself keeps rendering the deleted take until closed. Candidate fix: _refreshOpenDetailPanel pattern (used by tags) applied to deleteEntry, closing the panel if the place has no takes left.\n\nMOVED 2026-07-13: carried from REL-11 at release (P3 cosmetic, known issue).",
       "priority": "P3",
       "area": "UI",
       "effort": "XS",
@@ -2094,8 +2094,8 @@
       "reproSteps": "",
       "tags": [],
       "createdAt": "2026-07-12T21:25:44.259996Z",
-      "updatedAt": "2026-07-12T21:25:44.259996Z",
-      "releaseId": "REL-11"
+      "updatedAt": "2026-07-13T08:42:32.957717Z",
+      "releaseId": "REL-12"
     }
   ],
   "releases": [
@@ -2317,8 +2317,10 @@
       "name": "Friend Circles (Ego-Network)",
       "targetDate": "",
       "goals": "Add directional friendships, invite flow, and circle-scoped candor: notes/comments visible to accepted friends only via RLS, ratings member-visible as trust-engine signal, and My Circle / Just Mine / Everyone feed lenses. Includes place tags.",
-      "status": "planning",
-      "createdAt": "2026-04-17T22:38:56.634051Z"
+      "status": "released",
+      "createdAt": "2026-04-17T22:38:56.634051Z",
+      "releasedAt": "2026-07-13T08:42:32.957717Z",
+      "releaseNotes": "Friend Circles (ego-network). Directional friendships with mutual-accept, block/unblock, and a Friends screen (search by name/handle/email, requests inbox with realtime badge, friend profiles). Circle-scoped candor: notes and comments visible to accepted friends only (entry_notes split, fail-closed quote rule); ratings stay member-visible as trust-engine signal. Feed lenses My Circle / Just Mine / Everyone (default My Circle). Multi-author place tags. Profile settings (handle, bio, email-lookup opt-in). Fixes: post-write list refresh + realtime publication (IT-107), pull-to-refresh (IT-108), try-note keystroke swallowing (IT-109). Migrations 0017-0020. QA: 42 automated DB checks + browser pass, results in workspace/v0.4.0-qa-test-results.md."
     },
     {
       "id": "REL-12",
