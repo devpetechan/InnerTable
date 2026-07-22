@@ -25,7 +25,8 @@ supabase/.temp
 supabase/.env.keys
 supabase/.env.local
 supabase/.env.*.local
-supabase/snippets/
+# NOTE: supabase/snippets/ was gitignored until v0.5.0 Phase 1 — acceptance
+# tests are real deliverables and belong in the repo (decided 2026-07-22).
 
 # ── Local-only data dumps (contain real user PII — never commit) ────────────
 prod-data.sql
