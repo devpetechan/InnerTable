@@ -2373,7 +2373,10 @@ a.tag:hover { color: var(--color-primary); border-color: var(--color-primary); b
 .user-menu button:hover { background: var(--color-canvas); }
 
 .settings-modal { max-width: 420px; }
-.settings-body { padding: var(--sp-2) var(--sp-5) var(--sp-5); }
+/* Header sits directly on the padding-less .modal, so pad it to match the
+   body — otherwise the title + close button hug the modal edges (IT-106 polish). */
+.settings-modal .modal-header { padding: var(--sp-6) var(--sp-6) 0; }
+.settings-body { padding: var(--sp-3) var(--sp-6) var(--sp-6); }
 .settings-body .btn-submit { margin-top: var(--sp-2); }
 .settings-error {
   color: var(--color-danger);
