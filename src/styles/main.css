@@ -2195,6 +2195,102 @@ a.tag:hover { color: var(--color-primary); border-color: var(--color-primary); b
 .friend-cta.ghost.danger:hover { border-color: var(--color-danger); }
 
 /* ═══════════════════════════════════════════════════════════════
+   TASTE GRID (v0.5.0 Phase 3 · IT-047)
+   Accepted friends (rows) × categories (columns); each cell a 5-dot
+   trust weight.  Horizontally scrollable with a sticky friend column.
+═══════════════════════════════════════════════════════════════ */
+.taste-hint {
+  font-size: .82rem;
+  color: var(--color-text-muted);
+  margin: 0 0 var(--sp-3);
+}
+.taste-grid-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--color-border-card);
+  border-radius: var(--radius-md);
+  background: var(--color-card);
+  box-shadow: var(--shadow-raised);
+}
+.taste-grid {
+  border-collapse: collapse;
+  width: max-content;
+  min-width: 100%;
+}
+.taste-grid th,
+.taste-grid td {
+  padding: 10px var(--sp-3);
+  text-align: center;
+  border-bottom: 1px solid var(--color-border-card);
+  white-space: nowrap;
+}
+.taste-grid tbody tr:last-child th,
+.taste-grid tbody tr:last-child td { border-bottom: none; }
+
+/* Category column headers */
+.tg-col {
+  font-family: var(--font-mono);
+  font-size: .6rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  vertical-align: bottom;
+}
+
+/* Sticky first column (friend name / corner) */
+.tg-corner,
+.tg-friend {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--color-card);
+  text-align: left;
+  box-shadow: 1px 0 0 var(--color-border-card);
+}
+.tg-corner { box-shadow: 1px 0 0 var(--color-border-card); }
+.tg-friend-name {
+  font-weight: 600;
+  font-size: .86rem;
+  color: var(--color-text);
+}
+
+/* 5-dot trust control */
+.tg-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin: 0 2px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-star-empty);
+  cursor: pointer;
+  vertical-align: middle;
+  transition: background .12s, border-color .12s, transform .1s;
+}
+.tg-dot:hover { border-color: var(--color-primary); }
+.tg-dot.filled {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.tg-dot:active { transform: scale(.82); }
+.tg-dot:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.taste-showall {
+  margin-top: var(--sp-3);
+  border: 1px solid var(--color-border-tag);
+  background: var(--color-card);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font-size: .8rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.taste-showall:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+/* ═══════════════════════════════════════════════════════════════
    USER TAGS (v0.4.0 Phase 6 — multi-author place tags)
 ═══════════════════════════════════════════════════════════════ */
 .user-tags-row {

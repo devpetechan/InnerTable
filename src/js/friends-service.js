@@ -249,9 +249,13 @@ function switchFriendsTab(tab, el) {
   document.getElementById('ftab-friends').style.display  = tab === 'friends'  ? 'block' : 'none';
   document.getElementById('ftab-requests').style.display = tab === 'requests' ? 'block' : 'none';
   document.getElementById('ftab-find').style.display     = tab === 'find'     ? 'block' : 'none';
+  document.getElementById('ftab-taste').style.display    = tab === 'taste'    ? 'block' : 'none';
   if (tab === 'find') {
     setTimeout(() => document.getElementById('friend-search-input').focus(), 50);
   }
+  // Taste grid (v0.5.0 Phase 3) — load on open; explicit refresh each time
+  // (overrides are private to the rater, so no realtime is involved).
+  if (tab === 'taste') loadTasteScreen();
   renderFriendsScreen();
 }
 
@@ -358,6 +362,7 @@ function hideFriendProfile() {
   document.getElementById('ftab-friends').style.display  = currentFriendsTab === 'friends'  ? 'block' : 'none';
   document.getElementById('ftab-requests').style.display = currentFriendsTab === 'requests' ? 'block' : 'none';
   document.getElementById('ftab-find').style.display     = currentFriendsTab === 'find'     ? 'block' : 'none';
+  document.getElementById('ftab-taste').style.display    = currentFriendsTab === 'taste'    ? 'block' : 'none';
 }
 
 function _renderFriendProfile(friend) {

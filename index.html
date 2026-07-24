@@ -143,6 +143,7 @@
       <button class="view-tab active" data-ftab="friends"  role="tab" aria-selected="true">My Friends</button>
       <button class="view-tab"        data-ftab="requests" role="tab" aria-selected="false">Requests <span class="count-badge" id="requests-badge" style="display:none">0</span></button>
       <button class="view-tab"        data-ftab="find"     role="tab" aria-selected="false">Find</button>
+      <button class="view-tab"        data-ftab="taste"    role="tab" aria-selected="false">Taste</button>
     </div>
 
     <div class="ftab-panel" id="ftab-friends">
@@ -159,6 +160,12 @@
              maxlength="120" autocomplete="off" />
       <div class="flow-hint">Email search needs the exact address and only finds people who have allowed it.</div>
       <div id="friend-search-results"></div>
+    </div>
+
+    <!-- Taste grid (v0.5.0 Phase 3 · IT-047) — accepted friends × categories,
+         each cell a 5-dot trust weight; owned/rendered by taste-service.js -->
+    <div class="ftab-panel" id="ftab-taste" style="display:none">
+      <div id="taste-grid"></div>
     </div>
 
     <!-- Friend profile (Phase 3) — replaces the tab panels while open -->
@@ -407,6 +414,7 @@
 <script src="src/js/external-aggregates.js"></script>
 <script src="src/js/places-service.js"></script>
 <script src="src/js/friends-service.js"></script>
+<script src="src/js/taste-service.js"></script>
 <script src="src/js/ui-render.js"></script>
 <script src="src/js/map.js"></script>
 <script src="src/js/ui-events.js"></script>
