@@ -208,7 +208,13 @@ function renderTasteGrid() {
     return;
   }
 
-  const cols = _showAllCategories ? _categories : _mostUsedCats;
+  // Quant mode (IT-048) exposes the FULL category list by design (precise
+  // inspect/override), so it ignores the most-used short list.  Casual keeps
+  // the personalised short list with a "show all" expander.
+  const quant = advancedDetails;
+  const cols  = (quant || _showAllCategories) ? _categories : _mostUsedCats;
+
+  const cellFn = quant ? _tasteQuantCellHtml : _tasteDotCellHtml;
 
   const head = cols
     .map(c => `<th class="tg-col" scope="col" title="${esc(c.display_name)}">${esc(c.display_name)}</th>`)
@@ -216,7 +222,7 @@ function renderTasteGrid() {
 
   const rows = myFriends.map(f => {
     const ov = _tasteOverrides[f.userId] || {};
-    const cells = cols.map(c => _tasteDotCellHtml(f.userId, c.id, ov[c.id])).join('');
+    const cells = cols.map(c => cellFn(f.userId, c.id, ov[c.id])).join('');
     return `
       <tr>
         <th class="tg-friend" scope="row">
@@ -226,22 +232,30 @@ function renderTasteGrid() {
       </tr>`;
   }).join('');
 
+  // Two skins over one dataset.  Casual hides mute and offers the expander;
+  // quant shows every category and the explicit 0/mute vs blank(=default).
+  const hint = quant
+    ? 'Precise trust per category. <strong>0</strong> = mute (never weight their pick here); <strong>—</strong> = no opinion / use default.'
+    : 'More dots = you trust their pick more in that category. Tap a filled dot again to clear it.';
+
+  const expander = quant ? '' : `
+    <button class="taste-showall" onclick="toggleShowAllCategories()">
+      ${_showAllCategories ? 'Show fewer categories' : 'Show all categories'}
+    </button>`;
+
   el.innerHTML = `
     <div class="friends-subheading">Rate your friends' taste</div>
-    <p class="taste-hint">More dots = you trust their pick more in that category. Tap a filled dot again to clear it.</p>
+    <p class="taste-hint">${hint}</p>
 
     <div class="taste-grid-wrap">
-      <table class="taste-grid">
+      <table class="taste-grid${quant ? ' taste-grid-quant' : ''}">
         <thead>
           <tr><th class="tg-corner" scope="col"><span class="sr-only">Friend</span></th>${head}</tr>
         </thead>
         <tbody>${rows}</tbody>
       </table>
     </div>
-
-    <button class="taste-showall" onclick="toggleShowAllCategories()">
-      ${_showAllCategories ? 'Show fewer categories' : 'Show all categories'}
-    </button>`;
+    ${expander}`;
 
   const wrap = el.querySelector('.taste-grid-wrap');
   if (wrap) wrap.scrollLeft = prevScroll;
@@ -259,6 +273,31 @@ function _tasteDotCellHtml(friendId, categoryId, weight) {
       onclick="setTasteDot('${friendId}','${categoryId}',${i})"></span>`;
   }
   return `<td class="tg-cell">${dots}</td>`;
+}
+
+// Quant cell (IT-048): a precise <select> exposing every state the casual dots
+// deliberately hide — blank (—) = no opinion/default, 0 = explicit mute, 1..5 =
+// ascending trust.  A <select> (over a slider/number input) makes the null-vs-0
+// distinction unambiguous and self-documenting, and round-trips cleanly through
+// the SAME upsertOverride path (— → DELETE, 0..5 → upsert).  weight may arrive
+// as a number (incl. 0), or null/undefined for no row — both render as blank.
+function _tasteQuantCellHtml(friendId, categoryId, weight) {
+  const cur = (typeof weight === 'number') ? String(weight) : '';   // '' = default/NULL
+  const muted = cur === '0';
+  const opt = (val, label) =>
+    `<option value="${val}"${val === cur ? ' selected' : ''}>${label}</option>`;
+  return `<td class="tg-cell">
+    <select class="tg-quant${muted ? ' muted' : ''}" aria-label="Trust weight 0 to 5, or default"
+      onchange="setTasteQuant('${friendId}','${categoryId}',this.value)">
+      ${opt('',  '—')}
+      ${opt('0', '0')}
+      ${opt('1', '1')}
+      ${opt('2', '2')}
+      ${opt('3', '3')}
+      ${opt('4', '4')}
+      ${opt('5', '5')}
+    </select>
+  </td>`;
 }
 
 // Tap a dot: set weight = n, or clear (delete row) when tapping the dot that
@@ -287,7 +326,57 @@ function setTasteDot(friendId, categoryId, n) {
   }, TASTE_SAVE_DEBOUNCE_MS);
 }
 
+// Pick a value in the quant <select>.  Mirrors setTasteDot's state handling but
+// keeps the null≠0 distinction: '' → null → DELETE (default), '0'..'5' → number
+// (0 = mute).  No full re-render — the <select> already shows the chosen value,
+// and re-rendering would drop focus mid-interaction; we only refresh the cell's
+// muted styling.  Persist debounced (coalesces rapid changes; same pattern as
+// the casual dots) through the shared upsertOverride write path.
+function setTasteQuant(friendId, categoryId, raw) {
+  const next = (raw === '') ? null : Number(raw);
+
+  if (next === null) {
+    if (_tasteOverrides[friendId]) delete _tasteOverrides[friendId][categoryId];
+  } else {
+    (_tasteOverrides[friendId] = _tasteOverrides[friendId] || {})[categoryId] = next;
+  }
+
+  const key = friendId + '::' + categoryId;
+  clearTimeout(_tasteSaveTimers[key]);
+  _tasteSaveTimers[key] = setTimeout(() => {
+    delete _tasteSaveTimers[key];
+    upsertOverride(friendId, categoryId, next);
+  }, TASTE_SAVE_DEBOUNCE_MS);
+}
+
 function toggleShowAllCategories() {
   _showAllCategories = !_showAllCategories;
   renderTasteGrid();
+}
+
+// setAdvancedDetails (IT-049): the ONE place the global toggle is flipped.
+// Updates the in-memory flag, re-renders the active bilingual surface (only the
+// taste grid today; v0.6 score breakdowns join later), then persists the
+// preference server-side via the own-row users UPDATE (same path as
+// saveProfileSettings).  Optimistic: the UI flips immediately; a save failure
+// only toasts (the flag stays flipped for this session).
+async function setAdvancedDetails(on) {
+  advancedDetails = !!on;
+
+  const adv = document.getElementById('menu-advanced-toggle');
+  if (adv) {
+    adv.checked = advancedDetails;
+    adv.closest('.user-menu-toggle')?.setAttribute('aria-checked', String(advancedDetails));
+  }
+
+  if (currentFriendsTab === 'taste') renderTasteGrid();
+
+  const { error } = await supabaseClient
+    .from('users')
+    .update({ show_advanced_details: advancedDetails })
+    .eq('id', currentUser.id);
+  if (error) {
+    console.error('[setAdvancedDetails]', error);
+    showToast('Could not save that preference.');
+  }
 }

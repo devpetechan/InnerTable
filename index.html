@@ -57,6 +57,17 @@
              signing out directly -->
         <div class="user-menu" id="user-menu" style="display:none" role="menu">
           <button role="menuitem" id="menu-settings">Profile settings</button>
+          <!-- IT-049: global "show advanced details" toggle. App-level (not
+               taste-page-local) — v0.6 score breakdowns reuse this switch.
+               Flips casual↔quant surfaces instantly and persists server-side. -->
+          <label class="user-menu-toggle" role="menuitemcheckbox" aria-checked="false"
+                 title="Show precise trust weights and mute across the app">
+            <span>
+              Advanced details
+              <span class="user-menu-hint">Precise weights &amp; mute</span>
+            </span>
+            <input type="checkbox" id="menu-advanced-toggle" />
+          </label>
           <button role="menuitem" id="menu-signout">Sign out</button>
         </div>
         </div>

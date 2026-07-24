@@ -464,6 +464,13 @@ function toggleUserMenu() {
   const opening = menu.style.display === 'none';
   menu.style.display = opening ? 'block' : 'none';
   if (opening) {
+    // Reflect the current app-level preference (IT-049) each time we open —
+    // the flag is the source of truth, hydrated from users.show_advanced_details.
+    const adv = document.getElementById('menu-advanced-toggle');
+    if (adv) {
+      adv.checked = advancedDetails;
+      adv.closest('.user-menu-toggle')?.setAttribute('aria-checked', String(advancedDetails));
+    }
     const close = (e) => {
       if (!e.target.closest('.header-actions')) {
         menu.style.display = 'none';

@@ -6,6 +6,10 @@
 //  STATE
 // ══════════════════════════════════════════════════
 let currentUser        = null;  // shape: { id, display_name, avatar_url, is_admin }
+let advancedDetails    = false; // v0.5.0 Phase 4 (IT-049): global "show advanced
+                                // details" toggle. Hydrated from users.show_advanced_details
+                                // in auth.js; flips casual↔quant surfaces (taste grid today,
+                                // v0.6 score breakdowns later). App-level on purpose.
 let currentScreen      = 'list'; // 'list' | 'friends' (v0.4.0)
 let currentView        = 'all';
 let currentFilter      = 'circle'; // 'circle' | 'mine' | 'all' (v0.4.0 lenses)

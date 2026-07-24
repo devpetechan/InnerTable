@@ -2290,6 +2290,32 @@ a.tag:hover { color: var(--color-primary); border-color: var(--color-primary); b
 }
 .taste-showall:hover { border-color: var(--color-primary); color: var(--color-primary); }
 
+/* Quant mode (v0.5.0 Phase 4 · IT-048) — precise per-cell trust <select>.
+   Same grid shell as casual; only the cell control changes.  Exposes blank
+   (—) = default, 0 = mute, 1..5 = trust — the null≠0 distinction the dots hide. */
+.tg-quant {
+  font-family: var(--font-mono);
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-canvas);
+  border: 1.5px solid var(--color-border-tag);
+  border-radius: var(--radius-sm);
+  padding: 4px 6px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color .12s, color .12s;
+}
+.tg-quant:hover { border-color: var(--color-primary); }
+.tg-quant:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+/* Explicit mute (0) reads as a deliberately dimmed, distinct state — not the
+   same as the blank "—" default. */
+.tg-quant.muted {
+  color: var(--color-text-muted);
+  border-color: var(--color-star-empty);
+  border-style: dashed;
+}
+
 /* ═══════════════════════════════════════════════════════════════
    USER TAGS (v0.4.0 Phase 6 — multi-author place tags)
 ═══════════════════════════════════════════════════════════════ */
@@ -2371,6 +2397,36 @@ a.tag:hover { color: var(--color-primary); border-color: var(--color-primary); b
   cursor: pointer;
 }
 .user-menu button:hover { background: var(--color-canvas); }
+
+/* IT-049 advanced-details toggle — a checkbox row that matches the menu items
+   but carries its own control + sublabel. */
+.user-menu-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: 9px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: .84rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+.user-menu-toggle:hover { background: var(--color-canvas); }
+.user-menu-hint {
+  display: block;
+  font-size: .68rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  margin-top: 1px;
+}
+.user-menu-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+  flex-shrink: 0;
+  cursor: pointer;
+}
 
 .settings-modal { max-width: 420px; }
 /* Header sits directly on the padding-less .modal, so pad it to match the

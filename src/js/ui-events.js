@@ -19,6 +19,10 @@ document.addEventListener('DOMContentLoaded', function () {
     .addEventListener('click', signOut);
   document.getElementById('menu-settings')
     .addEventListener('click', openProfileSettings);
+  // IT-049: global advanced-details toggle — flips casual↔quant surfaces and
+  // persists server-side.  Lives in the menu so it's reachable app-wide.
+  document.getElementById('menu-advanced-toggle')
+    .addEventListener('change', e => setAdvancedDetails(e.target.checked));
   document.getElementById('settings-close')
     .addEventListener('click', closeProfileSettings);
   document.getElementById('settings-save')

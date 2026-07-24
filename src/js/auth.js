@@ -63,7 +63,7 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
 async function buildCurrentUser(user) {
   const { data: profile, error } = await supabaseClient
     .from('users')
-    .select('display_name, is_admin')
+    .select('display_name, is_admin, show_advanced_details')
     .eq('id', user.id)
     .single();
 
@@ -75,6 +75,9 @@ async function buildCurrentUser(user) {
     avatar_url:   user.user_metadata?.avatar_url || null,
     is_admin:     profile?.is_admin || false
   };
+  // v0.5.0 Phase 4 (IT-049): app-level preference kept in its own global so any
+  // surface can read it without threading it through currentUser.
+  advancedDetails = profile?.show_advanced_details || false;
 }
 
 function showApp() {
