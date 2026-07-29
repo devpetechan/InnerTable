@@ -407,6 +407,15 @@ function _renderFriendProfile(friend) {
       <button class="friend-cta ghost danger" onclick="blockUserFromProfile('${friend.userId}')">Block</button>
     </div>
 
+    <!-- Your taste ratings (v0.5.0 Phase 5 · IT-050) — inline override summary
+         for THIS friend.  Owned/filled by taste-service.renderFriendTasteSummary;
+         we only draw a placeholder here because that render is async (data may be
+         cold if the profile was opened without the Taste tab loading). -->
+    <div class="friends-subheading">Your taste ratings</div>
+    <div id="profile-taste-summary">
+      <div class="friends-empty-line">Loading…</div>
+    </div>
+
     <div class="friends-subheading">Their places</div>
     ${theirPlaces.length ? theirPlaces.map(({ place, take }) => `
       <div class="friend-card clickable" onclick="openPlaceDetail('${place.id}')" role="button" tabindex="0">
@@ -418,6 +427,12 @@ function _renderFriendProfile(friend) {
         ${chipFor(take.status)}
       </div>`).join('')
     : '<div class="friends-empty-line">No places yet.</div>'}`;
+
+  // Fill the taste-override summary placeholder (IT-050).  Async + fire-and-
+  // forget: _renderFriendProfile is synchronous and also runs on realtime
+  // re-renders, so we let the summary hydrate itself into #profile-taste-summary
+  // (it guards against a stale/closed profile internally).
+  renderFriendTasteSummary(friend.userId);
 }
 
 // ── Requests tab (incoming + outgoing) ───────────

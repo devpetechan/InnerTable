@@ -2317,6 +2317,43 @@ a.tag:hover { color: var(--color-primary); border-color: var(--color-primary); b
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   FRIEND-PROFILE TASTE SUMMARY (v0.5.0 Phase 5 · IT-050)
+   The contextual, per-friend counterpart to the Taste grid.  Reuses the
+   .taste-grid / .tg-* skin so an override reads identically on both surfaces;
+   only the layout differs — a compact one-category-per-row strip, no sticky
+   scroll (a single friend never needs it).
+═══════════════════════════════════════════════════════════════ */
+.taste-summary-wrap { overflow-x: visible; }
+.taste-summary-grid { width: 100%; }
+/* Category label (left) sits opposite its control (right) on each row. */
+.taste-summary-grid .tg-friend { box-shadow: none; }
+.taste-summary-grid .tg-cell { text-align: right; }
+.taste-summary-grid .tg-friend-name {
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.taste-summary-empty {
+  font-size: .82rem;
+  color: var(--color-text-muted);
+  padding: 6px 2px var(--sp-2);
+}
+.taste-summary-link {
+  display: block;
+  margin-top: 6px;
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--color-primary);
+  font-size: .82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.taste-summary-link:hover { text-decoration: underline; }
+
+/* ═══════════════════════════════════════════════════════════════
    USER TAGS (v0.4.0 Phase 6 — multi-author place tags)
 ═══════════════════════════════════════════════════════════════ */
 .user-tags-row {

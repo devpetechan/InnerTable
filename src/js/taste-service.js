@@ -264,13 +264,16 @@ function renderTasteGrid() {
 // One cell = a 5-dot control.  A NULL/0/absent weight renders as 0 filled
 // dots (casual mode deliberately does not distinguish mute from unset —
 // that lives in quant mode, Phase 4).
-function _tasteDotCellHtml(friendId, categoryId, weight) {
+// `handler` is the global function name wired to each dot's onclick — defaults
+// to the grid's setTasteDot; the friend-profile summary (IT-050) passes its own
+// so the same cell markup drives a different re-render target.
+function _tasteDotCellHtml(friendId, categoryId, weight, handler = 'setTasteDot') {
   const filled = (typeof weight === 'number' && weight > 0) ? weight : 0;
   let dots = '';
   for (let i = 1; i <= 5; i++) {
     dots += `<span class="tg-dot${i <= filled ? ' filled' : ''}"
       role="button" tabindex="0" aria-label="Set trust ${i} of 5"
-      onclick="setTasteDot('${friendId}','${categoryId}',${i})"></span>`;
+      onclick="${handler}('${friendId}','${categoryId}',${i})"></span>`;
   }
   return `<td class="tg-cell">${dots}</td>`;
 }
@@ -281,14 +284,14 @@ function _tasteDotCellHtml(friendId, categoryId, weight) {
 // distinction unambiguous and self-documenting, and round-trips cleanly through
 // the SAME upsertOverride path (— → DELETE, 0..5 → upsert).  weight may arrive
 // as a number (incl. 0), or null/undefined for no row — both render as blank.
-function _tasteQuantCellHtml(friendId, categoryId, weight) {
+function _tasteQuantCellHtml(friendId, categoryId, weight, handler = 'setTasteQuant') {
   const cur = (typeof weight === 'number') ? String(weight) : '';   // '' = default/NULL
   const muted = cur === '0';
   const opt = (val, label) =>
     `<option value="${val}"${val === cur ? ' selected' : ''}>${label}</option>`;
   return `<td class="tg-cell">
     <select class="tg-quant${muted ? ' muted' : ''}" aria-label="Trust weight 0 to 5, or default"
-      onchange="setTasteQuant('${friendId}','${categoryId}',this.value)">
+      onchange="${handler}('${friendId}','${categoryId}',this.value)">
       ${opt('',  '—')}
       ${opt('0', '0')}
       ${opt('1', '1')}
@@ -300,58 +303,141 @@ function _tasteQuantCellHtml(friendId, categoryId, weight) {
   </td>`;
 }
 
-// Tap a dot: set weight = n, or clear (delete row) when tapping the dot that
-// already represents the current value — the toggle-off pattern used by the
-// price/star controls elsewhere.  Optimistic: update local state + re-render
-// immediately, then persist debounced.  Clearing writes NULL → DELETE, never 0.
-function setTasteDot(friendId, categoryId, n) {
-  const current = (_tasteOverrides[friendId] || {})[categoryId];
-  const next = (current === n) ? null : n;   // tap current value → clear
-
-  // Optimistic local update
+// _applyTasteOverride: the SHARED optimistic-state-update + debounced-persist
+// step used by BOTH the Taste grid handlers and the friend-profile summary
+// handlers (IT-050).  Factoring it here keeps the two surfaces reading and
+// writing ONE dataset (_tasteOverrides) through ONE write path (upsertOverride),
+// so they can never drift.  It deliberately does NOT re-render — each caller
+// owns its own re-render (the grid re-renders itself; the profile re-renders the
+// summary; quant callers skip re-render to keep <select> focus).
+//   next === null → clear the local key + DELETE the row (back to default/NULL,
+//                   NEVER 0 — the null≠0 invariant lives entirely in upsertOverride)
+//   next 0..5     → set the local value + upsert
+function _applyTasteOverride(friendId, categoryId, next) {
   if (next === null) {
     if (_tasteOverrides[friendId]) delete _tasteOverrides[friendId][categoryId];
   } else {
     (_tasteOverrides[friendId] = _tasteOverrides[friendId] || {})[categoryId] = next;
   }
-  renderTasteGrid();
 
   // Debounced persist (per cell, ~300 ms) — save-as-you-go without a round
-  // trip on every intermediate tap.
+  // trip on every intermediate tap; rapid changes coalesce to one write.
   const key = friendId + '::' + categoryId;
   clearTimeout(_tasteSaveTimers[key]);
   _tasteSaveTimers[key] = setTimeout(() => {
     delete _tasteSaveTimers[key];
     upsertOverride(friendId, categoryId, next);
   }, TASTE_SAVE_DEBOUNCE_MS);
+}
+
+// Tap a dot: set weight = n, or clear (delete row) when tapping the dot that
+// already represents the current value — the toggle-off pattern used by the
+// price/star controls elsewhere.  Optimistic: update local state via the shared
+// helper, then re-render the grid.  Clearing writes NULL → DELETE, never 0.
+function setTasteDot(friendId, categoryId, n) {
+  const current = (_tasteOverrides[friendId] || {})[categoryId];
+  const next = (current === n) ? null : n;   // tap current value → clear
+  _applyTasteOverride(friendId, categoryId, next);
+  renderTasteGrid();
 }
 
 // Pick a value in the quant <select>.  Mirrors setTasteDot's state handling but
 // keeps the null≠0 distinction: '' → null → DELETE (default), '0'..'5' → number
 // (0 = mute).  No full re-render — the <select> already shows the chosen value,
-// and re-rendering would drop focus mid-interaction; we only refresh the cell's
-// muted styling.  Persist debounced (coalesces rapid changes; same pattern as
-// the casual dots) through the shared upsertOverride write path.
+// and re-rendering would drop focus mid-interaction.
 function setTasteQuant(friendId, categoryId, raw) {
   const next = (raw === '') ? null : Number(raw);
-
-  if (next === null) {
-    if (_tasteOverrides[friendId]) delete _tasteOverrides[friendId][categoryId];
-  } else {
-    (_tasteOverrides[friendId] = _tasteOverrides[friendId] || {})[categoryId] = next;
-  }
-
-  const key = friendId + '::' + categoryId;
-  clearTimeout(_tasteSaveTimers[key]);
-  _tasteSaveTimers[key] = setTimeout(() => {
-    delete _tasteSaveTimers[key];
-    upsertOverride(friendId, categoryId, next);
-  }, TASTE_SAVE_DEBOUNCE_MS);
+  _applyTasteOverride(friendId, categoryId, next);
 }
 
 function toggleShowAllCategories() {
   _showAllCategories = !_showAllCategories;
   renderTasteGrid();
+}
+
+
+// ══════════════════════════════════════════════════
+//  FRIEND-PROFILE TASTE SUMMARY (v0.5.0 Phase 5 · IT-050)
+//  A contextual, inline view of MY overrides for ONE friend, shown on that
+//  friend's profile page (friends-service.js renders the shell + placeholder;
+//  this fills it).  It reads the SAME _tasteOverrides source of truth and writes
+//  through the SAME upsertOverride path as the grid, so edits on either surface
+//  always agree.  Built additive for v0.6 (IT-112/113): a computed weight +
+//  deviation slots in next to each row later without forking read or write.
+// ══════════════════════════════════════════════════
+
+// renderFriendTasteSummary: fill #profile-taste-summary with a per-category
+// strip of the categories where I currently have an override set for this
+// friend, each inline-editable (casual dots or quant select, per advancedDetails).
+// Async because the profile can be opened straight from the Friends tab without
+// the Taste tab ever loading, so _categories/_tasteOverrides may be cold — we
+// ensure both first (categories are cached; overrides only re-read when the
+// Taste screen was never loaded, otherwise the grid's copy is already the truth).
+async function renderFriendTasteSummary(friendId) {
+  await getCategories();
+  if (!_tasteLoaded) _tasteOverrides = await getMyOverrides();
+
+  // The awaits above mean the profile could have closed or switched friends in
+  // the meantime — re-query the container and bail if it's gone or now stale.
+  const el = document.getElementById('profile-taste-summary');
+  if (!el || _profileUserId !== friendId) return;
+
+  const quant = advancedDetails;
+  const ov    = _tasteOverrides[friendId] || {};
+
+  // "Override set" = a row exists (the category id is a key in ov), so the
+  // profile and the grid always list the SAME rows.  _categories is pre-sorted
+  // by seed sort_order, so the strip follows the grid's column order.
+  const cats = _categories.filter(c => Object.prototype.hasOwnProperty.call(ov, c.id));
+
+  if (!cats.length) {
+    el.innerHTML = `
+      <div class="taste-summary-empty">
+        No taste ratings set for this friend yet.
+        <button class="taste-summary-link"
+          onclick="hideFriendProfile(); switchFriendsTab('taste', document.querySelector('[data-ftab=taste]'))">
+          Rate their taste in the Taste tab
+        </button>
+      </div>`;
+    return;
+  }
+
+  const cellFn  = quant ? _tasteQuantCellHtml : _tasteDotCellHtml;
+  const handler = quant ? 'setProfileTasteQuant' : 'setProfileTasteDot';
+
+  const rows = cats.map(c => `
+    <tr>
+      <th class="tg-friend" scope="row">
+        <span class="tg-friend-name">${esc(c.display_name)}</span>
+      </th>
+      ${cellFn(friendId, c.id, ov[c.id], handler)}
+    </tr>`).join('');
+
+  el.innerHTML = `
+    <div class="taste-grid-wrap taste-summary-wrap">
+      <table class="taste-grid taste-summary-grid${quant ? ' taste-grid-quant' : ''}">
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+// Profile dot handler: mirrors setTasteDot (toggle-off-to-clear included), but
+// re-renders the profile summary instead of the grid.  Clearing removes the row
+// from the strip (it's no longer a set override) — consistent with the grid,
+// where a cleared cell drops back to the blank default.
+function setProfileTasteDot(friendId, categoryId, n) {
+  const current = (_tasteOverrides[friendId] || {})[categoryId];
+  const next = (current === n) ? null : n;   // tap current value → clear (DELETE)
+  _applyTasteOverride(friendId, categoryId, next);
+  renderFriendTasteSummary(friendId);
+}
+
+// Profile quant handler: mirrors setTasteQuant — '' → null → DELETE (default),
+// '0'..'5' → number (0 = mute).  No re-render, so the <select> keeps focus
+// mid-edit (same as the grid); the strip refreshes next time the profile opens.
+function setProfileTasteQuant(friendId, categoryId, raw) {
+  const next = (raw === '') ? null : Number(raw);
+  _applyTasteOverride(friendId, categoryId, next);
 }
 
 // setAdvancedDetails (IT-049): the ONE place the global toggle is flipped.

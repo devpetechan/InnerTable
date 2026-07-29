@@ -935,17 +935,17 @@
       "id": "1776465536666",
       "itemId": "IT-050",
       "type": "enhancement",
-      "title": "[v0.5] Friend profile: inline taste-override summary (foundation for computed view)",
-      "description": "CONTEXT: Make taste tunings visible in context — on a friend's profile, show the categories where you've set an override for THAT friend, at a glance.\n\nGOAL (v0.5.0): Inline per-category summary on the friend profile of the current user's explicit overrides for that friend, with quick inline edit. Reuse the same taste-service state and upsertOverride path as the Taste grid (one dataset, two surfaces) — do NOT fork the write path.\n\nDIRECTION (ratified 2026-07-29, see InnerTable-Taste-Profiling-Direction.md §0): kept in v0.5.0 (deferral rejected). Build it additive so v0.6 can enrich this same surface with the friend's COMPUTED weight + deviation (IT-113) without a rewrite.",
-      "priority": "P2",
+      "title": "[v0.5] Show friend's taste tunings on their profile page",
+      "description": "CONTEXT: Make the taste tunings visible in context — when looking at a friend's profile, show 'you rate Alice as great for Chinese' at a glance.\n\nGOAL: On the friend profile page, display a compact row of the categories where the current user has set an override, with their dot-rating. Quick-edit inline.\n\nMinor release-polish item; not structural.",
+      "priority": "P3",
       "area": "UI",
       "effort": "S",
       "status": "backlog",
-      "acceptanceCriteria": "- Friend profile shows an inline summary of the current user's overrides for that friend.\n- Inline edits persist via taste-service.upsertOverride (same rows as the grid; NULL vs 0 invariant preserved).\n- Casual/quant toggle (IT-049) honored.\n- Built to be extended by IT-113 (computed weight + deviation) without forking state.",
+      "acceptanceCriteria": "- Friend profile shows inline override summary.\n- Inline edits persist.",
       "reproSteps": "",
-      "affectedFiles": "src/js/friends-service.js, src/js/taste-service.js, src/js/ui-render.js, src/styles/main.css",
+      "affectedFiles": "src/js/friends.js, src/js/taste.js",
       "tags": [],
-      "updatedAt": "2026-07-29T12:48:34.458189Z",
+      "updatedAt": "2026-04-17T22:38:56.634051Z",
       "releaseId": "REL-12",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
@@ -972,7 +972,7 @@
       "itemId": "IT-052",
       "type": "enhancement",
       "title": "[v0.6] Nightly Edge Function: compute per-category Pearson similarity",
-      "description": "CONTEXT: The core model: for each pair of users who've rated places in the same category, compute Pearson correlation on their overall_ratings.\n\nGOAL: Write a Supabase Edge Function that runs nightly (via Supabase cron) and recomputes similarity_scores for all (user_a, user_b, category) triples with n_shared >= 2.\n\nALGORITHM:\n- For each category_id, pull all entries joined to place_categories filtered to that category.\n- For each pair of users with >= 2 shared places in that category, compute Pearson r.\n- Store (user_a, user_b, category_id, raw_similarity=r, n_shared).\n\nPERFORMANCE: batch updates via a single transaction per category. For a small userbase this is fine; for scale, revisit later with a window or delta-based approach.\n\nDo NOT compute shrunk_similarity yet — that's the next item.\n\nCADENCE (decided 2026-07-29): run nightly (daily). Intraday/on-write is unnecessary; weekly is a future cost optimization only — at current scale the daily job is negligible cost and freshness matters while data is sparse. See InnerTable-Taste-Profiling-Direction.md §7.",
+      "description": "CONTEXT: The core model: for each pair of users who've rated places in the same category, compute Pearson correlation on their overall_ratings.\n\nGOAL: Write a Supabase Edge Function that runs nightly (via Supabase cron) and recomputes similarity_scores for all (user_a, user_b, category) triples with n_shared >= 2.\n\nALGORITHM:\n- For each category_id, pull all entries joined to place_categories filtered to that category.\n- For each pair of users with >= 2 shared places in that category, compute Pearson r.\n- Store (user_a, user_b, category_id, raw_similarity=r, n_shared).\n\nPERFORMANCE: batch updates via a single transaction per category. For a small userbase this is fine; for scale, revisit later with a window or delta-based approach.\n\nDo NOT compute shrunk_similarity yet — that's the next item.",
       "priority": "P1",
       "area": "Other",
       "effort": "L",
@@ -981,7 +981,7 @@
       "reproSteps": "",
       "affectedFiles": "supabase/functions/compute_similarity/index.ts, supabase/config.toml (cron)",
       "tags": [],
-      "updatedAt": "2026-07-29T13:20:35.386042Z",
+      "updatedAt": "2026-04-17T22:38:56.634051Z",
       "releaseId": "REL-13",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
@@ -2119,87 +2119,6 @@
       "updatedAt": "2026-07-13T09:15:39.190085Z",
       "releaseId": "REL-13",
       "createdAt": "2026-07-13T09:15:39.190085Z"
-    },
-    {
-      "id": "1785329314458",
-      "itemId": "IT-112",
-      "type": "enhancement",
-      "priority": "P1",
-      "area": "UI",
-      "effort": "M",
-      "status": "backlog",
-      "reproSteps": "",
-      "tags": [
-        "taste-profiling"
-      ],
-      "releaseId": "REL-13",
-      "createdAt": "2026-07-29T12:48:34.458189Z",
-      "updatedAt": "2026-07-29T13:20:35.386042Z",
-      "title": "[v0.6] Taste tab defaults to computed profile; manual entry becomes optional override layer",
-      "description": "CONTEXT: Ratified taste-profiling reframe (InnerTable-Taste-Profiling-Direction.md §0). The Taste tab stops being a blank data-entry grid and becomes where a mostly-COMPUTED profile is shown, explained, and (optionally) corrected.\n\nGOAL: Default the Taste tab to display each friend's computed per-category trust (from the v0.6 blend, IT-054). Demote the explicit friend×category grid to an OPTIONAL, always-available override layer — never required, never the first thing the user sees. Casual/quant toggle (IT-049) still governs precision.\n\nCOLD START: with no computed data yet, fall back to the explicit grid; transition to computed-first as signal accrues.\n\nDEPENDS ON: IT-054 (blended trust weight) producing a computed value to display.\n\nDISPLAY (decided 2026-07-29): the computed value is shown live, labelled \"Predicted Similarity,\" rounded to nearest 0.5. The override control is a 0.5-step slider (Untappd-style), replacing the 1–5 dots on this computed-first surface. Engine keeps computing; the computed value is simply not applied where an override exists.",
-      "acceptanceCriteria": "- Taste tab loads showing computed per-category trust per friend by default (no manual entry required).\n- An override/edit affordance is present but optional.\n- Casual/quant toggle honored in the computed view.\n- Cold-start (no computed data) falls back to the explicit grid; documented transition as data accrues.\n- Computed value shown live as \"Predicted Similarity\" (nearest 0.5).\n- Override control is a 0.5-step slider, not dots.",
-      "affectedFiles": "src/js/taste-service.js, index.html, src/js/app.js, src/styles/main.css"
-    },
-    {
-      "id": "1785329314459",
-      "itemId": "IT-113",
-      "type": "enhancement",
-      "priority": "P1",
-      "area": "UI",
-      "effort": "M",
-      "status": "backlog",
-      "reproSteps": "",
-      "tags": [
-        "taste-profiling"
-      ],
-      "releaseId": "REL-13",
-      "createdAt": "2026-07-29T12:48:34.458189Z",
-      "updatedAt": "2026-07-29T13:20:35.386042Z",
-      "title": "[v0.6] Predicted Similarity + 0.5-step override slider; keep / modify / delete override (live, passive)",
-      "description": "CONTEXT: Peter's requirement (2026-07-29). The app always computes a taste score but does NOT apply it where the user has overridden; both are visible so the user can decide to keep, modify, or clear the override.\n\nGOAL: Wherever a friend×category value is shown (Taste grid AND friend-profile summary, IT-050), display the live computed value as \"Predicted Similarity\" (nearest 0.5) alongside the user's override. Override via a 0.5-step slider (Untappd-style half-steps). No stored delta and no snapshot — show the current Predicted Similarity next to the override, LIVE. Clearing the override reverts to using Predicted Similarity (row DELETEd → NULL, not 0). Muting stays a distinct explicit 0.\n\nPASSIVE (decided): display-only; no nudge/notification when override and Predicted Similarity diverge, at launch.\n\nDEPENDS ON: IT-114 (numeric/0.5 migration), IT-112 (computed-first view), IT-054 (computed weight).",
-      "acceptanceCriteria": "- Every friend×category shows live \"Predicted Similarity\" (nearest 0.5) plus the user's override when set.\n- Override via 0.5-step slider; user can modify or clear inline.\n- Clearing reverts to Predicted Similarity (row DELETEd → NULL, not 0); explicit mute (0) stays distinct.\n- No stored delta/snapshot; values are live.\n- Display-only (passive) — no nudge at launch.\n- Consistent across the Taste grid and friend-profile summary (same rows).",
-      "affectedFiles": "src/js/taste-service.js, src/js/friends-service.js, src/js/ui-render.js, src/styles/main.css"
-    },
-    {
-      "id": "1785329314460",
-      "itemId": "IT-114",
-      "type": "task",
-      "priority": "P1",
-      "area": "Database",
-      "effort": "S",
-      "status": "backlog",
-      "reproSteps": "",
-      "tags": [
-        "taste-profiling"
-      ],
-      "releaseId": "REL-13",
-      "createdAt": "2026-07-29T12:48:34.458189Z",
-      "updatedAt": "2026-07-29T13:20:35.386042Z",
-      "title": "[v0.6] Migration: widen friend_taste_overrides.weight to numeric for 0.5-step overrides",
-      "description": "CONTEXT: Decided 2026-07-29 (InnerTable-Taste-Profiling-Direction.md §0/§6): deviation is LIVE-ONLY — no computed-at-override snapshot, no stored delta. This item is repurposed from the rejected snapshot idea to the migration the 0.5-step slider actually needs.\n\nGOAL: Predicted Similarity is shown to the nearest 0.5 and the user overrides in 0.5 increments (Untappd-style slider), but the shipped `weight` column is `smallint` (migration 0022). Widen it to a one-decimal numeric (e.g. numeric(2,1)) and update the CHECK to enforce 0.5 steps within 0..5. Backward-compatible — existing integer weights (0..5) stay valid.\n\nPRESERVE: NULL (no override / use predicted) vs 0 (explicit mute) invariant. The slider UX needs a distinct clear state separate from the 0 stop.\n\nBLOCKS: IT-113. Pre-verify in sandbox; apply by hand in Supabase SQL editor; verify after (0019 silent-miss lesson).",
-      "acceptanceCriteria": "- weight column is numeric with one decimal; CHECK enforces 0.5 steps in [0,5].\n- Existing integer weights remain valid; no data loss.\n- NULL vs 0 still distinguishable after migration.\n- Pre-verified in sandbox, verified in prod after apply.",
-      "affectedFiles": "supabase/migrations/ (new v0.6 migration), src/js/taste-service.js"
-    },
-    {
-      "id": "1785331235386",
-      "itemId": "IT-115",
-      "type": "enhancement",
-      "title": "[v0.6] Adoption / behavioral trust signal (save→visit→rate on a friend's rec)",
-      "description": "CONTEXT: New v0.6 input identified 2026-07-24 (InnerTable-Taste-Profiling-Direction.md §2.1), added to backlog 2026-07-29. The strongest implicit signal: you save a friend's recommended place to Want-to-Try, go, and rate it well = strong positive trust for that friend in that category; a hard-pass = negative. Observed from normal use, no new UI.\n\nGOAL: Feed an adoption signal into the v0.6 blend (IT-054) alongside pair-similarity (IT-052) and anchor calibration (IT-111).\n\nOPEN: does this need an explicit event log (save→visit→rate timeline), or is the current entries/takes `status` + `updated_at` enough to reconstruct it? Confirm during v0.6 scoping (§2.1, §6). Weighting of adoption vs co-rating vs anchor inside combine() is TODO until there's overlap data (§6).",
-      "priority": "P2",
-      "area": "Data",
-      "effort": "M",
-      "status": "backlog",
-      "acceptanceCriteria": "- Adoption events derivable (from existing status/timestamps or a new event log — decision recorded).\n- Positive (saved→visited→rated well) and negative (hard-pass) signals distinguished per friend×category.\n- Signal feeds combine() (IT-054); weighting validated once overlap data exists.",
-      "reproSteps": "",
-      "affectedFiles": "supabase/ (schema/queries), edge function (IT-052 sibling), src/js/taste-service.js",
-      "tags": [
-        "taste-profiling",
-        "trust-signal"
-      ],
-      "releaseId": "REL-13",
-      "createdAt": "2026-07-29T13:20:35.386042Z",
-      "updatedAt": "2026-07-29T13:20:35.386042Z"
     }
   ],
   "releases": [
@@ -2688,6 +2607,6 @@
       }
     }
   ],
-  "nextItemId": 116,
+  "nextItemId": 112,
   "nextReleaseId": 22
 }
