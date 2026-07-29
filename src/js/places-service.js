@@ -498,9 +498,34 @@ function _refreshOpenDetailPanel(placeId) {
 // ══════════════════════════════════════════════════
 async function deleteEntry(entryId) {
   if (!confirm('Delete your take on this place? This cannot be undone.')) return;
+
+  // Which place does this take belong to?  Capture it *before* loadPlaces()
+  // replaces the cache, so we can update the open detail panel afterward.
+  const placeId = _placeIdForEntry(entryId);
+
   const { error } = await supabaseClient.from('entries').delete().eq('id', entryId);
   if (error) { console.error(error); showToast('Could not delete.'); return; }
   showToast('Your take was deleted.');
   await loadPlaces(); // explicit refresh — own writes never wait on realtime (IT-107)
+
+  // IT-110: loadPlaces() re-renders the list but not the open detail overlay.
+  // If the place still has takes, re-render the panel in place; if the deleted
+  // take was its last one, close the panel (openPlaceDetail would no-op and
+  // leave stale content otherwise).
+  const overlay = document.getElementById('place-detail-overlay');
+  if (overlay && overlay.classList.contains('open')) {
+    const place = placeId ? allPlaces[placeId] : null;
+    if (place && place.takes.length) openPlaceDetail(placeId);
+    else closeDetailPanel();
+  }
+}
+
+// Find the place a given take (entry) belongs to, by scanning the current
+// cache. Returns the place id, or null if not found.
+function _placeIdForEntry(entryId) {
+  for (const [pid, place] of Object.entries(allPlaces)) {
+    if (place.takes.some(t => t.entryId === entryId)) return pid;
+  }
+  return null;
 }
 
