@@ -850,12 +850,12 @@
       "priority": "P1",
       "area": "Other",
       "effort": "S",
-      "status": "backlog",
+      "status": "done",
       "acceptanceCriteria": "- categories table seeded.\n- place_categories join table exists and is indexed.\n- Existing places backfilled based on their cuisine free-text (best-effort mapping).",
       "reproSteps": "",
       "affectedFiles": "supabase/migrations/0012_categories.sql, scripts/backfill-place-categories.sql",
       "tags": [],
-      "updatedAt": "2026-04-17T22:38:56.634051Z",
+      "updatedAt": "2026-07-29T18:11:17.690181Z",
       "releaseId": "REL-12",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
@@ -868,12 +868,12 @@
       "priority": "P1",
       "area": "Other",
       "effort": "S",
-      "status": "backlog",
+      "status": "done",
       "acceptanceCriteria": "- Table created with constraints enforced.\n- RLS isolation verified (user A cannot read or write user B's overrides).",
       "reproSteps": "",
       "affectedFiles": "supabase/migrations/0013_friend_taste_overrides.sql",
       "tags": [],
-      "updatedAt": "2026-04-17T22:38:56.634051Z",
+      "updatedAt": "2026-07-29T18:11:17.690181Z",
       "releaseId": "REL-12",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
@@ -886,12 +886,12 @@
       "priority": "P1",
       "area": "UI",
       "effort": "L",
-      "status": "backlog",
+      "status": "done",
       "acceptanceCriteria": "- Grid renders for all accepted friends × user's most-common categories.\n- Tapping dots upserts friend_taste_overrides and persists.\n- 'Show all categories' expands correctly.\n- Unrated cells remain null in the DB (not zero).",
       "reproSteps": "",
       "affectedFiles": "src/js/friends.js (or new src/js/taste.js), src/js/ui-render.js, index.html, src/styles/main.css",
       "tags": [],
-      "updatedAt": "2026-04-17T22:38:56.634051Z",
+      "updatedAt": "2026-07-29T18:11:17.690181Z",
       "releaseId": "REL-12",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
@@ -904,12 +904,12 @@
       "priority": "P2",
       "area": "UI",
       "effort": "S",
-      "status": "backlog",
+      "status": "done",
       "acceptanceCriteria": "- Casual ↔ quant toggle switches rendering without losing state.\n- Values in casual and quant always represent the same underlying similarity_score.\n- Numeric readout updates live.",
       "reproSteps": "",
       "affectedFiles": "src/js/taste.js, src/js/ui-render.js",
       "tags": [],
-      "updatedAt": "2026-04-17T22:38:56.634051Z",
+      "updatedAt": "2026-07-29T18:11:17.690181Z",
       "releaseId": "REL-12",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
@@ -922,12 +922,12 @@
       "priority": "P2",
       "area": "UI",
       "effort": "S",
-      "status": "backlog",
+      "status": "done",
       "acceptanceCriteria": "- Toggle in a Settings panel.\n- Persists to DB.\n- Taste grid (and later, prediction cards) respect the toggle.\n- 'Show math' peek button present on prediction cards (renders empty/disabled until v0.6 has something to show).",
       "reproSteps": "",
       "affectedFiles": "supabase/migrations/0014_show_advanced.sql, src/js/ui-render.js, src/js/settings.js (new), index.html",
       "tags": [],
-      "updatedAt": "2026-04-17T22:38:56.634051Z",
+      "updatedAt": "2026-07-29T18:11:17.690181Z",
       "releaseId": "REL-12",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
@@ -940,12 +940,12 @@
       "priority": "P2",
       "area": "UI",
       "effort": "S",
-      "status": "backlog",
+      "status": "done",
       "acceptanceCriteria": "- Friend profile shows an inline summary of the current user's overrides for that friend.\n- Inline edits persist via taste-service.upsertOverride (same rows as the grid; NULL vs 0 invariant preserved).\n- Casual/quant toggle (IT-049) honored.\n- Built to be extended by IT-113 (computed weight + deviation) without forking state.",
       "reproSteps": "",
       "affectedFiles": "src/js/friends-service.js, src/js/taste-service.js, src/js/ui-render.js, src/styles/main.css",
       "tags": [],
-      "updatedAt": "2026-07-29T12:48:34.458189Z",
+      "updatedAt": "2026-07-29T14:29:50.361014Z",
       "releaseId": "REL-12",
       "createdAt": "2026-04-17T22:38:56.634051Z"
     },
@@ -2087,14 +2087,14 @@
       "priority": "P3",
       "area": "UI",
       "effort": "XS",
-      "status": "backlog",
+      "status": "done",
       "acceptanceCriteria": "- Deleting a take from the detail panel updates or closes the panel immediately.",
       "affectedFiles": "src/js/places-service.js",
       "id": "1783891544261",
       "reproSteps": "",
       "tags": [],
       "createdAt": "2026-07-12T21:25:44.259996Z",
-      "updatedAt": "2026-07-13T08:42:32.957717Z",
+      "updatedAt": "2026-07-29T18:11:17.690181Z",
       "releaseId": "REL-12"
     },
     {
@@ -2507,8 +2507,60 @@
       "name": "Explicit Taste Preferences",
       "targetDate": "",
       "goals": "Formalize categories. Let users score each friend's taste per category (5-dot casual + 0-1 quant). Data collection, no math yet.",
-      "status": "planning",
-      "createdAt": "2026-04-17T22:38:56.634051Z"
+      "status": "released",
+      "createdAt": "2026-04-17T22:38:56.634051Z",
+      "releasedAt": "2026-07-29T18:11:17.690181Z",
+      "releaseNotes": {
+        "generatedAt": "2026-07-29T18:11:17.690181Z",
+        "releaseDate": "2026-07-29",
+        "sections": [
+          {
+            "heading": "✨ What's New",
+            "notes": [
+              {
+                "itemId": "IT-045",
+                "title": "Standardized taste categories",
+                "note": "A seeded set of cuisine and venue categories replaces free-text cuisine — the shared vocabulary that per-category trust scoring is keyed on."
+              },
+              {
+                "itemId": "IT-046",
+                "title": "Per-friend taste ratings",
+                "note": "New private storage for your judgment of how much you trust each friend's taste in each category. Yours only, never shared."
+              },
+              {
+                "itemId": "IT-047",
+                "title": "Rate your friends' taste",
+                "note": "A friends x categories grid with a casual 5-dot control per cell. Personalized to your most-used categories, with a 'show all' expander; saves as you go."
+              },
+              {
+                "itemId": "IT-048",
+                "title": "Advanced (quant) view",
+                "note": "A precise numeric view of the same ratings for power users, including an explicit 'mute' state that stays distinct from 'no opinion'."
+              },
+              {
+                "itemId": "IT-049",
+                "title": "'Show advanced details' toggle",
+                "note": "One app-level switch flips between the casual and precise surfaces, and your choice persists across sessions."
+              },
+              {
+                "itemId": "IT-050",
+                "title": "Taste ratings on friend profiles",
+                "note": "See and edit the categories you've rated for a friend right on their profile, always in sync with the grid."
+              }
+            ]
+          },
+          {
+            "heading": "🐛 Fixes",
+            "notes": [
+              {
+                "itemId": "IT-110",
+                "title": "Detail panel refreshes after deleting a take",
+                "note": "Deleting your take from an open place now updates the panel immediately — it refreshes in place when other takes remain, or closes when it was the last one."
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "REL-13",
